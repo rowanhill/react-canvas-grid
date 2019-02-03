@@ -1,0 +1,27 @@
+{
+  "name": "react-canvas-grid",
+  "version": "1.0.0",
+  "description": "A canvas-based simple datagrid",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "datagrid",
+    "grid",
+    "canvas"
+  ],
+  "author": "Rowan Hill",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^16.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "^16.8.1",
+    "typescript": "^3.3.1"
+  }
+}
