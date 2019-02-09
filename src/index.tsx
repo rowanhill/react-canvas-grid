@@ -89,7 +89,7 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
             throw new Error('Cannot resize canvas: scrollParent is null');
         }
         const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
-        const scrollParentClientRect = this.scrollParent.getBoundingClientRect();
+        const scrollParentClientRect = this.getScrollParentClientRect();
         const bounds = {
             top: Math.max(sizerClientRect.top, scrollParentClientRect.top, 0) - sizerClientRect.top,
             left: Math.max(sizerClientRect.left, scrollParentClientRect.left, 0) - sizerClientRect.left,
@@ -110,10 +110,10 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
             return;
         }
         const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
-        const scrollParentClientRect = this.scrollParent.getBoundingClientRect();
+        const scrollParentClientRect = this.getScrollParentClientRect();
 
-        const yOffset = scrollParentClientRect.top - sizerClientRect.top;
-        const xOffset = scrollParentClientRect.left - sizerClientRect.left;
+        const yOffset = Math.max(0, scrollParentClientRect.top - sizerClientRect.top);
+        const xOffset = Math.max(0, scrollParentClientRect.left - sizerClientRect.left);
 
         if (yOffset > 0 || xOffset > 0) {
             this.baseCanvasRef.current.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
@@ -122,6 +122,24 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         }
 
         this.draw();
+    }
+
+    private getScrollParentClientRect = () => {
+        if (!this.scrollParent) {
+            throw new Error('Cannot get scroll parent client rect: scrollParent not set');
+        }
+        if (this.scrollParent === document.body) {
+            return {
+                top: 0,
+                height: window.innerHeight,
+                bottom: window.innerHeight,
+                left: 0,
+                width: window.innerWidth,
+                right: window.innerWidth
+            };
+        } else {
+            return this.scrollParent.getBoundingClientRect();
+        }
     }
 
     private resizeCanvas = () => {
