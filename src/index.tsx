@@ -5,15 +5,21 @@ export interface ColumnDef {
     width: number;
 }
 
-export interface ReactCanvasGridProps<T> {
+export interface CellDef {
+    getText: () => string;
+}
+
+export type DataRow<T extends CellDef> = {
+    [fieldName: string]: T;
+}
+
+export interface ReactCanvasGridProps<T extends CellDef> {
     columns: ColumnDef[];
-    data: {
-        [fieldName: string]: T;
-    }[];
+    data: DataRow<T>[];
     rowHeight: number;
 }
 
-export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, {}> {
+export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCanvasGridProps<T>, {}> {
     private readonly baseCanvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private scrollParent: HTMLElement|null = null;
 
@@ -51,7 +57,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private calculateDataSize = () => {
-        const numRows = this.props.data.length + 1;
+        const numRows = this.props.data.length;
         const height = numRows * this.props.rowHeight;
 
         const width = this.props.columns.reduce((acc, col) => acc + col.width, 0);
@@ -130,7 +136,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         baseContext.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
 
         // Draw white base
-        baseContext.fillStyle = 'lightgreen';
+        baseContext.fillStyle = 'white';
         baseContext.fillRect(visibleRect.left, visibleRect.top, visibleRect.width, visibleRect.height);
 
         // Draw column separator lines
@@ -156,6 +162,20 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         }
 
         baseContext.stroke();
+
+        // Draw cell text
+        baseContext.fillStyle = 'black';
+        let cellLeft = 0;
+        this.props.columns.forEach(col => {
+            if (cellLeft + col.width >= visibleRect.left && cellLeft <= visibleRect.right) {
+                for (let rowIndex = 0; rowIndex < this.props.data.length; rowIndex++) {
+                    const row = this.props.data[rowIndex];
+                    const cell = row[col.fieldName];
+                    baseContext.fillText(cell.getText(), cellLeft + 2, rowIndex * this.props.rowHeight + 15, col.width - 2);
+                }
+            }
+            cellLeft += col.width;
+        });
     }
 };
 
