@@ -111,9 +111,10 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         }
         const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
         const scrollParentClientRect = this.getScrollParentClientRect();
+        const canvasClientRect = this.baseCanvasRef.current.getBoundingClientRect();
 
-        const yOffset = Math.max(0, scrollParentClientRect.top - sizerClientRect.top);
-        const xOffset = Math.max(0, scrollParentClientRect.left - sizerClientRect.left);
+        const yOffset = this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, canvasClientRect);
+        const xOffset = this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, canvasClientRect);
 
         if (yOffset > 0 || xOffset > 0) {
             this.baseCanvasRef.current.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
@@ -122,6 +123,40 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         }
 
         this.draw();
+    }
+
+    private calcCanvasYOffset = (
+        sizerClientRect: ClientRect,
+        scrollParentClientRect: ClientRect,
+        canvasClientRect: ClientRect
+    ) => {
+        if (sizerClientRect.top >= scrollParentClientRect.top) {
+            // The sizer is below the top of the scroll parent, so no need to offset the canvas
+            return 0;
+        } else if (sizerClientRect.bottom <= scrollParentClientRect.bottom) {
+            // The sizer is above the bottom of the scroll parent, so offset the canvas to align the bottoms
+            return sizerClientRect.height - canvasClientRect.height;
+        } else {
+            // The sizer spans across the scroll parent, so offset the canvas to align the tops
+            return scrollParentClientRect.top - sizerClientRect.top;
+        }
+    }
+
+    private calcCanvasXOffset = (
+        sizerClientRect: ClientRect,
+        scrollParentClientRect: ClientRect,
+        canvasClientRect: ClientRect
+    ) => {
+        if (sizerClientRect.left >= scrollParentClientRect.left) {
+            // The sizer is to the right of the left of the scroll parent, so no need to offset the canvas
+            return 0;
+        } else if (sizerClientRect.right <= scrollParentClientRect.right) {
+            // The sizer is to the left of the right of the scroll parent, so offset the canvas to align the rights
+            return sizerClientRect.width - canvasClientRect.width;
+        } else {
+            // The sizer spans across the scroll parent, so offset the canvas to align the lefts
+            return scrollParentClientRect.left - sizerClientRect.left;
+        }
     }
 
     private getScrollParentClientRect = () => {
@@ -196,15 +231,30 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
             return;
         }
 
+        if (!this.scrollParent) {
+            return;
+        }
+
+        const sizerClientRect = sizer.getBoundingClientRect();
+        const scrollParentClientRect =  this.getScrollParentClientRect();
+        const baseCanvasClientRect = baseCanvas.getBoundingClientRect()
+
         // Get rect to draw
         const visibleRect = this.calculateViewRect();
 
-        // Clear the background
-        baseContext.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+        // Get amount to translate
+        const translationOffset = {
+            top: this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, baseCanvasClientRect),
+            left: this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, baseCanvasClientRect)
+        };
 
         // Draw white base
         baseContext.fillStyle = 'white';
-        baseContext.fillRect(0, 0, visibleRect.width, visibleRect.height);
+        baseContext.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+
+        // Translate the canvas context so that it's covering the visibleRect
+        // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
+        baseContext.translate(-translationOffset.left, -translationOffset.top);
 
         // Draw column separator lines
         baseContext.strokeStyle = 'lightgrey';
@@ -215,16 +265,16 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         this.props.columns.forEach(col => {
             x += col.width;
             if (x >= visibleRect.left && x <= visibleRect.right) {
-                baseContext.moveTo(x - visibleRect.left, 0);
-                baseContext.lineTo(x - visibleRect.left, visibleRect.height);
+                baseContext.moveTo(x, visibleRect.top);
+                baseContext.lineTo(x, visibleRect.bottom);
             }
         });
 
         // Draw row separator lines
         for (let y = this.props.rowHeight; y < sizer.getBoundingClientRect().height; y += this.props.rowHeight) {
             if (y >= visibleRect.top && y <= visibleRect.bottom) {
-                baseContext.moveTo(0, y - visibleRect.top);
-                baseContext.lineTo(visibleRect.width, y - visibleRect.top);
+                baseContext.moveTo(visibleRect.left, y);
+                baseContext.lineTo(visibleRect.right, y);
             }
         }
 
@@ -238,7 +288,7 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                 for (let rowIndex = Math.floor(visibleRect.top / this.props.rowHeight); rowIndex < this.props.data.length; rowIndex++) {
                     const row = this.props.data[rowIndex];
                     const cell = row[col.fieldName];
-                    baseContext.fillText(cell.getText(), cellLeft + 2 - visibleRect.left, (rowIndex * this.props.rowHeight + 15) - visibleRect.top, col.width - 2);
+                    baseContext.fillText(cell.getText(), cellLeft + 2, (rowIndex * this.props.rowHeight + 15), col.width - 2);
                 }
             }
             cellLeft += col.width;
@@ -246,6 +296,9 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                 break;
             }
         }
+
+        // Translate back, to bring our drawn area into the bounds of the canvas element
+        baseContext.translate(translationOffset.left, translationOffset.top);
     }
 };
 
