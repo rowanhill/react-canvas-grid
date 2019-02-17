@@ -109,7 +109,14 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                     height: `${this.state.gridSize.height}px`
                 }}
             >
-                <div ref={this.canvasHolderRef} style={{position: 'relative', transform: canvasHolderTransform}}>
+                <div
+                    ref={this.canvasHolderRef} 
+                    style={{
+                        position: 'relative',
+                        width: `${this.state.canvasSize.width}px`,
+                        transform: canvasHolderTransform
+                    }}
+                >
                     <BaseCanvas<T>
                         data={this.props.data}
                         columns={this.props.columns}
