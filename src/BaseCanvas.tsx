@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { CellDef, DataRow, ColumnDef, Coord } from './types';
 
-export interface BaseCanvasProps<T extends CellDef> {
+export interface BaseCanvasProps<T> {
     data: DataRow<T>[];
     width: number;
     height: number;
@@ -16,7 +16,7 @@ export interface BaseCanvasProps<T extends CellDef> {
 
 const dpr =  window.devicePixelRatio;
 
-export class BaseCanvas<T extends CellDef> extends React.Component<BaseCanvasProps<T>, {}> {
+export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
 
@@ -97,8 +97,11 @@ export class BaseCanvas<T extends CellDef> extends React.Component<BaseCanvasPro
                     height: this.props.rowHeight
                 };
 
-                this.drawCellBackgroundDefault(context, cellBounds, cell, col);
-                this.drawCellTextDefault(context, cellBounds, cell, col);
+                const renderBackground = cell.renderBackground || this.drawCellBackgroundDefault;
+                const renderText = cell.renderText || this.drawCellTextDefault;
+
+                renderBackground(context, cellBounds, cell, col);
+                renderText(context, cellBounds, cell, col);
             }
             colIndex++;
         }
@@ -107,12 +110,12 @@ export class BaseCanvas<T extends CellDef> extends React.Component<BaseCanvasPro
         context.translate(this.props.gridOffset.x, this.props.gridOffset.y);
     }
 
-    private drawCellBackgroundDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: T, column: ColumnDef) => {
+    private drawCellBackgroundDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CellDef<T>, column: ColumnDef) => {
         context.fillStyle = 'white';
         context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
     }
 
-    private drawCellTextDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: T, column: ColumnDef) => {
+    private drawCellTextDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CellDef<T>, column: ColumnDef) => {
         context.fillStyle = 'black';
         context.fillText(cell.getText(), cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
     }

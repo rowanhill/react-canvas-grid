@@ -6,7 +6,7 @@ import { CanvasHolder } from './CanvasHolder';
 
 export { CellDef, DataRow, ColumnDef, Coord, Size } from './types';
 
-export interface ReactCanvasGridProps<T extends CellDef> {
+export interface ReactCanvasGridProps<T> {
     columns: ColumnDef[];
     data: DataRow<T>[];
     rowHeight: number;
@@ -26,7 +26,7 @@ export interface SelectRange {
     bottomRight: Coord;
 }
 
-export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
+export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
     private scrollParent: HTMLElement|null = null;
