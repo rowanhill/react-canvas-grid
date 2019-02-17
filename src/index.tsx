@@ -2,6 +2,7 @@ import * as React from 'react';
 import { CellDef, DataRow, ColumnDef, Coord, Size } from './types';
 import { BaseCanvas } from './BaseCanvas';
 import { HighlightCanvas } from './HighlightCanvas';
+import { CanvasHolder } from './CanvasHolder';
 
 export { CellDef, DataRow, ColumnDef, Coord, Size } from './types';
 
@@ -94,10 +95,6 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
     render() {
         const colBoundaries = this.calculateColumnBoundaries();
 
-        const canvasHolderTransform = (this.state.gridOffset.x > 0 || this.state.gridOffset.y > 0) ? 
-            `translate(${this.state.gridOffset.x}px, ${this.state.gridOffset.y}px)` :
-            '';
-
         return (
             <div
                 ref={this.sizerRef}
@@ -109,14 +106,7 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                     height: `${this.state.gridSize.height}px`
                 }}
             >
-                <div
-                    ref={this.canvasHolderRef} 
-                    style={{
-                        position: 'relative',
-                        width: `${this.state.canvasSize.width}px`,
-                        transform: canvasHolderTransform
-                    }}
-                >
+                <CanvasHolder ref={this.canvasHolderRef} gridOffset={this.state.gridOffset} canvasSize={this.state.canvasSize}>
                     <BaseCanvas<T>
                         data={this.props.data}
                         columns={this.props.columns}
@@ -136,7 +126,7 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                         colBoundaries={colBoundaries}
                         selectedRange={this.state.selectedRange}
                     />
-                </div>
+                </CanvasHolder>
             </div>
         );
     }
