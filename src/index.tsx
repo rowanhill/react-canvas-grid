@@ -107,6 +107,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                         gridOffset={this.state.gridOffset}
                         colBoundaries={this.columnBoundaries}
                         selectedRange={this.state.selectedRange}
+                        borderWidth={this.borderWidth()}
                     />
                 </CanvasHolder>
             </div>

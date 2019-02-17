@@ -9,6 +9,7 @@ export interface HighlightCanvasProps {
     gridOffset: Coord;
     colBoundaries: {left: number; right: number}[];
     selectedRange: SelectRange|null;
+    borderWidth: number;
 }
 
 const dpr =  window.devicePixelRatio;
@@ -83,8 +84,8 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
 
     private gridToSizer = ({x, y}: {x: number; y: number}): ClientRect => {
         return {
-            top: y * this.props.rowHeight,
-            bottom: (y + 1) * this.props.rowHeight,
+            top: y * (this.props.rowHeight + this.props.borderWidth),
+            bottom: (y + 1) * (this.props.rowHeight + + this.props.borderWidth) - this.props.borderWidth,
             height: this.props.rowHeight,
             left: this.props.colBoundaries[x].left,
             right: this.props.colBoundaries[x].right,
