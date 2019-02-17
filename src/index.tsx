@@ -32,8 +32,12 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
     private scrollParent: HTMLElement|null = null;
 
+    private columnBoundaries: {left: number; right: number}[];
+
     constructor(props: ReactCanvasGridProps<T>) {
         super(props);
+
+        this.columnBoundaries = this.calculateColumnBoundaries();
 
         this.state = {
             canvasSize: {width: 0, height: 0},
@@ -92,9 +96,11 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         window.removeEventListener('scroll', this.onScroll);
     }
 
-    render() {
-        const colBoundaries = this.calculateColumnBoundaries();
+    componentDidUpdate() {
+        this.columnBoundaries = this.calculateColumnBoundaries();
+    }
 
+    render() {
         return (
             <div
                 ref={this.sizerRef}
@@ -116,14 +122,14 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                         visibleRect={this.state.visibleRect}
                         gridOffset={this.state.gridOffset}
                         gridHeight={this.state.gridSize.height}
-                        colBoundaries={colBoundaries}
+                        colBoundaries={this.columnBoundaries}
                     />
                     <HighlightCanvas
                         rowHeight={this.props.rowHeight}
                         width={this.state.canvasSize.width}
                         height={this.state.canvasSize.height}
                         gridOffset={this.state.gridOffset}
-                        colBoundaries={colBoundaries}
+                        colBoundaries={this.columnBoundaries}
                         selectedRange={this.state.selectedRange}
                     />
                 </CanvasHolder>
@@ -138,16 +144,6 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
             curLeft += col.width;
             return boundary;
         });
-    }
-
-    private calculateColumnLefts = () => {
-        const lefts = [0];
-        let curLeft = 0;
-        this.props.columns.forEach(col => {
-            curLeft += col.width;
-            lefts.push(curLeft);
-        });
-        return lefts;
     }
 
     private calculateDataSize = () => {
@@ -269,11 +265,10 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
     }
 
     private sizerToGrid = ({x, y}: {x: number; y: number}) => {
-        const columnLefts = this.calculateColumnLefts(); //TODO: Cache as private var
         let colIndex = -1;
-        for (let i = 0; i < columnLefts.length; i++) {
-            if (columnLefts[i] >= x) {
-                colIndex = i - 1;
+        for (let i = 0; i < this.columnBoundaries.length; i++) {
+            if (this.columnBoundaries[i].right >= x) {
+                colIndex = i;
                 break;
             }
         }
