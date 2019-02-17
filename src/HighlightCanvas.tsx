@@ -15,17 +15,10 @@ const dpr =  window.devicePixelRatio;
 
 export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
+    private hasFixedScale = false;
 
     constructor(props: HighlightCanvasProps) {
         super(props);
-    }
-
-    componentDidMount() {
-        setTimeout(() => {
-            const ctx = this.canvasRef.current!.getContext('2d');
-            ctx!.scale(dpr, dpr);
-            this.draw();
-        }, 0)
     }
 
     render() {
@@ -44,6 +37,15 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
     };
 
     componentDidUpdate() {
+        // Fix the scale if we haven't already.
+        // (Note, we can't do this in componentDidMount for some reason - perhaps because the canvas mounts
+        //  with a zero size?)
+        if (!this.hasFixedScale) {
+            const ctx = this.canvasRef.current!.getContext('2d');
+            ctx!.scale(dpr, dpr);
+            this.hasFixedScale = true;
+        }
+
         this.draw();
     }
 
