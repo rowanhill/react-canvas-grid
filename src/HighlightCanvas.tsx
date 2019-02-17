@@ -69,8 +69,8 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         context.translate(-this.props.gridOffset.x, -this.props.gridOffset.y);
         
         // Draw selected cell highlights
-        context.fillStyle = '#44aaff22';
-        context.strokeStyle = '#44aaff99';
+        context.fillStyle = '#44aaff55';
+        context.strokeStyle = '#44aaffcc';
         if (this.props.selectedRange) {
             const tl = this.gridToSizer(this.props.selectedRange.topLeft);
             const br = this.gridToSizer(this.props.selectedRange.bottomRight);
