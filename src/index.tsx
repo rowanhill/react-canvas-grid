@@ -13,10 +13,8 @@ export interface ReactCanvasGridProps<T extends CellDef> {
 }
 
 interface ReactCanvasGridState {
-    canvasSize: Size;
     visibleRect: ClientRect;
     gridOffset: Coord;
-    gridSize: Size;
 
     selectedRangeDragStart: Coord|null;
     selectedRange: SelectRange|null;
@@ -40,9 +38,7 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         this.columnBoundaries = this.calculateColumnBoundaries();
 
         this.state = {
-            canvasSize: {width: 0, height: 0},
             gridOffset: {x: 0, y: 0},
-            gridSize: {width: 0, height: 0},
             visibleRect: {top: 0, left: 0, right: 0, bottom: 0, height: 0, width: 0},
             selectedRangeDragStart: null,
             selectedRange: null,
@@ -54,33 +50,8 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
             this.scrollParent = getScrollParent(this.canvasHolderRef.current, true);
         }
 
-        const canvasSize = this.calculateMaxViewSize();
-
-        const sizerClientRect = this.sizerRef.current!.getBoundingClientRect();
-        const scrollParentClientRect =  this.getScrollParentClientRect();
-
-        // Get amount to translate
-        const gridOffset = {
-            x: this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, this.state.canvasSize),
-            y: this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, this.state.canvasSize)
-        };
-
-        const gridSize = this.calculateDataSize();
-
-        this.setState({
-            canvasSize,
-            gridOffset,
-            gridSize,
-        });
-
-        // Calculate the view rect once the canvas has been sized and the DOM has updated
-        setTimeout(() => {
-            const visibleRect = this.calculateViewRect();
-            this.setState({
-                visibleRect,
-            });
-        }, 0);
-
+        // Calculate the visible region and the canvases' offset, and set them as state,
+        // causing us to re-render
         this.onScroll();
 
         if (this.scrollParent && this.scrollParent !== document.body) {
@@ -101,6 +72,9 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
     }
 
     render() {
+        const canvasSize = this.calculateMaxViewSize();
+        const gridSize = this.calculateDataSize();
+
         return (
             <div
                 ref={this.sizerRef}
@@ -108,26 +82,26 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                 onMouseUp={this.onMouseUp}
                 onMouseMove={this.onMouseMove}
                 style={{
-                    width: `${this.state.gridSize.width}px`,
-                    height: `${this.state.gridSize.height}px`
+                    width: `${gridSize.width}px`,
+                    height: `${gridSize.height}px`
                 }}
             >
-                <CanvasHolder ref={this.canvasHolderRef} gridOffset={this.state.gridOffset} canvasSize={this.state.canvasSize}>
+                <CanvasHolder ref={this.canvasHolderRef} gridOffset={this.state.gridOffset} canvasSize={canvasSize}>
                     <BaseCanvas<T>
                         data={this.props.data}
                         columns={this.props.columns}
                         rowHeight={this.props.rowHeight}
-                        width={this.state.canvasSize.width}
-                        height={this.state.canvasSize.height}
+                        width={canvasSize.width}
+                        height={canvasSize.height}
                         visibleRect={this.state.visibleRect}
                         gridOffset={this.state.gridOffset}
-                        gridHeight={this.state.gridSize.height}
+                        gridHeight={gridSize.height}
                         colBoundaries={this.columnBoundaries}
                     />
                     <HighlightCanvas
                         rowHeight={this.props.rowHeight}
-                        width={this.state.canvasSize.width}
-                        height={this.state.canvasSize.height}
+                        width={canvasSize.width}
+                        height={canvasSize.height}
                         gridOffset={this.state.gridOffset}
                         colBoundaries={this.columnBoundaries}
                         selectedRange={this.state.selectedRange}
@@ -157,7 +131,10 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
 
     private calculateMaxViewSize = () => {
         if (!this.scrollParent) {
-            throw new Error('Cannot resize canvas: scrollParent is null');
+            // First render is before componentDidMount, so before we have found scrollParent.
+            // In this case, we just render as 0x0. componentDidMount will then update state,
+            // and we'll re-render
+            return {height: 0, width: 0};
         }
         const dataSize = this.calculateDataSize();
         const scrollParentClientRect = this.scrollParent.getBoundingClientRect();
@@ -189,11 +166,12 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         if (!this.sizerRef.current) {
             return;
         }
+        const canvasSize = this.calculateMaxViewSize();
         const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
         const scrollParentClientRect = this.getScrollParentClientRect();
 
-        const yOffset = this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, this.state.canvasSize);
-        const xOffset = this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, this.state.canvasSize);
+        const yOffset = this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, canvasSize);
+        const xOffset = this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, canvasSize);
 
         this.setState({
             gridOffset: {x: xOffset, y: yOffset},
