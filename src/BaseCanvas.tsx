@@ -74,30 +74,33 @@ export class BaseCanvas<T extends CellDef> extends React.Component<BaseCanvasPro
         // Draw cells
         let colIndex = 0;
         for (let {left: cellLeft, right: cellRight} of this.props.colBoundaries) {
-            const col = this.props.columns[colIndex];
-            if (cellRight >= this.props.visibleRect.left && cellLeft <= this.props.visibleRect.right) {
-                for (let rowIndex = Math.floor(this.props.visibleRect.top / (this.props.rowHeight + this.props.borderWidth)); rowIndex < this.props.data.length; rowIndex++) {
-                    const row = this.props.data[rowIndex];
-                    const cell = row[col.fieldName];
-
-                    const cellBounds = {
-                        left: cellLeft,
-                        top: rowIndex * (this.props.rowHeight + this.props.borderWidth),
-                        right: cellLeft + col.width,
-                        bottom: (rowIndex + 1) * (this.props.rowHeight + this.props.borderWidth) - this.props.borderWidth,
-                        width: col.width,
-                        height: this.props.rowHeight
-                    };
-
-                    this.drawCellBackgroundDefault(context, cellBounds, cell, col);
-                    this.drawCellTextDefault(context, cellBounds, cell, col);
-                }
+            if (cellRight < this.props.visibleRect.left) {
+                // Cell is off screen to left, so skip this column
+                colIndex++;
+                continue;
             }
-            cellLeft += col.width + this.props.borderWidth;
-            colIndex++;
             if (cellLeft > this.props.visibleRect.right) {
+                // Cell is off screen to right, so skip this and all future columns
                 break;
             }
+            const col = this.props.columns[colIndex];
+            for (let rowIndex = Math.floor(this.props.visibleRect.top / (this.props.rowHeight + this.props.borderWidth)); rowIndex < this.props.data.length; rowIndex++) {
+                const row = this.props.data[rowIndex];
+                const cell = row[col.fieldName];
+
+                const cellBounds = {
+                    left: cellLeft,
+                    top: rowIndex * (this.props.rowHeight + this.props.borderWidth),
+                    right: cellLeft + col.width,
+                    bottom: (rowIndex + 1) * (this.props.rowHeight + this.props.borderWidth) - this.props.borderWidth,
+                    width: col.width,
+                    height: this.props.rowHeight
+                };
+
+                this.drawCellBackgroundDefault(context, cellBounds, cell, col);
+                this.drawCellTextDefault(context, cellBounds, cell, col);
+            }
+            colIndex++;
         }
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
