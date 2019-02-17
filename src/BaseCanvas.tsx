@@ -11,6 +11,7 @@ export interface BaseCanvasProps<T extends CellDef> {
     colBoundaries: {left: number; right: number}[];
     columns: ColumnDef[];
     gridHeight: number;
+    borderWidth: number;
 }
 
 const dpr =  window.devicePixelRatio;
@@ -62,49 +63,37 @@ export class BaseCanvas<T extends CellDef> extends React.Component<BaseCanvasPro
             return;
         }
 
-        // Draw white base
-        context.fillStyle = 'white';
+        // Draw base in border colour; cells will draw over this, leaving only the borders
+        context.fillStyle = 'lightgrey';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
         // Translate the canvas context so that it's covering the visibleRect
         // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
         context.translate(-this.props.gridOffset.x, -this.props.gridOffset.y);
 
-        context.strokeStyle = 'lightgrey';
-        context.lineWidth = 1;
-        context.beginPath();
-
-        // Draw column separator lines
-        this.props.colBoundaries
-            .filter(boundaries => boundaries.left >= this.props.visibleRect.left && boundaries.left <= this.props.visibleRect.right)
-            .forEach(boundaries => {
-                context.moveTo(boundaries.left, this.props.visibleRect.top);
-                context.lineTo(boundaries.left, this.props.visibleRect.bottom);
-            });
-
-        // Draw row separator lines
-        for (let y = this.props.rowHeight; y < this.props.gridHeight; y += this.props.rowHeight) {
-            if (y >= this.props.visibleRect.top && y <= this.props.visibleRect.bottom) {
-                context.moveTo(this.props.visibleRect.left, y);
-                context.lineTo(this.props.visibleRect.right, y);
-            }
-        }
-
-        context.stroke();
-
-        // Draw cell text
-        context.fillStyle = 'black';
+        // Draw cells
         let colIndex = 0;
         for (let {left: cellLeft, right: cellRight} of this.props.colBoundaries) {
             const col = this.props.columns[colIndex];
             if (cellRight >= this.props.visibleRect.left && cellLeft <= this.props.visibleRect.right) {
-                for (let rowIndex = Math.floor(this.props.visibleRect.top / this.props.rowHeight); rowIndex < this.props.data.length; rowIndex++) {
+                for (let rowIndex = Math.floor(this.props.visibleRect.top / (this.props.rowHeight + this.props.borderWidth)); rowIndex < this.props.data.length; rowIndex++) {
                     const row = this.props.data[rowIndex];
                     const cell = row[col.fieldName];
-                    context.fillText(cell.getText(), cellLeft + 2, (rowIndex * this.props.rowHeight + 15), col.width - 2);
+
+                    const cellBounds = {
+                        left: cellLeft,
+                        top: rowIndex * (this.props.rowHeight + this.props.borderWidth),
+                        right: cellLeft + col.width,
+                        bottom: (rowIndex + 1) * (this.props.rowHeight + this.props.borderWidth) - this.props.borderWidth,
+                        width: col.width,
+                        height: this.props.rowHeight
+                    };
+
+                    this.drawCellBackgroundDefault(context, cellBounds, cell, col);
+                    this.drawCellTextDefault(context, cellBounds, cell, col);
                 }
             }
-            cellLeft += col.width;
+            cellLeft += col.width + this.props.borderWidth;
             colIndex++;
             if (cellLeft > this.props.visibleRect.right) {
                 break;
@@ -113,5 +102,15 @@ export class BaseCanvas<T extends CellDef> extends React.Component<BaseCanvasPro
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
         context.translate(this.props.gridOffset.x, this.props.gridOffset.y);
+    }
+
+    private drawCellBackgroundDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: T, column: ColumnDef) => {
+        context.fillStyle = 'white';
+        context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
+    }
+
+    private drawCellTextDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: T, column: ColumnDef) => {
+        context.fillStyle = 'black';
+        context.fillText(cell.getText(), cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
     }
 }

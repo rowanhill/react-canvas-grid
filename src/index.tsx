@@ -10,6 +10,7 @@ export interface ReactCanvasGridProps<T extends CellDef> {
     columns: ColumnDef[];
     data: DataRow<T>[];
     rowHeight: number;
+    borderWidth?: number;
 }
 
 interface ReactCanvasGridState {
@@ -97,6 +98,7 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
                         gridOffset={this.state.gridOffset}
                         gridHeight={gridSize.height}
                         colBoundaries={this.columnBoundaries}
+                        borderWidth={this.borderWidth()}
                     />
                     <HighlightCanvas
                         rowHeight={this.props.rowHeight}
@@ -111,20 +113,23 @@ export class ReactCanvasGrid<T extends CellDef> extends React.Component<ReactCan
         );
     }
 
+    private borderWidth = () => this.props.borderWidth || 1;
+
     private calculateColumnBoundaries = () => {
         let curLeft = 0;
         return this.props.columns.map(col => {
             const boundary = { left: curLeft, right: curLeft + col.width };
-            curLeft += col.width;
+            curLeft += col.width + 1;
             return boundary;
         });
     }
 
     private calculateDataSize = () => {
+        const borderWidth = this.borderWidth();
         const numRows = this.props.data.length;
-        const height = numRows * this.props.rowHeight;
+        const height = numRows * (this.props.rowHeight + borderWidth) - borderWidth;
 
-        const width = this.props.columns.reduce((acc, col) => acc + col.width, 0);
+        const width = this.props.columns.reduce((acc, col) => acc + col.width + borderWidth, 0) - borderWidth;
 
         return { width, height };
     }
