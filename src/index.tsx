@@ -10,7 +10,7 @@ export interface ReactCanvasGridProps<T> {
     columns: ColumnDef[];
     data: DataRow<T>[];
     rowHeight: number;
-    borderWidth?: number;
+    borderWidth: number;
 }
 
 interface ReactCanvasGridState {
@@ -27,6 +27,10 @@ export interface SelectRange {
 }
 
 export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
+    static defaultProps = {
+        borderWidth: 1
+    };
+
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
     private scrollParent: HTMLElement|null = null;
@@ -98,7 +102,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                         gridOffset={this.state.gridOffset}
                         gridHeight={gridSize.height}
                         colBoundaries={this.columnBoundaries}
-                        borderWidth={this.borderWidth()}
+                        borderWidth={this.props.borderWidth}
                     />
                     <HighlightCanvas
                         rowHeight={this.props.rowHeight}
@@ -107,14 +111,12 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                         gridOffset={this.state.gridOffset}
                         colBoundaries={this.columnBoundaries}
                         selectedRange={this.state.selectedRange}
-                        borderWidth={this.borderWidth()}
+                        borderWidth={this.props.borderWidth}
                     />
                 </CanvasHolder>
             </div>
         );
     }
-
-    private borderWidth = () => this.props.borderWidth || 1;
 
     private calculateColumnBoundaries = () => {
         let curLeft = 0;
@@ -126,7 +128,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private calculateDataSize = () => {
-        const borderWidth = this.borderWidth();
+        const borderWidth = this.props.borderWidth;
         const numRows = this.props.data.length;
         const height = numRows * (this.props.rowHeight + borderWidth) - borderWidth;
 
