@@ -267,7 +267,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             }
         }
         return {
-            y: Math.floor(y / this.props.rowHeight),
+            y: Math.floor(y / (this.props.rowHeight + this.props.borderWidth)),
             x: colIndex
         };
     }
