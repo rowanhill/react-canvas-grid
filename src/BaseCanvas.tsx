@@ -19,6 +19,10 @@ const dpr =  window.devicePixelRatio;
 export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
+    private prevDraw: {
+        gridOffset: Coord;
+        rect: { top: number; left: number; right: number; bottom: number };
+    }|null = null;
 
     constructor(props: BaseCanvasProps<T>) {
         super(props);
@@ -63,9 +67,45 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
             return;
         }
 
-        // Draw base in border colour; cells will draw over this, leaving only the borders
-        context.fillStyle = 'lightgrey';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        if (this.prevDraw) {
+            // Translate according to difference from previous draw
+            const xDiff = (this.prevDraw.gridOffset.x - this.props.gridOffset.x);
+            const yDiff = (this.prevDraw.gridOffset.y - this.props.gridOffset.y);
+            context.drawImage(canvas,
+                0, 0, canvas.width * dpr, canvas.height * dpr,
+                xDiff, yDiff, canvas.width, canvas.height
+                );
+
+            // Draw base in border colour in new areas; cells will draw over this, leaving only the borders
+            // (Note, we might fill a corner twice if scrolling diagnally, but the perf cost seems minimal)
+            context.fillStyle = 'lightgrey';
+            if (yDiff < 0) {
+                // Moved down - draw bottom
+                const top = this.prevDraw.rect.bottom - this.props.gridOffset.y;
+                const height = -yDiff;
+                context.fillRect(0, top, canvas.width, height);
+            } else if (yDiff > 0) {
+                // Moved up - draw top
+                const top = 0;
+                const height = yDiff;
+                context.fillRect(0, top, canvas.width, height);
+            }
+            if (xDiff < 0) {
+                // Moved right - draw right
+                const left = this.props.width + xDiff;
+                const width = -xDiff;
+                context.fillRect(left, 0, width, canvas.height);
+            } else if (xDiff > 0) {
+                // Moved left - draw left
+                const left = 0;
+                const width = xDiff;
+                context.fillRect(left, 0, width, canvas.height);
+            }
+        } else {
+            // Draw base in border colour; cells will draw over this, leaving only the borders
+            context.fillStyle = 'lightgrey';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
         // Translate the canvas context so that it's covering the visibleRect
         // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
@@ -73,6 +113,8 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
 
         // Draw cells
         let colIndex = 0;
+        const minRowIndex = Math.floor(this.props.visibleRect.top / (this.props.rowHeight + this.props.borderWidth));
+        const maxRowIndex = Math.ceil(this.props.visibleRect.bottom / (this.props.rowHeight + this.props.borderWidth));
         for (let {left: cellLeft, right: cellRight} of this.props.colBoundaries) {
             if (cellRight < this.props.visibleRect.left) {
                 // Cell is off screen to left, so skip this column
@@ -84,7 +126,7 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
                 break;
             }
             const col = this.props.columns[colIndex];
-            for (let rowIndex = Math.floor(this.props.visibleRect.top / (this.props.rowHeight + this.props.borderWidth)); rowIndex < this.props.data.length; rowIndex++) {
+            for (let rowIndex = minRowIndex; rowIndex < maxRowIndex; rowIndex++) {
                 const row = this.props.data[rowIndex];
                 const cell = row[col.fieldName];
 
@@ -97,6 +139,14 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
                     height: this.props.rowHeight
                 };
 
+                if (this.prevDraw &&
+                    cellLeft >= this.prevDraw.rect.left && cellRight <= this.prevDraw.rect.right &&
+                    cellBounds.top >= this.prevDraw.rect.top && cellBounds.bottom <= this.prevDraw.rect.bottom
+                ) {
+                    // Cell is entirely contained within previously drawn region, so we can skip
+                    continue;
+                }
+
                 const renderBackground = cell.renderBackground || this.drawCellBackgroundDefault;
                 const renderText = cell.renderText || this.drawCellTextDefault;
 
@@ -108,6 +158,17 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
         context.translate(this.props.gridOffset.x, this.props.gridOffset.y);
+
+        // Remember what area is now drawn
+        this.prevDraw = {
+            gridOffset: this.props.gridOffset,
+            rect: {
+                left: Math.max(this.props.gridOffset.x, this.props.visibleRect.left),
+                top: Math.max(this.props.gridOffset.y, this.props.visibleRect.top),
+                right: Math.min(this.props.gridOffset.x + this.props.width, this.props.visibleRect.right),
+                bottom: Math.min(this.props.gridOffset.y + this.props.height, this.props.visibleRect.bottom)
+            }
+        };
     }
 
     private drawCellBackgroundDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CellDef<T>, column: ColumnDef) => {
