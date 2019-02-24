@@ -91,7 +91,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                     height: `${gridSize.height}px`
                 }}
             >
-                <CanvasHolder ref={this.canvasHolderRef} gridOffset={this.state.gridOffset} canvasSize={canvasSize}>
+                <CanvasHolder ref={this.canvasHolderRef} canvasSize={canvasSize}>
                     <BaseCanvas<T>
                         data={this.props.data}
                         columns={this.props.columns}
@@ -180,6 +180,14 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
         const yOffset = this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, canvasSize);
         const xOffset = this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, canvasSize);
+
+        // Update the canvas holder's position outside of React, for performance reasons
+        if (this.canvasHolderRef.current) {
+            const transform = (xOffset > 0 || yOffset > 0) ?
+                `translate(${xOffset}px, ${yOffset}px)` :
+                '';
+            this.canvasHolderRef.current.style.transform = transform;
+        }
 
         this.setState({
             gridOffset: {x: xOffset, y: yOffset},
