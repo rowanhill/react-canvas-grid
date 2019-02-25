@@ -43,7 +43,7 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
         );
     };
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps: BaseCanvasProps<T>) {
         // Fix the scale if we haven't already.
         // (Note, we can't do this in componentDidMount for some reason - perhaps because the canvas mounts
         //  with a zero size?)
@@ -51,6 +51,18 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
             const ctx = this.canvasRef.current!.getContext('2d');
             ctx!.scale(dpr, dpr);
             this.hasFixedScale = true;
+        }
+
+        // If anything that affects the grid other than the gridOffset / visibleRect has changed
+        // then invalidate the previously drawn region
+        for (const key of Object.keys(this.props) as (keyof BaseCanvasProps<T>)[]) {
+            if (key === 'gridOffset' || key === 'visibleRect') {
+                continue;
+            }
+            if (this.props[key] !== prevProps[key]) {
+                this.prevDraw = null;
+                break;
+            }
         }
 
         this.draw();
