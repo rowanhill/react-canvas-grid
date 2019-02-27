@@ -31,7 +31,9 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
                 style={{
                     position: 'absolute',
                     width: `${this.props.width}px`,
-                    height: `${this.props.height}px`
+                    height: `${this.props.height}px`,
+                    top:0,
+                    left: 0,
                 }}
             />
         );
