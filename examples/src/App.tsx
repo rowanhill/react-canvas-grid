@@ -26,13 +26,45 @@ const labels = [
   {text: 'Amet', colour: 'lightpink'}
 ];
 
+type HighlightPosition = 'topleft' | 'bottomright' | 'full' | 'none';
+const highlights: HighlightPosition[] = [
+  'topleft',
+  'bottomright',
+  'full',
+  'none','none','none','none','none','none', // Hacky way to make 'none' more likely
+];
+
 const renderBackground = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CustomBgCellDef, column: ColumnDef) => {
-  context.fillStyle = cell.data.bgColour;
-  context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
+  if (cell.data.highlight !== 'full') {
+    context.fillStyle = cell.data.bgColour;
+    context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
+  }
+
+  if (cell.data.highlight !== 'none') {
+    context.fillStyle = 'yellow';
+    if (cell.data.highlight === 'full') {
+      context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
+    } else if (cell.data.highlight === 'topleft') {
+      context.beginPath();
+      context.moveTo(cellBounds.left, cellBounds.top);
+      context.lineTo(cellBounds.left, cellBounds.bottom);
+      context.lineTo(cellBounds.right, cellBounds.top);
+      context.closePath();
+      context.fill();
+    } else if (cell.data.highlight === 'bottomright') {
+      context.beginPath();
+      context.moveTo(cellBounds.left, cellBounds.bottom);
+      context.lineTo(cellBounds.right, cellBounds.bottom);
+      context.lineTo(cellBounds.right, cellBounds.top);
+      context.closePath();
+      context.fill();
+    }
+  }
 };
 
 interface CustomCellData {
   bgColour: string;
+  highlight: HighlightPosition;
 }
 
 type CustomBgCellDef = CellDef<CustomCellData>;
@@ -51,9 +83,10 @@ function createData() {
     };
     for (let j = 0; j < numCols; j++) {
       const label = labels[Math.floor(Math.random() * labels.length)];
-      const cell = {
+      const highlight = highlights[Math.floor(Math.random() * highlights.length)];
+      const cell: CustomBgCellDef = {
         getText: () => label.text,
-        data: { bgColour: label.colour },
+        data: { bgColour: label.colour, highlight },
         renderBackground,
       };
       row[j.toString()] = cell as CellDef<AllCellDataTypes>;
@@ -113,6 +146,7 @@ class App extends Component<{}, AppState> {
       data: this.state.data.map((row, i) => {
         if (i === 0) {
           const label = labels[Math.floor(Math.random() * labels.length)];
+          const highlight = highlights[Math.floor(Math.random() * highlights.length)];
           return {
             ...row,
             0: {
@@ -120,7 +154,8 @@ class App extends Component<{}, AppState> {
               getText: () => label.text,
               data: {
                 ...row[0].data,
-                bgColour: label.colour
+                bgColour: label.colour,
+                highlight
               }
             }
           };
