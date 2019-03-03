@@ -147,8 +147,8 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const dataSize = this.calculateDataSize();
         const scrollParentClientRect = this.scrollParent.getBoundingClientRect();
         return {
-            height: Math.min(dataSize.height, scrollParentClientRect.height, window.innerHeight),
-            width: Math.min(dataSize.width, scrollParentClientRect.width, window.innerWidth)
+            height: Math.min(dataSize.height, scrollParentClientRect.height, window.screen.availHeight),
+            width: Math.min(dataSize.width, scrollParentClientRect.width, window.screen.availWidth)
         };
     }
 
@@ -164,8 +164,8 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const bounds = {
             top: Math.max(sizerClientRect.top, scrollParentClientRect.top, 0) - sizerClientRect.top,
             left: Math.max(sizerClientRect.left, scrollParentClientRect.left, 0) - sizerClientRect.left,
-            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, window.innerHeight) - sizerClientRect.top,
-            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, window.innerWidth) - sizerClientRect.left
+            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, window.screen.availHeight) - sizerClientRect.top,
+            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, window.screen.availWidth) - sizerClientRect.left
         };
         return { ...bounds, height: bounds.bottom-bounds.top, width: bounds.right-bounds.left };
     }
@@ -236,11 +236,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (this.scrollParent === document.body) {
             return {
                 top: 0,
-                height: window.innerHeight,
-                bottom: window.innerHeight,
+                height: window.screen.availHeight,
+                bottom: window.screen.availHeight,
                 left: 0,
-                width: window.innerWidth,
-                right: window.innerWidth
+                width: window.screen.availWidth,
+                right: window.screen.availWidth
             };
         } else {
             return this.scrollParent.getBoundingClientRect();
@@ -326,8 +326,9 @@ function getScrollParent(element: HTMLElement, includeHidden: boolean) {
     var style = getComputedStyle(element);
     var excludeStaticParent = style.position === 'absolute';
     var overflowRegex = includeHidden ? /(auto|scroll|hidden)/ : /(auto|scroll)/;
+    const doc = element.ownerDocument || document;
 
-    if (style.position === 'fixed') return document.body;
+    if (style.position === 'fixed') return doc.body;
     for (let parent: HTMLElement|null = element; parent !== null; parent = parent!.parentElement) {
         style = getComputedStyle(parent);
         if (excludeStaticParent && style.position === "static") {
@@ -338,5 +339,5 @@ function getScrollParent(element: HTMLElement, includeHidden: boolean) {
         }
     }
 
-    return document.body;
+    return doc.body;
 }
