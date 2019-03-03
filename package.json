@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "cypress run",
+    "test": "cypress run --browser chrome",
     "cypress": "cypress open"
   },
   "keywords": [
