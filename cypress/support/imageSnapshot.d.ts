@@ -1,5 +1,5 @@
 declare namespace Cypress {
     interface Chainable<Subject> {
-        matchImageSnapshot: () => Chainable<void>
+        matchImageSnapshot: (name?: string) => Chainable<void>
     }
 }
