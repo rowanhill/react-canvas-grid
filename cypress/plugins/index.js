@@ -8,12 +8,15 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-const webpack = require('@cypress/webpack-preprocessor')
+const webpack = require('@cypress/webpack-preprocessor');
+const { addMatchImageSnapshotPlugin } = require('cypress-image-snapshot/plugin');
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
-module.exports = (on) => {
+module.exports = (on, config) => {
   on('file:preprocessor', webpack({
     webpackOptions: require('../../webpack.config'),
   }));
-}
+
+  addMatchImageSnapshotPlugin(on, config);
+};

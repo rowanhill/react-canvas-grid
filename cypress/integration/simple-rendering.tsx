@@ -17,5 +17,7 @@ describe('ReactCanvasGrid with no scrolling parent', () => {
       cy.get('canvas').eq(0)
         .invoke('width')
         .should('be.greaterThan', 0);
+
+      cy.matchImageSnapshot();
     });
   });
