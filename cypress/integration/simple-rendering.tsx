@@ -52,10 +52,20 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
             .matchImageSnapshot('simple-grid-after-click');
     });
 
+    it('scrolls the selection overlay with the grid', () => {
+        cy.get('#rcg-holder')
+            .click();
+        cy.get('#rcg-holder')
+            .scrollTo(50, 50);
+        cy.wait(1000); // Wait to ensure scroll bar has faded away on osx
+
+        cy.get('#rcg-holder')
+            .matchImageSnapshot('simple-grid-after-click-then-scroll');
+    });
+
     describe('renders a selection overlay', () => {
-        function dragFromCenterAndScreenshot(
+        function dragFromCentre(
             finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight',
-            screenshotName: string,
             release: boolean = false
         ) {
             cy.get('#rcg-holder canvas').eq(1)
@@ -65,33 +75,47 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
                 cy.get('#rcg-holder canvas').eq(1)
                     .trigger('mouseup', finalPos, { force: true });
             }
-
+        }
+        function dragFromCentreAndScreenshot(
+            finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight',
+            screenshotName: string,
+            release: boolean = false
+        ) {
+            dragFromCentre(finalPos, release);
             cy.get('#rcg-holder')
                 .matchImageSnapshot(screenshotName);
         }
 
         it('when dragging right', () => {
-            dragFromCenterAndScreenshot('right', 'simple-grid-drag-right');
+            dragFromCentreAndScreenshot('right', 'simple-grid-drag-right');
         });
     
         it('when dragging left', () => {
-            dragFromCenterAndScreenshot('left', 'simple-grid-drag-left');
+            dragFromCentreAndScreenshot('left', 'simple-grid-drag-left');
         });
     
         it('when dragging down', () => {
-            dragFromCenterAndScreenshot('bottom', 'simple-grid-drag-down');
+            dragFromCentreAndScreenshot('bottom', 'simple-grid-drag-down');
         });
     
         it('when dragging up', () => {
-            dragFromCenterAndScreenshot('top', 'simple-grid-drag-up');
+            dragFromCentreAndScreenshot('top', 'simple-grid-drag-up');
         });
 
         it('when dragging diagonally down and right', () => {
-            dragFromCenterAndScreenshot('bottomRight', 'simple-grid-drag-down-and-right');
+            dragFromCentreAndScreenshot('bottomRight', 'simple-grid-drag-down-and-right');
         });
 
         it('when dragging and releasing', () => {
-            dragFromCenterAndScreenshot('right', 'simple-grid-drag-right-and-release', true);
+            dragFromCentreAndScreenshot('right', 'simple-grid-drag-right-and-release', true);
         });
+
+        it('when dragging, releasing, and then moving the mouse', () => {
+            dragFromCentre('right', true);
+            cy.get('#rcg-holder canvas').eq(1)
+                .trigger('mousemove', 'left', { force: true });
+            cy.get('#rcg-holder')
+                .matchImageSnapshot('simple-grid-drag-release-move');
+        })
     });
 });
