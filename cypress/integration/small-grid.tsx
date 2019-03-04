@@ -4,7 +4,7 @@ import { createFakeDataAndColumns } from '../data/dataAndColumns';
 import { Holder } from '../components/ScrollingHolder';
 
 const getProps = () => {
-    const colsAndRows = createFakeDataAndColumns(100, 20, () => null);
+    const colsAndRows = createFakeDataAndColumns(2, 2, () => null);
     const props: ReactCanvasGridProps<null> = {
         data: colsAndRows.rows,
         columns: colsAndRows.columns,
@@ -14,7 +14,7 @@ const getProps = () => {
     return props;
 };
 
-describe('ReactCanvasGrid in an overflow:scroll parent', () => {
+describe('ReactCanvasGrid with very little data', () => {
     beforeEach(() => {
         const props = getProps();
         cy.mount(<Holder><ReactCanvasGrid<null> {...props} /></Holder>, 'foo');
@@ -25,15 +25,6 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
     });
 
     it('renders a grid of data', () => {
-        cy.get('#rcg-holder').matchImageSnapshot('simple-grid-in-scroll');
-    });
-
-    it('can be scrolled to the middle', () => {
-        cy.get('#rcg-holder')
-            .scrollTo(300, 300);
-        cy.wait(1000); // Wait to ensure scroll bar has faded away on osx
-
-        cy.get('#rcg-holder')
-            .matchImageSnapshot('scrolled-grid-in-scroll');
+        cy.get('#rcg-holder').matchImageSnapshot('small-grid');
     });
 });
