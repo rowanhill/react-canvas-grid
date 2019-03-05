@@ -17,7 +17,7 @@ const getProps = () => {
 describe('ReactCanvasGrid with very little data', () => {
     beforeEach(() => {
         const props = getProps();
-        cy.mount(<Holder><ReactCanvasGrid<null> {...props} /></Holder>, 'foo');
+        cy.mount(<Holder><ReactCanvasGrid<null> {...props} /></Holder>, 'Holder');
 
         cy.get('canvas').eq(0)
             .invoke('width')
