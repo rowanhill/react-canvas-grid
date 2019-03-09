@@ -7,8 +7,10 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "cypress run --browser chrome",
-    "cypress": "cypress open"
+    "test": "jest && cypress run --browser chrome",
+    "cypress": "cypress open",
+    "jest": "jest --watch",
+    "jest:once": "jest"
   },
   "keywords": [
     "react",
@@ -19,15 +21,23 @@
   "author": "Rowan Hill",
   "license": "ISC",
   "dependencies": {
+    "memoize-one": "^5.0.0",
     "react": "^16.7.0"
   },
   "devDependencies": {
     "@cypress/webpack-preprocessor": "^4.0.3",
+    "@types/enzyme": "^3.9.0",
+    "@types/jest": "^24.0.9",
+    "@types/memoize-one": "^4.1.0",
     "@types/react": "^16.8.1",
     "cypress": "^3.1.5",
     "cypress-image-snapshot": "^3.0.0",
     "cypress-react-unit-test": "github:rowanhill/cypress-react-unit-test",
+    "enzyme": "^3.9.0",
+    "enzyme-adapter-react-16": "^1.10.0",
+    "jest": "^24.1.0",
     "react-dom": "^16.8.3",
+    "ts-jest": "^24.0.0",
     "ts-loader": "^5.3.3",
     "typescript": "^3.3.1",
     "webpack": "^4.29.6"
