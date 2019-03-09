@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
+import { CellDef, ColumnDef, DataRow, ReactCanvasGrid } from 'react-canvas-grid';
 import './App.css';
-import { ReactCanvasGrid, ColumnDef, CellDef, DataRow } from 'react-canvas-grid';
 
 const numCols = 250;
 const numRows = 250;
@@ -8,13 +8,13 @@ const numRows = 250;
 const colDefs: ColumnDef[] = [
   {
     fieldName: 'date',
-    width: 80
-  }
+    width: 80,
+  },
 ];
 for (let i = 0; i < numCols; i++) {
   colDefs.push({
     fieldName: i.toString(),
-    width: 100
+    width: 100,
   });
 }
 
@@ -23,7 +23,7 @@ const labels = [
   {text: 'Ipsum', colour: 'orange'},
   {text: 'Dolor', colour: 'lightblue'},
   {text: 'Sit', colour: 'lightgreen'},
-  {text: 'Amet', colour: 'lightpink'}
+  {text: 'Amet', colour: 'lightpink'},
 ];
 
 type HighlightPosition = 'topleft' | 'bottomright' | 'full' | 'none';
@@ -31,10 +31,15 @@ const highlights: HighlightPosition[] = [
   'topleft',
   'bottomright',
   'full',
-  'none','none','none','none','none','none', // Hacky way to make 'none' more likely
+  'none', 'none', 'none', 'none', 'none', 'none', // Hacky way to make 'none' more likely
 ];
 
-const renderBackground = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CustomBgCellDef, column: ColumnDef) => {
+const renderBackground = (
+  context: CanvasRenderingContext2D,
+  cellBounds: ClientRect,
+  cell: CustomBgCellDef,
+  column: ColumnDef,
+) => {
   if (cell.data.highlight !== 'full') {
     context.fillStyle = cell.data.bgColour;
     context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
@@ -72,14 +77,14 @@ type CustomBgCellDef = CellDef<CustomCellData>;
 type AllCellDataTypes = CustomCellData | null;
 
 function createData() {
-  const data: DataRow<AllCellDataTypes>[] = [];
+  const data: Array<DataRow<AllCellDataTypes>> = [];
 
   for (let i = 0; i < numRows; i++) {
     const row: DataRow<AllCellDataTypes> = {
-      'date': {
+      date: {
         getText: () => (i + 1).toString(),
-        data: null
-      }
+        data: null,
+      },
     };
     for (let j = 0; j < numCols; j++) {
       const label = labels[Math.floor(Math.random() * labels.length)];
@@ -97,18 +102,18 @@ function createData() {
 }
 
 interface AppState {
-  data: DataRow<AllCellDataTypes>[]
+  data: Array<DataRow<AllCellDataTypes>>;
 }
 
 class App extends Component<{}, AppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      data: createData()
-    }
+      data: createData(),
+    };
   }
 
-  render() {
+  public render() {
     return (
       <React.Fragment>
         <div className="App">
@@ -137,8 +142,8 @@ class App extends Component<{}, AppState> {
 
   private replaceData = () => {
     this.setState({
-      data: createData()
-    })
+      data: createData(),
+    });
   }
 
   private updateCell = () => {
@@ -155,15 +160,15 @@ class App extends Component<{}, AppState> {
               data: {
                 ...row[0].data,
                 bgColour: label.colour,
-                highlight
-              }
-            }
+                highlight,
+              },
+            },
           };
         } else {
           return row;
         }
-      })
-    })
+      }),
+    });
   }
 }
 

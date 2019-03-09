@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {ReactCanvasGrid, ReactCanvasGridProps} from '../../src/index';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
 import { Holder } from '../components/ScrollingHolder';
+import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 const getProps = () => {
     const colsAndRows = createFakeDataAndColumns(100, 20, () => null);
@@ -46,7 +46,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
     describe('renders a selection overlay', () => {
         function dragFromCentre(
             finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight',
-            release: boolean = false
+            release: boolean = false,
         ) {
             cy.get('#rcg-holder canvas').eq(1)
                 .trigger('mousedown', 'center')
@@ -59,7 +59,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
         function dragFromCentreAndScreenshot(
             finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight',
             screenshotName: string,
-            release: boolean = false
+            release: boolean = false,
         ) {
             dragFromCentre(finalPos, release);
             cy.get('#rcg-holder')
@@ -96,6 +96,6 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
                 .trigger('mousemove', 'left', { force: true });
             cy.get('#rcg-holder')
                 .matchImageSnapshot('simple-grid-drag-release-move');
-        })
+        });
     });
 });

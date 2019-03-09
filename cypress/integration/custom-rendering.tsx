@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {ReactCanvasGrid, ReactCanvasGridProps, CellDef} from '../../src/index';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
+import {CellDef, ReactCanvasGrid, ReactCanvasGridProps} from '../../src/index';
 import { Holder } from '../components/ScrollingHolder';
+import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 const getProps = () => {
     const colsAndRows = createFakeDataAndColumns(100, 20, () => null);
@@ -25,8 +25,8 @@ const mountGrid = (props = getProps()) => {
 describe('ReactCanvasGrid in an overflow:scroll parent', () => {
     it('uses custom background renderers from cell data', () => {
         const props = getProps();
-        props.data.forEach(row => {
-            for (let key of Object.keys(row)) {
+        props.data.forEach((row) => {
+            for (const key of Object.keys(row)) {
                 const cell = row[key];
                 cell.renderBackground = (context: CanvasRenderingContext2D, cellBounds: ClientRect) => {
                     context.fillStyle = 'lightgreen';
@@ -41,10 +41,14 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
     it('uses custom text renderers from cell data', () => {
         const props = getProps();
-        props.data.forEach(row => {
-            for (let key of Object.keys(row)) {
-                const cell = row[key];
-                cell.renderText = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CellDef<null>) => {
+        props.data.forEach((row) => {
+            for (const key of Object.keys(row)) {
+                const cellDef = row[key];
+                cellDef.renderText = (
+                    context: CanvasRenderingContext2D,
+                    cellBounds: ClientRect,
+                    cell: CellDef<null>,
+                ) => {
                     context.fillStyle = 'red';
                     context.fillText(cell.getText(), cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
                 };

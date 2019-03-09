@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {ReactCanvasGrid, ReactCanvasGridProps} from '../../src/index';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
 import { Holder } from '../components/ScrollingHolder';
+import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 const getProps = () => {
     const colsAndRows = createFakeDataAndColumns(2, 2, () => null);

@@ -11,7 +11,7 @@
     "cypress": "cypress open",
     "jest": "jest --watch",
     "jest:once": "jest",
-    "tslint": "tslint src/**/*.ts*"
+    "tslint": "tslint src/**/*.ts* cypress/**/*.ts* examples/**/*.ts*"
   },
   "keywords": [
     "react",
