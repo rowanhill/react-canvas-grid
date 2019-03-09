@@ -46,6 +46,10 @@ function row(): DataRow<null> {
 }
 
 describe('BaseCanvasRenderer', () => {
+    beforeEach(() => {
+        jest.restoreAllMocks();
+    });
+
     const mockContext = {
         scale: jest.fn(),
         translate: jest.fn(),
@@ -76,7 +80,7 @@ describe('BaseCanvasRenderer', () => {
             height: 50,
             width: 50,
             rowHeight: 9,
-            visibleRect: { top: 10, left: 10, width: 50, height: 50, right: 50, bottom: 50 }
+            visibleRect: { left: 10, top: 10, width: 50, height: 50, right: 60, bottom: 60 }
         });
 
         describe('with no previous draw info', () => {
@@ -88,6 +92,96 @@ describe('BaseCanvasRenderer', () => {
 
                 expect(renderer.drawWholeBorderBackground).toHaveBeenCalledTimes(1);
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('with previous draw info', () => {
+            const prevDraw: PreviousDrawInfo = {
+                gridOffset: props.gridOffset,
+                rect: props.visibleRect
+            };
+            function getNewProps(dx: number, dy: number) {
+                return {
+                    ...props,
+                    gridOffset: {
+                        x: props.gridOffset.x + dx,
+                        y: props.gridOffset.y + dy
+                    },
+                    visibleRect: {
+                        ...props.visibleRect,
+                        left: props.visibleRect.left + dx,
+                        right: props.visibleRect.right + dx,
+                        top: props.visibleRect.top + dy,
+                        bottom: props.visibleRect.bottom + dy
+                    }
+                }
+            }
+
+            it('shifts the old image and paints the newly revealed areas in border colour', () => {
+                jest.spyOn(renderer, 'drawNewBorderBackground');
+                jest.spyOn(renderer, 'shiftExistingCanvas');
+                const newProps = getNewProps(3, 5);
+
+                renderer.draw(newProps, prevDraw);
+
+                expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
+                expect(renderer.drawNewBorderBackground).toHaveBeenCalledWith(-3, -5, newProps.width, newProps.height);
+            });
+
+            describe('cell redrawing', () => {
+                function getDrawnCellRects() {
+                    const mockDrawCell = renderer.drawCell as jest.Mock<typeof renderer.drawCell>;
+                    const calls = mockDrawCell.mock.calls as [CellDef<null>, ClientRect, ColumnDef][];
+                    return calls.map(c => c[1]);
+                }
+    
+                it('redraws cells on the bottom when scrolling down', () => {
+                    jest.spyOn(renderer, 'drawCell');
+                    const newProps = getNewProps(0, 5);
+                    
+                    renderer.draw(newProps, prevDraw);
+    
+                    expect(renderer.drawCell).toHaveBeenCalledTimes(4);
+                    getDrawnCellRects().forEach(r => {
+                        expect(r.top).toBe(60);
+                    });
+                });
+    
+                it('redraws cells on the top when scrolling up', () => {
+                    jest.spyOn(renderer, 'drawCell');
+                    const newProps = getNewProps(0, -5);
+                    
+                    renderer.draw(newProps, prevDraw);
+    
+                    expect(renderer.drawCell).toHaveBeenCalledTimes(4);
+                    getDrawnCellRects().forEach(r => {
+                        expect(r.top).toBe(0);
+                    });
+                });
+    
+                it('redraws cells on the right when scrolling right`', () => {
+                    jest.spyOn(renderer, 'drawCell');
+                    const newProps = getNewProps(5, 0);
+                    
+                    renderer.draw(newProps, prevDraw);
+    
+                    expect(renderer.drawCell).toHaveBeenCalledTimes(5);
+                    getDrawnCellRects().forEach(r => {
+                        expect(r.left).toBe(60);
+                    });
+                });
+    
+                it('redraws cells on the left when scrolling left`', () => {
+                    jest.spyOn(renderer, 'drawCell');
+                    const newProps = getNewProps(-5, 0);
+                    
+                    renderer.draw(newProps, prevDraw);
+    
+                    expect(renderer.drawCell).toHaveBeenCalledTimes(5);
+                    getDrawnCellRects().forEach(r => {
+                        expect(r.left).toBe(0);
+                    });
+                });
             });
         });
     });

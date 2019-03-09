@@ -63,10 +63,12 @@ export class BaseCanvasRenderer<T> {
                 };
 
                 if (prevDraw &&
-                    cellLeft >= prevDraw.rect.left && cellRight <= prevDraw.rect.right &&
-                    cellBounds.top >= prevDraw.rect.top && cellBounds.bottom <= prevDraw.rect.bottom
+                    Math.max(cellLeft, props.visibleRect.left) >= prevDraw.rect.left &&
+                    Math.min(cellRight, props.visibleRect.right) <= prevDraw.rect.right &&
+                    Math.max(cellBounds.top, props.visibleRect.top) >= prevDraw.rect.top &&
+                    Math.min(cellBounds.bottom, props.visibleRect.bottom) <= prevDraw.rect.bottom
                 ) {
-                    // Cell is entirely contained within previously drawn region, so we can skip
+                    // Visible portion of cell is entirely contained within previously drawn region, so we can skip
                     continue;
                 }
 
