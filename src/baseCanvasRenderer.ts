@@ -1,5 +1,5 @@
 import { BaseCanvasProps, PreviousDrawInfo } from './BaseCanvas';
-import { Coord, CellDef, ColumnDef } from './types';
+import { CellDef, ColumnDef, Coord } from './types';
 
 export class BaseCanvasRenderer<T> {
     private readonly canvas: HTMLCanvasElement;
@@ -10,17 +10,17 @@ export class BaseCanvasRenderer<T> {
         this.canvas = canvas;
         const context = this.canvas.getContext('2d', { alpha: false });
         if (!context) {
-            throw new Error('Could not create canvas contex')
+            throw new Error('Could not create canvas contex');
         }
         this.context = context;
         this.dpr = dpr;
     }
 
-    fixScale() {
+    public fixScale() {
         this.context.scale(this.dpr, this.dpr);
     }
 
-    draw(props: BaseCanvasProps<T>, prevDraw: PreviousDrawInfo|null): PreviousDrawInfo {
+    public draw(props: BaseCanvasProps<T>, prevDraw: PreviousDrawInfo|null): PreviousDrawInfo {
         if (prevDraw) {
             // Translate according to difference from previous draw
             const xDiff = (prevDraw.gridOffset.x - props.gridOffset.x);
@@ -38,7 +38,7 @@ export class BaseCanvasRenderer<T> {
         let colIndex = 0;
         const minRowIndex = Math.floor(props.visibleRect.top / (props.rowHeight + props.borderWidth));
         const maxRowIndex = Math.ceil(props.visibleRect.bottom / (props.rowHeight + props.borderWidth));
-        for (let {left: cellLeft, right: cellRight} of props.colBoundaries) {
+        for (const {left: cellLeft, right: cellRight} of props.colBoundaries) {
             if (cellRight < props.visibleRect.left) {
                 // Cell is off screen to left, so skip this column
                 colIndex++;
@@ -59,7 +59,7 @@ export class BaseCanvasRenderer<T> {
                     right: cellLeft + col.width,
                     bottom: (rowIndex + 1) * (props.rowHeight + props.borderWidth) - props.borderWidth,
                     width: col.width,
-                    height: props.rowHeight
+                    height: props.rowHeight,
                 };
 
                 if (prevDraw &&
@@ -87,23 +87,23 @@ export class BaseCanvasRenderer<T> {
                 left: Math.max(props.gridOffset.x, props.visibleRect.left),
                 top: Math.max(props.gridOffset.y, props.visibleRect.top),
                 right: Math.min(props.gridOffset.x + props.width, props.visibleRect.right),
-                bottom: Math.min(props.gridOffset.y + props.height, props.visibleRect.bottom)
-            }
+                bottom: Math.min(props.gridOffset.y + props.height, props.visibleRect.bottom),
+            },
         };
     }
 
-    translateToGridOffset(gridOffset: Coord) {
+    public translateToGridOffset(gridOffset: Coord) {
         this.context.translate(-gridOffset.x, -gridOffset.y);
     }
 
-    translateToOrigin(gridOffset: Coord) {
+    public translateToOrigin(gridOffset: Coord) {
         this.context.translate(gridOffset.x, gridOffset.y);
     }
 
     /*
      * Fill the entire canvas with the border colour
      */
-    drawWholeBorderBackground() {
+    public drawWholeBorderBackground() {
         // Draw base in border colour; cells will draw over this, leaving only the borders
         this.context.fillStyle = 'lightgrey';
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -112,11 +112,11 @@ export class BaseCanvasRenderer<T> {
     /*
      * Copy the current image on the canvas back onto the canvas, shifted by the given delta
      */
-    shiftExistingCanvas(xDiff: number, yDiff: number) {
+    public shiftExistingCanvas(xDiff: number, yDiff: number) {
         this.context.drawImage(
             this.canvas,
             0, 0, this.canvas.width * this.dpr, this.canvas.height * this.dpr,
-            xDiff, yDiff, this.canvas.width, this.canvas.height
+            xDiff, yDiff, this.canvas.width, this.canvas.height,
         );
     }
 
@@ -124,7 +124,7 @@ export class BaseCanvasRenderer<T> {
      * Fill with the border colour along any areas of the canvas that are 'new', i.e. need repainting
      * because they represent areas of the grid that have just become visible after a scroll
      */
-    drawNewBorderBackground(xDiff: number, yDiff: number, propsWidth: number, propsHeight: number) {
+    public drawNewBorderBackground(xDiff: number, yDiff: number, propsWidth: number, propsHeight: number) {
         // Draw base in border colour in new areas; cells will draw over this, leaving only the borders
         // (Note, we might fill a corner twice if scrolling diagnally, but the perf cost seems minimal)
         this.context.fillStyle = 'lightgrey';
@@ -152,7 +152,7 @@ export class BaseCanvasRenderer<T> {
         }
     }
 
-    drawCell(cell: CellDef<T>, cellBounds: ClientRect, col: ColumnDef) {
+    public drawCell(cell: CellDef<T>, cellBounds: ClientRect, col: ColumnDef) {
         const renderBackground = cell.renderBackground || this.drawCellBackgroundDefault;
         const renderText = cell.renderText || this.drawCellTextDefault;
 
@@ -160,12 +160,22 @@ export class BaseCanvasRenderer<T> {
         renderText(this.context, cellBounds, cell, col);
     }
 
-    private drawCellBackgroundDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CellDef<T>, column: ColumnDef) => {
+    private drawCellBackgroundDefault = (
+        context: CanvasRenderingContext2D,
+        cellBounds: ClientRect,
+        cell: CellDef<T>,
+        column: ColumnDef,
+    ) => {
         context.fillStyle = 'white';
         context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
     }
 
-    private drawCellTextDefault = (context: CanvasRenderingContext2D, cellBounds: ClientRect, cell: CellDef<T>, column: ColumnDef) => {
+    private drawCellTextDefault = (
+        context: CanvasRenderingContext2D,
+        cellBounds: ClientRect,
+        cell: CellDef<T>,
+        column: ColumnDef,
+    ) => {
         context.fillStyle = 'black';
         context.fillText(cell.getText(), cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
     }

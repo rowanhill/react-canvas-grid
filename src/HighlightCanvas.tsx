@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { CellDef, DataRow, ColumnDef, Coord } from './types';
 import { SelectRange } from './index';
+import { CellDef, ColumnDef, Coord, DataRow } from './types';
 
 export interface HighlightCanvasProps {
     width: number;
     height: number;
     rowHeight: number;
     gridOffset: Coord;
-    colBoundaries: {left: number; right: number}[];
+    colBoundaries: Array<{left: number; right: number}>;
     selectedRange: SelectRange|null;
     borderWidth: number;
 }
@@ -22,7 +22,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         super(props);
     }
 
-    render() {
+    public render() {
         return (
             <canvas
                 ref={this.canvasRef}
@@ -32,14 +32,14 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
                     position: 'absolute',
                     width: `${this.props.width}px`,
                     height: `${this.props.height}px`,
-                    top:0,
+                    top: 0,
                     left: 0,
                 }}
             />
         );
-    };
+    }
 
-    componentDidUpdate() {
+    public componentDidUpdate() {
         // Fix the scale if we haven't already.
         // (Note, we can't do this in componentDidMount for some reason - perhaps because the canvas mounts
         //  with a zero size?)
@@ -69,7 +69,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         // Translate the canvas context so that it's covering the visibleRect
         // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
         context.translate(-this.props.gridOffset.x, -this.props.gridOffset.y);
-        
+
         // Draw selected cell highlights
         context.fillStyle = '#44aaff55';
         context.strokeStyle = '#44aaffcc';
@@ -91,7 +91,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             height: this.props.rowHeight,
             left: this.props.colBoundaries[x].left,
             right: this.props.colBoundaries[x].right,
-            width: this.props.colBoundaries[x].right - this.props.colBoundaries[x].left
+            width: this.props.colBoundaries[x].right - this.props.colBoundaries[x].left,
         };
     }
 }

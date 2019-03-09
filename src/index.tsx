@@ -1,15 +1,15 @@
-import * as React from 'react';
 import memoizeOne from 'memoize-one';
-import { DataRow, ColumnDef, Coord, Size } from './types';
+import * as React from 'react';
 import { BaseCanvas } from './BaseCanvas';
-import { HighlightCanvas } from './HighlightCanvas';
 import { CanvasHolder } from './CanvasHolder';
+import { HighlightCanvas } from './HighlightCanvas';
+import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export { CellDef, DataRow, ColumnDef, Coord, Size } from './types';
 
 export interface ReactCanvasGridProps<T> {
     columns: ColumnDef[];
-    data: DataRow<T>[];
+    data: Array<DataRow<T>>;
     rowHeight: number;
     borderWidth: number;
 }
@@ -28,8 +28,8 @@ export interface SelectRange {
 }
 
 export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
-    static defaultProps = {
-        borderWidth: 1
+    public static defaultProps = {
+        borderWidth: 1,
     };
 
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
@@ -38,7 +38,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
     private readonly memoizedCalcColBoundaries = memoizeOne((columns: ColumnDef[]) => {
         let curLeft = 0;
-        return columns.map(col => {
+        return columns.map((col) => {
             const boundary = { left: curLeft, right: curLeft + col.width };
             curLeft += col.width + 1;
             return boundary;
@@ -56,7 +56,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         };
     }
 
-    componentDidMount() {
+    public componentDidMount() {
         if (this.canvasHolderRef.current) {
             this.scrollParent = getScrollParent(this.canvasHolderRef.current, true);
         }
@@ -71,14 +71,14 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         window.addEventListener('scroll', this.onScroll);
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         if (this.scrollParent && this.scrollParent !== document.body) {
             this.scrollParent.removeEventListener('scroll', this.onScroll);
         }
         window.removeEventListener('scroll', this.onScroll);
     }
 
-    render() {
+    public render() {
         const canvasSize = this.calculateMaxViewSize();
         const gridSize = this.calculateDataSize();
         const columnBoundaries = this.memoizedCalcColBoundaries(this.props.columns);
@@ -91,7 +91,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 onMouseMove={this.onMouseMove}
                 style={{
                     width: `${gridSize.width}px`,
-                    height: `${gridSize.height}px`
+                    height: `${gridSize.height}px`,
                 }}
             >
                 <CanvasHolder ref={this.canvasHolderRef} canvasSize={canvasSize}>
@@ -142,7 +142,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const scrollParentClientRect = this.scrollParent.getBoundingClientRect();
         return {
             height: Math.min(dataSize.height, scrollParentClientRect.height, window.screen.availHeight),
-            width: Math.min(dataSize.width, scrollParentClientRect.width, window.screen.availWidth)
+            width: Math.min(dataSize.width, scrollParentClientRect.width, window.screen.availWidth),
         };
     }
 
@@ -158,10 +158,12 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const bounds = {
             top: Math.max(sizerClientRect.top, scrollParentClientRect.top, 0) - sizerClientRect.top,
             left: Math.max(sizerClientRect.left, scrollParentClientRect.left, 0) - sizerClientRect.left,
-            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, window.screen.availHeight) - sizerClientRect.top,
-            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, window.screen.availWidth) - sizerClientRect.left
+            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, window.screen.availHeight) -
+                sizerClientRect.top,
+            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, window.screen.availWidth) -
+                sizerClientRect.left,
         };
-        return { ...bounds, height: bounds.bottom-bounds.top, width: bounds.right-bounds.left };
+        return { ...bounds, height: bounds.bottom - bounds.top, width: bounds.right - bounds.left };
     }
 
     private onScroll = () => {
@@ -185,14 +187,14 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
         this.setState({
             gridOffset: {x: xOffset, y: yOffset},
-            visibleRect: this.calculateViewRect()
+            visibleRect: this.calculateViewRect(),
         });
     }
 
     private calcCanvasYOffset = (
         sizerClientRect: ClientRect,
         scrollParentClientRect: ClientRect,
-        canvasSize: Size
+        canvasSize: Size,
     ) => {
         if (sizerClientRect.top >= scrollParentClientRect.top) {
             // The sizer is below the top of the scroll parent, so no need to offset the canvas
@@ -209,7 +211,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     private calcCanvasXOffset = (
         sizerClientRect: ClientRect,
         scrollParentClientRect: ClientRect,
-        canvasSize: Size
+        canvasSize: Size,
     ) => {
         if (sizerClientRect.left >= scrollParentClientRect.left) {
             // The sizer is to the right of the left of the scroll parent, so no need to offset the canvas
@@ -234,7 +236,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 bottom: window.screen.availHeight,
                 left: 0,
                 width: window.screen.availWidth,
-                right: window.screen.availWidth
+                right: window.screen.availWidth,
             };
         } else {
             return this.scrollParent.getBoundingClientRect();
@@ -248,7 +250,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
         return {
             x: x - sizerClientRect.left,
-            y: y - sizerClientRect.top
+            y: y - sizerClientRect.top,
         };
     }
 
@@ -264,7 +266,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         }
         return {
             y: Math.floor(y / (this.props.rowHeight + this.props.borderWidth)),
-            x: colIndex
+            x: colIndex,
         };
     }
 
@@ -272,7 +274,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const gridCoords = this.sizerToGrid(this.windowToSizer({x: event.clientX, y: event.clientY}));
         const selectedRange = {
             topLeft: gridCoords,
-            bottomRight: gridCoords
+            bottomRight: gridCoords,
         };
         this.setState({selectedRange, selectedRangeDragStart: gridCoords});
     }
@@ -281,6 +283,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.state.selectedRange || !this.state.selectedRangeDragStart) {
             return;
         }
+        // tslint:disable-next-line: no-bitwise
         if ((event.buttons & 1) === 0) {
             return;
         }
@@ -288,12 +291,12 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const selectedRange = {
             topLeft: {
                 x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.min(this.state.selectedRangeDragStart.y, gridCoords.y)
+                y: Math.min(this.state.selectedRangeDragStart.y, gridCoords.y),
             },
             bottomRight: {
                 x: Math.max(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.max(this.state.selectedRangeDragStart.y, gridCoords.y)
-            }
+                y: Math.max(this.state.selectedRangeDragStart.y, gridCoords.y),
+            },
         };
         this.setState({selectedRange});
     }
@@ -306,28 +309,28 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const selectedRange = {
             topLeft: {
                 x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.min(this.state.selectedRangeDragStart.y, gridCoords.y)
+                y: Math.min(this.state.selectedRangeDragStart.y, gridCoords.y),
             },
             bottomRight: {
                 x: Math.max(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.max(this.state.selectedRangeDragStart.y, gridCoords.y)
-            }
+                y: Math.max(this.state.selectedRangeDragStart.y, gridCoords.y),
+            },
         };
         const selectedRangeDragStart = null;
         this.setState({selectedRange, selectedRangeDragStart});
     }
-};
+}
 
 function getScrollParent(element: HTMLElement, includeHidden: boolean) {
-    var style = getComputedStyle(element);
-    var excludeStaticParent = style.position === 'absolute';
-    var overflowRegex = includeHidden ? /(auto|scroll|hidden)/ : /(auto|scroll)/;
+    let style = getComputedStyle(element);
+    const excludeStaticParent = style.position === 'absolute';
+    const overflowRegex = includeHidden ? /(auto|scroll|hidden)/ : /(auto|scroll)/;
     const doc = element.ownerDocument || document;
 
-    if (style.position === 'fixed') return doc.body;
+    if (style.position === 'fixed') { return doc.body; }
     for (let parent: HTMLElement|null = element; parent !== null; parent = parent!.parentElement) {
         style = getComputedStyle(parent);
-        if (excludeStaticParent && style.position === "static") {
+        if (excludeStaticParent && style.position === 'static') {
             continue;
         }
         if (overflowRegex.test(`${style.overflow}${style.overflowY}${style.overflowX}`)) {

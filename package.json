@@ -10,7 +10,8 @@
     "test": "jest && cypress run --browser chrome",
     "cypress": "cypress open",
     "jest": "jest --watch",
-    "jest:once": "jest"
+    "jest:once": "jest",
+    "tslint": "tslint src/**/*.ts*"
   },
   "keywords": [
     "react",
@@ -39,6 +40,7 @@
     "react-dom": "^16.8.3",
     "ts-jest": "^24.0.0",
     "ts-loader": "^5.3.3",
+    "tslint": "^5.13.1",
     "typescript": "^3.3.1",
     "webpack": "^4.29.6"
   }

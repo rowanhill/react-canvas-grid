@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Size, Coord } from './types';
+import { Coord, Size } from './types';
 
 export interface CanvasHolderProps {
     canvasSize: Size;

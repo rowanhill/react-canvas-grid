@@ -1,7 +1,7 @@
-import { BaseCanvasProps, BaseCanvas } from './BaseCanvas';
-import { BaseCanvasRenderer } from './baseCanvasRenderer';
 import { mount } from 'enzyme';
 import * as React from 'react';
+import { BaseCanvas, BaseCanvasProps } from './BaseCanvas';
+import { BaseCanvasRenderer } from './baseCanvasRenderer';
 
 const mockFixScale = jest.fn();
 const mockDraw = jest.fn();
@@ -12,8 +12,8 @@ jest.mock('./baseCanvasRenderer', () => {
                 fixScale: mockFixScale,
                 draw: mockDraw,
             };
-        })
-    }
+        }),
+    };
 });
 const MockedRenderer = BaseCanvasRenderer as jest.Mock<BaseCanvasRenderer<null>>;
 
@@ -27,7 +27,7 @@ const props: BaseCanvasProps<null> = {
     height: 100,
     width: 100,
     rowHeight: 20,
-    visibleRect: { top: 0, left: 0, width: 100, height: 100, right: 100, bottom: 100 }
+    visibleRect: { top: 0, left: 0, width: 100, height: 100, right: 100, bottom: 100 },
 };
 
 describe('BaseCanvas', () => {
@@ -58,7 +58,7 @@ describe('BaseCanvas', () => {
     it('redraws to its canvas with details of previous draw when non-fundamental props change', () => {
         mockDraw.mockReturnValue({
             gridOffset: { x: 0, y: 0 },
-            rect: {}
+            rect: {},
         });
 
         const bc = mount(<BaseCanvas {...props} />);
@@ -68,16 +68,15 @@ describe('BaseCanvas', () => {
         expect(mockDraw).toHaveBeenCalledTimes(2);
         expect(mockDraw).toHaveBeenNthCalledWith(1, expect.anything(), null);
         expect(mockDraw).toHaveBeenNthCalledWith(2,
-            expect.anything(), 
-            expect.objectContaining({ gridOffset: expect.anything(), rect: expect.anything()})
+            expect.anything(),
+            expect.objectContaining({ gridOffset: expect.anything(), rect: expect.anything()}),
         );
     });
-
 
     it('redraws to its canvas discarding prior draw info when fundamental props change', () => {
         mockDraw.mockReturnValue({
             gridOffset: { x: 0, y: 0 },
-            rect: {}
+            rect: {},
         });
 
         const bc = mount(<BaseCanvas {...props} />);
