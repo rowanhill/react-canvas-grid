@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {ReactCanvasGrid, ReactCanvasGridProps} from '../../dist/index';
+import {ReactCanvasGrid, ReactCanvasGridProps} from '../../src/index';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
 import { Holder } from '../components/ScrollingHolder';
 
