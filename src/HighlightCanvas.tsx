@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CellDef, DataRow, ColumnDef, Coord } from './types';
-import { SelectRange } from '.';
+import { SelectRange } from './index';
 
 export interface HighlightCanvasProps {
     width: number;
