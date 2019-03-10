@@ -57,7 +57,7 @@ export class BaseCanvasRenderer<T> {
                     left: cellLeft,
                     top: rowIndex * (props.rowHeight + props.borderWidth),
                     right: cellLeft + col.width,
-                    bottom: (rowIndex + 1) * (props.rowHeight + props.borderWidth) - props.borderWidth,
+                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
                     width: col.width,
                     height: props.rowHeight,
                 };

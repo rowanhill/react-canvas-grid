@@ -1,9 +1,9 @@
-import memoizeOne from 'memoize-one';
 import * as React from 'react';
 import { BaseCanvas } from './BaseCanvas';
 import { CanvasHolder } from './CanvasHolder';
+import { GridGeometry } from './gridGeometry';
 import { HighlightCanvas } from './HighlightCanvas';
-import { ColumnDef, Coord, DataRow, Size } from './types';
+import { ColumnDef, Coord, DataRow } from './types';
 
 export interface ReactCanvasGridProps<T> {
     columns: ColumnDef[];
@@ -33,15 +33,6 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
     private scrollParent: HTMLElement|null = null;
-
-    private readonly memoizedCalcColBoundaries = memoizeOne((columns: ColumnDef[]) => {
-        let curLeft = 0;
-        return columns.map((col) => {
-            const boundary = { left: curLeft, right: curLeft + col.width };
-            curLeft += col.width + 1;
-            return boundary;
-        });
-    });
 
     constructor(props: ReactCanvasGridProps<T>) {
         super(props);
@@ -77,9 +68,14 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     public render() {
-        const canvasSize = this.calculateMaxViewSize();
-        const gridSize = this.calculateDataSize();
-        const columnBoundaries = this.memoizedCalcColBoundaries(this.props.columns);
+        const columnBoundaries = GridGeometry.calculateColumnBoundaries(this.props);
+        // First render is before componentDidMount, so before we have found scrollParent.
+        // In this case, we just render as 0x0. componentDidMount will then update state,
+        // and we'll re-render
+        const canvasSize = this.scrollParent ?
+            GridGeometry.calculateMaxViewSize(this.props, this.scrollParent) :
+            { height: 0, width: 0 };
+        const gridSize = GridGeometry.calculateGridSize(this.props);
 
         return (
             <div
@@ -119,157 +115,31 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         );
     }
 
-    private calculateDataSize = () => {
-        const borderWidth = this.props.borderWidth;
-        const numRows = this.props.data.length;
-        const height = numRows * (this.props.rowHeight + borderWidth) - borderWidth;
-
-        const width = this.props.columns.reduce((acc, col) => acc + col.width + borderWidth, 0) - borderWidth;
-
-        return { width, height };
-    }
-
-    private calculateMaxViewSize = () => {
-        if (!this.scrollParent) {
-            // First render is before componentDidMount, so before we have found scrollParent.
-            // In this case, we just render as 0x0. componentDidMount will then update state,
-            // and we'll re-render
-            return {height: 0, width: 0};
-        }
-        const dataSize = this.calculateDataSize();
-        const scrollParentClientRect = this.scrollParent.getBoundingClientRect();
-        return {
-            height: Math.min(dataSize.height, scrollParentClientRect.height, window.screen.availHeight),
-            width: Math.min(dataSize.width, scrollParentClientRect.width, window.screen.availWidth),
-        };
-    }
-
-    private calculateViewRect = () => {
-        if (!this.sizerRef.current) {
-            throw new Error('Cannot resize canvas: sizerRef does not have current');
-        }
-        if (!this.scrollParent) {
-            throw new Error('Cannot resize canvas: scrollParent is null');
-        }
-        const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
-        const scrollParentClientRect = this.getScrollParentClientRect();
-        const bounds = {
-            top: Math.max(sizerClientRect.top, scrollParentClientRect.top, 0) - sizerClientRect.top,
-            left: Math.max(sizerClientRect.left, scrollParentClientRect.left, 0) - sizerClientRect.left,
-            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, window.screen.availHeight) -
-                sizerClientRect.top,
-            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, window.screen.availWidth) -
-                sizerClientRect.left,
-        };
-        return { ...bounds, height: bounds.bottom - bounds.top, width: bounds.right - bounds.left };
-    }
-
     private onScroll = () => {
         if (!this.sizerRef.current) {
             return;
         }
-        const canvasSize = this.calculateMaxViewSize();
-        const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
-        const scrollParentClientRect = this.getScrollParentClientRect();
-
-        const yOffset = this.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, canvasSize);
-        const xOffset = this.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, canvasSize);
+        if (!this.scrollParent) {
+            return;
+        }
+        const gridOffset = GridGeometry.calculateGridOffset(this.props, this.scrollParent, this.sizerRef.current);
 
         // Update the canvas holder's position outside of React, for performance reasons
         if (this.canvasHolderRef.current) {
-            const transform = (xOffset > 0 || yOffset > 0) ?
-                `translate(${xOffset}px, ${yOffset}px)` :
+            const transform = (gridOffset.x > 0 || gridOffset.y > 0) ?
+                `translate(${gridOffset.x}px, ${gridOffset.y}px)` :
                 '';
             this.canvasHolderRef.current.style.transform = transform;
         }
 
         this.setState({
-            gridOffset: {x: xOffset, y: yOffset},
-            visibleRect: this.calculateViewRect(),
+            gridOffset,
+            visibleRect: GridGeometry.calculateViewRect(this.scrollParent, this.sizerRef.current),
         });
     }
 
-    private calcCanvasYOffset = (
-        sizerClientRect: ClientRect,
-        scrollParentClientRect: ClientRect,
-        canvasSize: Size,
-    ) => {
-        if (sizerClientRect.top >= scrollParentClientRect.top) {
-            // The sizer is below the top of the scroll parent, so no need to offset the canvas
-            return 0;
-        } else if (sizerClientRect.bottom <= scrollParentClientRect.bottom) {
-            // The sizer is above the bottom of the scroll parent, so offset the canvas to align the bottoms
-            return sizerClientRect.height - canvasSize.height;
-        } else {
-            // The sizer spans across the scroll parent, so offset the canvas to align the tops
-            return scrollParentClientRect.top - sizerClientRect.top;
-        }
-    }
-
-    private calcCanvasXOffset = (
-        sizerClientRect: ClientRect,
-        scrollParentClientRect: ClientRect,
-        canvasSize: Size,
-    ) => {
-        if (sizerClientRect.left >= scrollParentClientRect.left) {
-            // The sizer is to the right of the left of the scroll parent, so no need to offset the canvas
-            return 0;
-        } else if (sizerClientRect.right <= scrollParentClientRect.right) {
-            // The sizer is to the left of the right of the scroll parent, so offset the canvas to align the rights
-            return sizerClientRect.width - canvasSize.width;
-        } else {
-            // The sizer spans across the scroll parent, so offset the canvas to align the lefts
-            return scrollParentClientRect.left - sizerClientRect.left;
-        }
-    }
-
-    private getScrollParentClientRect = () => {
-        if (!this.scrollParent) {
-            throw new Error('Cannot get scroll parent client rect: scrollParent not set');
-        }
-        if (this.scrollParent === document.body) {
-            return {
-                top: 0,
-                height: window.screen.availHeight,
-                bottom: window.screen.availHeight,
-                left: 0,
-                width: window.screen.availWidth,
-                right: window.screen.availWidth,
-            };
-        } else {
-            return this.scrollParent.getBoundingClientRect();
-        }
-    }
-
-    private windowToSizer = ({x, y}: {x: number; y: number}) => {
-        if (!this.sizerRef.current) {
-            return {x, y};
-        }
-        const sizerClientRect = this.sizerRef.current.getBoundingClientRect();
-        return {
-            x: x - sizerClientRect.left,
-            y: y - sizerClientRect.top,
-        };
-    }
-
-    private sizerToGrid = ({x, y}: {x: number; y: number}) => {
-        const columnBoundaries = this.memoizedCalcColBoundaries(this.props.columns);
-
-        let colIndex = -1;
-        for (let i = 0; i < columnBoundaries.length; i++) {
-            if (columnBoundaries[i].right >= x) {
-                colIndex = i;
-                break;
-            }
-        }
-        return {
-            y: Math.floor(y / (this.props.rowHeight + this.props.borderWidth)),
-            x: colIndex,
-        };
-    }
-
     private onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        const gridCoords = this.sizerToGrid(this.windowToSizer({x: event.clientX, y: event.clientY}));
+        const gridCoords = this.calculateGridCoords(event);
         const selectedRange = {
             topLeft: gridCoords,
             bottomRight: gridCoords,
@@ -285,7 +155,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if ((event.buttons & 1) === 0) {
             return;
         }
-        const gridCoords = this.sizerToGrid(this.windowToSizer({x: event.clientX, y: event.clientY}));
+        const gridCoords = this.calculateGridCoords(event);
         const selectedRange = {
             topLeft: {
                 x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
@@ -303,7 +173,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.state.selectedRange || !this.state.selectedRangeDragStart) {
             return;
         }
-        const gridCoords = this.sizerToGrid(this.windowToSizer({x: event.clientX, y: event.clientY}));
+        const gridCoords = this.calculateGridCoords(event);
         const selectedRange = {
             topLeft: {
                 x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
@@ -316,6 +186,17 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         };
         const selectedRangeDragStart = null;
         this.setState({selectedRange, selectedRangeDragStart});
+    }
+
+    private calculateGridCoords = (event: React.MouseEvent<any, any>) => {
+        if (!this.sizerRef.current) {
+            throw new Error('Cannot convert mouse event coords to grid coords because sizerRef is not set');
+        }
+        return GridGeometry.calculateGridCoords(
+            event,
+            this.props,
+            this.sizerRef.current,
+        );
     }
 }
 
