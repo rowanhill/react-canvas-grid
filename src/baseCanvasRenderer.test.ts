@@ -47,21 +47,27 @@ function row(): DataRow<null> {
 
 describe('BaseCanvasRenderer', () => {
     beforeEach(() => {
-        jest.restoreAllMocks();
+        mockContext = {
+            scale: jest.fn(),
+            translate: jest.fn(),
+            fillRect: jest.fn(),
+            drawImage: jest.fn(),
+            fillText: jest.fn(),
+        } as unknown as CanvasRenderingContext2D;
+        mockCanvas = {
+            getContext: () => mockContext,
+        } as unknown as HTMLCanvasElement;
+        renderer = new BaseCanvasRenderer<null>(mockCanvas, dpr);
     });
 
-    const mockContext = {
-        scale: jest.fn(),
-        translate: jest.fn(),
-        fillRect: jest.fn(),
-        drawImage: jest.fn(),
-        fillText: jest.fn(),
-    };
-    const mockCanvas = {
-        getContext: () => mockContext,
-    };
+    afterEach(() => {
+        jest.resetAllMocks(); // reset spies
+    });
+
     const dpr = 2;
-    const renderer = new BaseCanvasRenderer<null>(mockCanvas as unknown as HTMLCanvasElement, dpr);
+    let mockContext: CanvasRenderingContext2D;
+    let mockCanvas: HTMLCanvasElement;
+    let renderer: BaseCanvasRenderer<null>;
 
     describe('fixScale', () => {
         it('set the scale on the canvas to the device pixel ratio', () => {
@@ -72,7 +78,7 @@ describe('BaseCanvasRenderer', () => {
     });
 
     describe('draw', () => {
-        const props: BaseCanvasProps<null> = calcProps({
+        const normalisedProps: NormalisedProps<null> = {
             borderWidth: 1,
             columns: [col(), col(), col(), col(), col(), col(), col(), col(), col(), col()],
             data: [row(), row(), row(), row(), row(), row(), row(), row(), row(), row()],
@@ -81,7 +87,14 @@ describe('BaseCanvasRenderer', () => {
             width: 50,
             rowHeight: 9,
             visibleRect: { left: 10, top: 10, width: 50, height: 50, right: 60, bottom: 60 },
-        });
+        };
+        const props: BaseCanvasProps<null> = calcProps(normalisedProps);
+
+        function getDrawnCellRects() {
+            const mockDrawCell = renderer.drawCell as jest.Mock<typeof renderer.drawCell>;
+            const calls = mockDrawCell.mock.calls as Array<[CellDef<null>, ClientRect, ColumnDef]>;
+            return calls.map((c) => c[1]);
+        }
 
         describe('with no previous draw info', () => {
             it('fills the entire canvas with border colour (before drawing cells)', () => {
@@ -92,6 +105,36 @@ describe('BaseCanvasRenderer', () => {
 
                 expect(renderer.drawWholeBorderBackground).toHaveBeenCalledTimes(1);
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
+            });
+
+            it('only draws (at least partially) visible cells', () => {
+                jest.spyOn(renderer, 'drawCell');
+                const shiftedNormalisedProps = {
+                    ...normalisedProps,
+                    gridOffset: { x: 25, y: 25 },
+                    visibleRect: {
+                        left: 25, // scrolled right to quarter-way through 2nd col
+                        top: 25, // scrolled down to half-way through 3rd row
+                        width: 50, // enough to see 1 partial, 1 full, 1 partial col
+                        height: 50, // enough to see 1 partial, 4 full, 1 partial row
+                        right: 75,
+                        bottom: 75,
+                    },
+                };
+                const shiftedProps = calcProps(shiftedNormalisedProps);
+
+                renderer.draw(shiftedProps, null);
+
+                expect(renderer.drawCell).toHaveBeenCalledTimes(18);
+                getDrawnCellRects().forEach((r) => {
+                    // Cell is in view horizontally
+                    expect(r.right).toBeGreaterThanOrEqual(shiftedProps.visibleRect.left);
+                    expect(r.left).toBeLessThanOrEqual(shiftedProps.visibleRect.right);
+
+                    // Cell is in view vertically
+                    expect(r.bottom).toBeGreaterThanOrEqual(shiftedProps.visibleRect.top);
+                    expect(r.top).toBeLessThanOrEqual(shiftedProps.visibleRect.bottom);
+                });
             });
         });
 
@@ -129,12 +172,6 @@ describe('BaseCanvasRenderer', () => {
             });
 
             describe('cell redrawing', () => {
-                function getDrawnCellRects() {
-                    const mockDrawCell = renderer.drawCell as jest.Mock<typeof renderer.drawCell>;
-                    const calls = mockDrawCell.mock.calls as Array<[CellDef<null>, ClientRect, ColumnDef]>;
-                    return calls.map((c) => c[1]);
-                }
-
                 it('redraws cells on the bottom when scrolling down', () => {
                     jest.spyOn(renderer, 'drawCell');
                     const newProps = getNewProps(0, 5);
@@ -183,6 +220,45 @@ describe('BaseCanvasRenderer', () => {
                     });
                 });
             });
+        });
+    });
+
+    describe('drawWholeBorderBackground', () => {
+        it('fills the entire canvas', () => {
+            renderer.drawWholeBorderBackground(100, 100);
+
+            expect(mockContext.fillRect).toHaveBeenCalledTimes(1);
+            expect(mockContext.fillRect).toHaveBeenCalledWith(0, 0, 100, 100);
+        });
+    });
+
+    describe('drawNewBorderBackground', () => {
+        it('only fills the bottom edge when scrolling down', () => {
+            renderer.drawNewBorderBackground(0, -5, 100, 100);
+
+            expect(mockContext.fillRect).toHaveBeenCalledTimes(1);
+            expect(mockContext.fillRect).toHaveBeenCalledWith(0, 95, 100, 5);
+        });
+
+        it('only fills the top edge when scrolling up', () => {
+            renderer.drawNewBorderBackground(0, 5, 100, 100);
+
+            expect(mockContext.fillRect).toHaveBeenCalledTimes(1);
+            expect(mockContext.fillRect).toHaveBeenCalledWith(0, 0, 100, 5);
+        });
+
+        it('only fills the right edge when scrolling right', () => {
+            renderer.drawNewBorderBackground(-5, 0, 100, 100);
+
+            expect(mockContext.fillRect).toHaveBeenCalledTimes(1);
+            expect(mockContext.fillRect).toHaveBeenCalledWith(95, 0, 5, 100);
+        });
+
+        it('only fills the left edge when scrolling left', () => {
+            renderer.drawNewBorderBackground(5, 0, 100, 100);
+
+            expect(mockContext.fillRect).toHaveBeenCalledTimes(1);
+            expect(mockContext.fillRect).toHaveBeenCalledWith(0, 0, 5, 100);
         });
     });
 });

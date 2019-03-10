@@ -28,7 +28,7 @@ export class BaseCanvasRenderer<T> {
             this.shiftExistingCanvas(xDiff, yDiff);
             this.drawNewBorderBackground(xDiff, yDiff, props.width, props.height);
         } else {
-            this.drawWholeBorderBackground();
+            this.drawWholeBorderBackground(props.width, props.height);
         }
 
         // Translate the canvas context so that it's covering the visibleRect
@@ -103,10 +103,10 @@ export class BaseCanvasRenderer<T> {
     /*
      * Fill the entire canvas with the border colour
      */
-    public drawWholeBorderBackground() {
+    public drawWholeBorderBackground(propsWidth: number, propsHeight: number) {
         // Draw base in border colour; cells will draw over this, leaving only the borders
         this.context.fillStyle = 'lightgrey';
-        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.fillRect(0, 0, propsWidth, propsHeight);
     }
 
     /*
@@ -132,23 +132,23 @@ export class BaseCanvasRenderer<T> {
             // Moved down - draw bottom
             const top = propsHeight + yDiff;
             const height = -yDiff;
-            this.context.fillRect(0, top, this.canvas.width, height);
+            this.context.fillRect(0, top, propsWidth, height);
         } else if (yDiff > 0) {
             // Moved up - draw top
             const top = 0;
             const height = yDiff;
-            this.context.fillRect(0, top, this.canvas.width, height);
+            this.context.fillRect(0, top, propsWidth, height);
         }
         if (xDiff < 0) {
             // Moved right - draw right
             const left = propsWidth + xDiff;
             const width = -xDiff;
-            this.context.fillRect(left, 0, width, this.canvas.height);
+            this.context.fillRect(left, 0, width, propsHeight);
         } else if (xDiff > 0) {
             // Moved left - draw left
             const left = 0;
             const width = xDiff;
-            this.context.fillRect(left, 0, width, this.canvas.height);
+            this.context.fillRect(left, 0, width, propsHeight);
         }
     }
 
