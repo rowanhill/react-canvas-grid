@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SelectRange } from './index';
+import { SelectRange } from './ReactCanvasGrid';
 import { CellDef, ColumnDef, Coord, DataRow } from './types';
 
 export interface HighlightCanvasProps {

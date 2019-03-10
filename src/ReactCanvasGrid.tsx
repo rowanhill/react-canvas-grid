@@ -5,8 +5,6 @@ import { CanvasHolder } from './CanvasHolder';
 import { HighlightCanvas } from './HighlightCanvas';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
-export { CellDef, DataRow, ColumnDef, Coord, Size } from './types';
-
 export interface ReactCanvasGridProps<T> {
     columns: ColumnDef[];
     data: Array<DataRow<T>>;
