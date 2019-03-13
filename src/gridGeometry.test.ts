@@ -305,5 +305,111 @@ describe('GridGeomtry', () => {
         });
     });
 
-    // TODO: Test remaining public methods
+    describe('calculateGridCellCoords', () => {
+        it('maps a click in the top left of the grid to (0,0), when the scroll parent aligns to the window', () => {
+            const props = { rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }] } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 0, clientY: 0 }, props, sizer);
+
+            expect(coords).toEqual({ x: 0, y: 0 });
+        });
+
+        it('accounts for the scroll parent\'s offset within the window', () => {
+            const props = { rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }] } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 100, left: 100 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 100, clientY: 100 }, props, sizer);
+
+            expect(coords).toEqual({ x: 0, y: 0 });
+        });
+
+        it('maps a click on the rightmost pixel of (0,0) to that cell coord', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 9, clientY: 0 }, props, sizer);
+
+            expect(coords).toEqual({ x: 0, y: 0 });
+        });
+
+        it('maps a click on the border between cell (0,0) and (1,0) to the cell on the right', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 10, clientY: 0 }, props, sizer);
+
+            expect(coords).toEqual({ x: 1, y: 0 });
+        });
+
+        it('maps a click on the leftmost pixel of (1,0) to that cell coord', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 11, clientY: 0 }, props, sizer);
+
+            expect(coords).toEqual({ x: 1, y: 0 });
+        });
+
+        it('maps a click on the bottommost pixel of (0,0) to that cell coord', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 0, clientY: 19 }, props, sizer);
+
+            expect(coords).toEqual({ x: 0, y: 0 });
+        });
+
+        it('maps a click on the border between (0,0) and (0,1) to the cell on the bottom', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 0, clientY: 20 }, props, sizer);
+
+            expect(coords).toEqual({ x: 0, y: 1 });
+        });
+
+        it('maps a click on the topmost pixel of (0,1) to that cell coord', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 0, clientY: 21 }, props, sizer);
+
+            expect(coords).toEqual({ x: 0, y: 1 });
+        });
+
+        it('maps a click in the top left of (1,1) to that cell\'s coords', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 11, clientY: 21 }, props, sizer);
+
+            expect(coords).toEqual({ x: 1, y: 1 });
+        });
+
+        it('maps a click in the bottom right of (1,1) to that cell\'s coords', () => {
+            const props = {
+                rowHeight: 20, borderWidth: 1, columns: [{ width: 10 }, { width: 10 }],
+            } as ReactCanvasGridProps<any>;
+            const sizer = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords({ clientX: 20, clientY: 40 }, props, sizer);
+
+            expect(coords).toEqual({ x: 1, y: 1 });
+        });
+    });
 });

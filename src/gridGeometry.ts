@@ -174,13 +174,26 @@ export class GridGeometry {
         const columnBoundaries = GridGeometry.calculateColumnBoundaries(props);
         let colIndex = -1;
         for (let i = 0; i < columnBoundaries.length; i++) {
-            if (columnBoundaries[i].right >= x) {
+            if (columnBoundaries[i].right > x) {
                 colIndex = i;
                 break;
             }
         }
+
+        /*
+        The following (dodgy?) algebra gives the formula for finding the row index, where borders belong to lower cells:
+            Yclick <= (Ycell-1)b + (Ycell)c
+            Yclick <= Ycell(b) - b + Ycell(c)
+            Yclick <= Ycell(b + c) - b
+            Yclick + b <= Ycell(b + c)
+            (Yclick + b)/(b + c) <= Ycell
+            Ycell >= (Yclick + b)/(b + c)
+            Ycell = floor((Yclick + b)/(b + c))
+        */
+        const rowIndex = Math.floor((y + props.borderWidth) / (props.rowHeight + props.borderWidth));
+
         return {
-            y: Math.floor(y / (props.rowHeight + props.borderWidth)),
+            y: rowIndex,
             x: colIndex,
         };
     }
