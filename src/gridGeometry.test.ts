@@ -191,23 +191,50 @@ describe('GridGeomtry', () => {
     });
 
     describe('calculateGridOffset', () => {
+        function defaultNum(arg: number|undefined, def: number) {
+            return arg !== undefined ? arg : def;
+        }
+        function createElements(positions: Partial<{
+             gridLeft: number; gridRight: number;
+             scrollParentLeft: number; scrollParentRight: number;
+             maxViewSizeWidth: number;
+             gridTop: number; gridBottom: number;
+             scrollParentTop: number; scrollParentBottom: number;
+             maxViewSizeHeight: number;
+        }>) {
+            jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
+                width: 300,
+                height: positions.maxViewSizeWidth || 300,
+            }));
+            const props = { dummy: 'fake props' } as any;
+            const scrollParent = {
+                getBoundingClientRect: () => ({
+                    top: defaultNum(positions.scrollParentTop, 0),
+                    bottom: defaultNum(positions.scrollParentBottom, 300),
+                    height: defaultNum(positions.scrollParentBottom, 300) - defaultNum(positions.scrollParentTop, 0),
+                    left: defaultNum(positions.scrollParentLeft, 0),
+                    right: defaultNum(positions.scrollParentRight, 300),
+                    width: defaultNum(positions.scrollParentRight, 300) - defaultNum(positions.scrollParentLeft, 0),
+                }),
+            } as unknown as HTMLElement;
+            const sizer = {
+                getBoundingClientRect: () => ({
+                    top: defaultNum(positions.gridTop, -100),
+                    bottom: defaultNum(positions.gridBottom, 500),
+                    height: defaultNum(positions.gridBottom, 500) - defaultNum(positions.gridTop, -100),
+                    left: defaultNum(positions.gridLeft, -100),
+                    right: defaultNum(positions.gridRight, 500),
+                    width: defaultNum(positions.gridRight, 500) - defaultNum(positions.gridLeft, -100),
+                }),
+            } as unknown as HTMLDivElement;
+
+            return { props, scrollParent, sizer };
+        }
+
         describe('x-axis', () => {
+
             it('pushes the canvas right far enough to align its left with the scroll parent', () => {
-                jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
-                    width: 300,
-                    height: 300,
-                }));
-                const props = { dummy: 'fake props' } as any;
-                const scrollParent = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 300, bottom: 300, right: 800,
-                    }),
-                } as unknown as HTMLElement;
-                const sizer = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 200, bottom: 500, right: 900,
-                    }),
-                } as unknown as HTMLDivElement;
+                const { props, scrollParent, sizer } = createElements({ gridLeft: 200, scrollParentLeft: 300 });
 
                 const offset = GridGeometry.calculateGridOffset(props, scrollParent, sizer);
 
@@ -217,21 +244,7 @@ describe('GridGeomtry', () => {
             });
 
             it('never pulls the canvas left, even if there is space in the scroll parent', () => {
-                jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
-                    width: 300,
-                    height: 300,
-                }));
-                const props = { dummy: 'fake props' } as any;
-                const scrollParent = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 0, bottom: 300, right: 300,
-                    }),
-                } as unknown as HTMLElement;
-                const sizer = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 100, bottom: 500, right: 600,
-                    }),
-                } as unknown as HTMLDivElement;
+                const { props, scrollParent, sizer } = createElements({ scrollParentLeft: 100, gridLeft: 200 });
 
                 const offset = GridGeometry.calculateGridOffset(props, scrollParent, sizer);
 
@@ -241,21 +254,11 @@ describe('GridGeomtry', () => {
             });
 
             it('never pushes the canvas beyond the right edge of the sizer, even if there is space', () => {
-                jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
-                    width: 300,
-                    height: 300,
-                }));
-                const props = { dummy: 'fake props' } as any;
-                const scrollParent = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 0, bottom: 800, right: 800, // scroll parent extends right beyond grid
-                    }),
-                } as unknown as HTMLElement;
-                const sizer = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: -100, bottom: 500, width: 700, right: 600, // grid ends before scroll parent
-                    }),
-                } as unknown as HTMLDivElement;
+                const { props, scrollParent, sizer } = createElements({
+                    gridLeft: 0, gridRight: 700,
+                    scrollParentLeft: 100, scrollParentRight: 800, // scroll parent right is beyond grid
+                    maxViewSizeWidth: 300,
+                });
 
                 const offset = GridGeometry.calculateGridOffset(props, scrollParent, sizer);
 
@@ -267,21 +270,7 @@ describe('GridGeomtry', () => {
 
         describe('y-axis', () => {
             it('pushes the canvas down far enough to align its top with the scroll parent', () => {
-                jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
-                    width: 300,
-                    height: 300,
-                }));
-                const props = { dummy: 'fake props' } as any;
-                const scrollParent = {
-                    getBoundingClientRect: () => ({
-                        top: 300, left: 0, bottom: 800, right: 300,
-                    }),
-                } as unknown as HTMLElement;
-                const sizer = {
-                    getBoundingClientRect: () => ({
-                        top: 200, left: 0, bottom: 900, right: 500,
-                    }),
-                } as unknown as HTMLDivElement;
+                const { props, scrollParent, sizer } = createElements({ gridTop: 200, scrollParentTop: 300 });
 
                 const offset = GridGeometry.calculateGridOffset(props, scrollParent, sizer);
 
@@ -291,21 +280,7 @@ describe('GridGeomtry', () => {
             });
 
             it('never pulls the canvas up, even if there is space in the scroll parent', () => {
-                jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
-                    width: 300,
-                    height: 300,
-                }));
-                const props = { dummy: 'fake props' } as any;
-                const scrollParent = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 0, bottom: 300, right: 300,
-                    }),
-                } as unknown as HTMLElement;
-                const sizer = {
-                    getBoundingClientRect: () => ({
-                        top: 100, left: 0, bottom: 600, right: 500,
-                    }),
-                } as unknown as HTMLDivElement;
+                const { props, scrollParent, sizer } = createElements({ scrollParentTop: 100, gridTop: 200 });
 
                 const offset = GridGeometry.calculateGridOffset(props, scrollParent, sizer);
 
@@ -315,21 +290,11 @@ describe('GridGeomtry', () => {
             });
 
             it('never pushes the canvas beyond the bottom edge of the sizer, even if there is space', () => {
-                jest.spyOn(GridGeometry, 'calculateMaxViewSize').mockImplementation(() => ({
-                    width: 300,
-                    height: 300,
-                }));
-                const props = { dummy: 'fake props' } as any;
-                const scrollParent = {
-                    getBoundingClientRect: () => ({
-                        top: 0, left: 0, bottom: 800, right: 800, // scroll parent extends down beyond grid
-                    }),
-                } as unknown as HTMLElement;
-                const sizer = {
-                    getBoundingClientRect: () => ({
-                        top: -100, left: 0, bottom: 600, height: 700, right: 600, // grid ends before scroll parent
-                    }),
-                } as unknown as HTMLDivElement;
+                const { props, scrollParent, sizer } = createElements({
+                    gridTop: 0, gridBottom: 700,
+                    scrollParentTop: 100, scrollParentBottom: 800, // scroll parent right is beyond grid
+                    maxViewSizeHeight: 300,
+                });
 
                 const offset = GridGeometry.calculateGridOffset(props, scrollParent, sizer);
 
