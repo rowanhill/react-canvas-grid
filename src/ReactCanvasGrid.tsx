@@ -139,7 +139,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        const gridCoords = this.calculateGridCoords(event);
+        const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: gridCoords,
             bottomRight: gridCoords,
@@ -155,7 +155,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if ((event.buttons & 1) === 0) {
             return;
         }
-        const gridCoords = this.calculateGridCoords(event);
+        const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: {
                 x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
@@ -173,7 +173,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.state.selectedRange || !this.state.selectedRangeDragStart) {
             return;
         }
-        const gridCoords = this.calculateGridCoords(event);
+        const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: {
                 x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
@@ -188,11 +188,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         this.setState({selectedRange, selectedRangeDragStart});
     }
 
-    private calculateGridCoords = (event: React.MouseEvent<any, any>) => {
+    private calculateGridCellCoords = (event: React.MouseEvent<any, any>) => {
         if (!this.sizerRef.current) {
             throw new Error('Cannot convert mouse event coords to grid coords because sizerRef is not set');
         }
-        return GridGeometry.calculateGridCoords(
+        return GridGeometry.calculateGridCellCoords(
             event,
             this.props,
             this.sizerRef.current,

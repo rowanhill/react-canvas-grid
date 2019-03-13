@@ -108,16 +108,16 @@ export class GridGeometry {
     }
 
     /**
-     * Calculate the column & row index (i.e. "grid coordinates") that contains a click. The click coordinates
+     * Calculate the column & row index (i.e. "grid cell coordinates") that contains a click. The click coordinates
      * are given in the window/viewport's frame of reference.
      */
-    public static calculateGridCoords = (
+    public static calculateGridCellCoords = (
         event: {clientX: number, clientY: number},
         props: ReactCanvasGridProps<any>,
         sizer: HTMLDivElement,
     ): Coord => {
-        return GridGeometry.sizerToGrid(
-            GridGeometry.windowToSizer(
+        return GridGeometry.gridPixelToGridCell(
+            GridGeometry.windowPixelToGridPixel(
                 {x: event.clientX, y: event.clientY},
                 sizer,
             ),
@@ -159,7 +159,7 @@ export class GridGeometry {
         }
     }
 
-    private static windowToSizer = ({x, y}: Coord, sizer: HTMLDivElement): Coord => {
+    private static windowPixelToGridPixel = ({x, y}: Coord, sizer: HTMLDivElement): Coord => {
         const sizerClientRect = sizer.getBoundingClientRect();
         return {
             x: x - sizerClientRect.left,
@@ -167,7 +167,7 @@ export class GridGeometry {
         };
     }
 
-    private static sizerToGrid = (
+    private static gridPixelToGridCell = (
         {x, y}: Coord,
         props: ReactCanvasGridProps<any>,
     ): Coord => {
