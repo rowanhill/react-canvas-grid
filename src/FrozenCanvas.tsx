@@ -17,9 +17,8 @@ export interface FrozenCanvasProps<T> {
     gridOffset: Coord;
 }
 
-export interface PreviousDrawInfo {
+export interface FrozenPreviousDrawInfo {
     gridOffset: Coord;
-    rect: { top: number; left: number; right: number; bottom: number };
 }
 
 const dpr =  window.devicePixelRatio;
@@ -27,6 +26,7 @@ const dpr =  window.devicePixelRatio;
 export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
+    private prevDraw: FrozenPreviousDrawInfo|null = null;
     private renderer: BaseCanvasRenderer<T>|null = null;
 
     constructor(props: FrozenCanvasProps<T>) {
@@ -57,7 +57,7 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
         this.renderer = new BaseCanvasRenderer(this.canvasRef.current, dpr, true);
     }
 
-    public componentDidUpdate() {
+    public componentDidUpdate(prevProps: FrozenCanvasProps<T>) {
         if (!this.renderer) {
             throw new Error('renderer is null in componentDidUpdate - cannot draw');
         }
@@ -70,6 +70,18 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
             this.hasFixedScale = true;
         }
 
-        this.renderer.drawFrozenCells(this.props);
+        // If anything that affects the grid other than the gridOffset / visibleRect has changed
+        // then invalidate the previously drawn region
+        for (const key of Object.keys(this.props) as Array<keyof FrozenCanvasProps<T>>) {
+            if (key === 'gridOffset') {
+                continue;
+            }
+            if (this.props[key] !== prevProps[key]) {
+                this.prevDraw = null;
+                break;
+            }
+        }
+
+        this.prevDraw = this.renderer.drawFrozenCells(this.props, this.prevDraw);
     }
 }
