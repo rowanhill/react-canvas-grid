@@ -1,4 +1,5 @@
 import { BaseCanvasProps, PreviousDrawInfo } from './BaseCanvas';
+import { FrozenCanvasProps } from './FrozenCanvas';
 import { CellDef, ColumnDef, Coord } from './types';
 
 export class BaseCanvasRenderer<T> {
@@ -6,9 +7,9 @@ export class BaseCanvasRenderer<T> {
     private readonly context: CanvasRenderingContext2D;
     private readonly dpr: number;
 
-    constructor(canvas: HTMLCanvasElement, dpr: number) {
+    constructor(canvas: HTMLCanvasElement, dpr: number, alpha: boolean = false) {
         this.canvas = canvas;
-        const context = this.canvas.getContext('2d', { alpha: false });
+        const context = this.canvas.getContext('2d', { alpha });
         if (!context) {
             throw new Error('Could not create canvas contex');
         }
@@ -90,6 +91,103 @@ export class BaseCanvasRenderer<T> {
                 bottom: Math.min(props.gridOffset.y + props.height, props.visibleRect.bottom),
             },
         };
+    }
+
+    public drawFrozenCells(props: FrozenCanvasProps<T>) {
+        this.context.fillStyle = 'lightgrey';
+        this.context.fillRect(0, 0, props.width, props.frozenRowsHeight);
+        this.context.fillRect(0, props.frozenRowsHeight, props.frozenColsWidth, props.height - props.frozenRowsHeight);
+
+        // Draw immobile cell(s) in top left
+        for (let colIndex = 0; colIndex < props.frozenCols; colIndex++) {
+            const col = props.columns[colIndex];
+            const {left: cellLeft} = props.colBoundaries[colIndex];
+            for (let rowIndex = 0; rowIndex < props.frozenRows; rowIndex++) {
+                const row = props.data[rowIndex];
+                const cell = row[col.fieldName];
+
+                const cellBounds = {
+                    left: cellLeft,
+                    top: rowIndex * (props.rowHeight + props.borderWidth),
+                    right: cellLeft + col.width,
+                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
+                    width: col.width,
+                    height: props.rowHeight,
+                };
+
+                this.drawCell(cell, cellBounds, col);
+            }
+        }
+
+        // Draw frozen rows
+        this.context.save();
+        this.context.beginPath();
+        this.context.rect(props.frozenColsWidth, 0, props.width - props.frozenColsWidth, props.frozenRowsHeight);
+        this.context.closePath();
+        this.context.clip();
+        this.context.translate(-props.gridOffset.x, 0);
+        const visibleLeft = props.gridOffset.x + props.frozenColsWidth;
+        const visibleRight = props.gridOffset.x + props.width;
+        for (let colIndex = 0; colIndex < props.columns.length; colIndex++) {
+            const {left: cellLeft, right: cellRight} = props.colBoundaries[colIndex];
+            if (cellRight < visibleLeft) {
+                // Cell is off screen to left, so skip this column
+                continue;
+            }
+            if (cellLeft > visibleRight) {
+                // Cell is off screen to right, so skip this and all future columns
+                break;
+            }
+            const col = props.columns[colIndex];
+            for (let rowIndex = 0; rowIndex < props.frozenRows; rowIndex++) {
+                const row = props.data[rowIndex];
+                const cell = row[col.fieldName];
+
+                const cellBounds = {
+                    left: cellLeft,
+                    top: rowIndex * (props.rowHeight + props.borderWidth),
+                    right: cellLeft + col.width,
+                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
+                    width: col.width,
+                    height: props.rowHeight,
+                };
+
+                this.drawCell(cell, cellBounds, col);
+            }
+        }
+        this.context.restore();
+
+        // Draw frozen cols
+        this.context.save();
+        this.context.beginPath();
+        this.context.rect(0, props.frozenRowsHeight, props.frozenColsWidth, props.height - props.frozenRowsHeight);
+        this.context.closePath();
+        this.context.clip();
+        this.context.translate(0, -props.gridOffset.y);
+        const visibleTop = props.gridOffset.y + props.frozenRowsHeight;
+        const visibleBottom = props.gridOffset.y + props.height;
+        const minRowIndex = Math.floor(visibleTop / (props.rowHeight + props.borderWidth));
+        const maxRowIndex = Math.ceil(visibleBottom / (props.rowHeight + props.borderWidth));
+        for (let colIndex = 0; colIndex < props.frozenCols; colIndex++) {
+            const col = props.columns[colIndex];
+            const {left: cellLeft} = props.colBoundaries[colIndex];
+            for (let rowIndex = minRowIndex; rowIndex < maxRowIndex; rowIndex++) {
+                const row = props.data[rowIndex];
+                const cell = row[col.fieldName];
+
+                const cellBounds = {
+                    left: cellLeft,
+                    top: rowIndex * (props.rowHeight + props.borderWidth),
+                    right: cellLeft + col.width,
+                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
+                    width: col.width,
+                    height: props.rowHeight,
+                };
+
+                this.drawCell(cell, cellBounds, col);
+            }
+        }
+        this.context.restore();
     }
 
     public translateToGridOffset(gridOffset: Coord) {

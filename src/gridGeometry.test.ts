@@ -1,5 +1,6 @@
 import { GridGeometry } from './gridGeometry';
 import { ReactCanvasGridProps } from './ReactCanvasGrid';
+import { Coord } from './types';
 
 describe('GridGeomtry', () => {
     beforeEach(() => {
@@ -17,6 +18,8 @@ describe('GridGeomtry', () => {
                 ],
                 data: [],
                 rowHeight: 19,
+                frozenRows: 0,
+                frozenCols: 0,
             };
 
             const boundaries = GridGeometry.calculateColumnBoundaries(props);
@@ -40,6 +43,8 @@ describe('GridGeomtry', () => {
                 ],
                 data: [ {}, {}, {}, {}, {} ],
                 rowHeight: 19,
+                frozenRows: 0,
+                frozenCols: 0,
             };
 
             const size = GridGeometry.calculateGridSize(props);
@@ -57,6 +62,8 @@ describe('GridGeomtry', () => {
                 columns: [{ width: 10, fieldName: '1' }],
                 data: [ {} ],
                 rowHeight: 10,
+                frozenRows: 0,
+                frozenCols: 0,
             };
             const scrollParent: HTMLElement = {
                 getBoundingClientRect: () => ({ height: 200, width: 300 }),
@@ -74,6 +81,8 @@ describe('GridGeomtry', () => {
                 columns: [{ width: 500, fieldName: '1' }],
                 data: [ {} ],
                 rowHeight: 500,
+                frozenRows: 0,
+                frozenCols: 0,
             };
             const scrollParent: HTMLElement = {
                 getBoundingClientRect: () => ({ height: 200, width: 300 }),
@@ -91,6 +100,8 @@ describe('GridGeomtry', () => {
                 columns: [{ width: 500, fieldName: '1' }],
                 data: [ {} ],
                 rowHeight: 500,
+                frozenRows: 0,
+                frozenCols: 0,
             };
             const scrollParent: HTMLElement = {
                 getBoundingClientRect: () => ({ height: 700, width: 700 }),
@@ -104,6 +115,16 @@ describe('GridGeomtry', () => {
     });
 
     describe('calculateViewRect', () => {
+        const gridOffset: Coord = {x: 0, y: 0};
+        const props: ReactCanvasGridProps<any> = {
+            borderWidth: 1,
+            columns: [{ width: 10, fieldName: '1' }],
+            data: [ {} ],
+            rowHeight: 10,
+            frozenRows: 0,
+            frozenCols: 0,
+        };
+
         it('can be bounded by the scroll parent (i.e. the grid is in a small scrolling div)', () => {
             const scrollParent = {
                 getBoundingClientRect: () => ({
@@ -117,7 +138,7 @@ describe('GridGeomtry', () => {
             } as unknown as HTMLDivElement;
             const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
 
-            const rect = GridGeometry.calculateViewRect(scrollParent, sizer, screen);
+            const rect = GridGeometry.calculateViewRect(props, gridOffset, scrollParent, sizer, screen);
 
             expect(rect).toEqual({
                 top: 100, left: 100, height: 500, width: 500, bottom: 600, right: 600,
@@ -137,7 +158,7 @@ describe('GridGeomtry', () => {
             } as unknown as HTMLDivElement;
             const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
 
-            const rect = GridGeometry.calculateViewRect(scrollParent, sizer, screen);
+            const rect = GridGeometry.calculateViewRect(props, gridOffset, scrollParent, sizer, screen);
 
             expect(rect).toEqual({
                 top: 100, left: 100, height: 1000, width: 1000, bottom: 1100, right: 1100,
@@ -157,7 +178,7 @@ describe('GridGeomtry', () => {
             } as unknown as HTMLDivElement;
             const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
 
-            const rect = GridGeometry.calculateViewRect(scrollParent, sizer, screen);
+            const rect = GridGeometry.calculateViewRect(props, gridOffset, scrollParent, sizer, screen);
 
             expect(rect).toEqual({
                 top: 100, left: 100, height: 1000, width: 1000, bottom: 1100, right: 1100,
@@ -177,7 +198,7 @@ describe('GridGeomtry', () => {
             } as unknown as HTMLDivElement;
             const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
 
-            const rect = GridGeometry.calculateViewRect(scrollParent, sizer, screen);
+            const rect = GridGeometry.calculateViewRect(props, gridOffset, scrollParent, sizer, screen);
 
             expect(rect).toEqual({
                 top: 200, // Scroll parent truncates grid at top
@@ -186,6 +207,105 @@ describe('GridGeomtry', () => {
                 right: 100, // Screen truncates grid at right
                 height: 200,
                 width: 100, // Grid is only 100px wide, so nothing truncates it
+            });
+        });
+
+        it('excludes the space taken by frozen rows', () => {
+            const propsWithRows = {
+                ...props,
+                frozenRows: 2,
+                borderWidth: 1,
+                rowHeight: 10,
+            } as ReactCanvasGridProps<any>;
+            const scrollParent = {
+                getBoundingClientRect: () => ({
+                    top: 0, left: 0, bottom: 1000, right: 1000,
+                }),
+            } as unknown as HTMLElement;
+            const sizer = {
+                getBoundingClientRect: () => ({
+                    top: 0, left: 0, bottom: 1000, right: 1000,
+                }),
+            } as unknown as HTMLDivElement;
+            const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
+
+            const rect = GridGeometry.calculateViewRect(propsWithRows, gridOffset, scrollParent, sizer, screen);
+
+            expect(rect).toEqual({
+                top: 22,
+                left: 0,
+                bottom: 1000,
+                right: 1000,
+                height: 978,
+                width: 1000,
+            });
+        });
+
+        it('excludes the space taken by frozen cols', () => {
+            const propsWithRows = {
+                ...props,
+                frozenCols: 2,
+                borderWidth: 1,
+                columns: [ { width: 10 }, { width: 10 } ],
+            } as ReactCanvasGridProps<any>;
+            const scrollParent = {
+                getBoundingClientRect: () => ({
+                    top: 0, left: 0, bottom: 1000, right: 1000,
+                }),
+            } as unknown as HTMLElement;
+            const sizer = {
+                getBoundingClientRect: () => ({
+                    top: 0, left: 0, bottom: 1000, right: 1000,
+                }),
+            } as unknown as HTMLDivElement;
+            const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
+
+            const rect = GridGeometry.calculateViewRect(propsWithRows, gridOffset, scrollParent, sizer, screen);
+
+            expect(rect).toEqual({
+                top: 0,
+                left: 22,
+                bottom: 1000,
+                right: 1000,
+                height: 1000,
+                width: 978,
+            });
+        });
+
+        it('ignores frozen col / row space when the frozen cells are not visible', () => {
+            // Grid offset < sizer's displacement, because the bottom/right of the grid have been reached,
+            // and visible area is reducing. The sizer keeps scrolling, but the grid offset maxes out.
+            // In this case, the frozen rows/cols can scroll out of view.
+            const scrolledGridOffset = { x: 25, y: 25 };
+            const propsWithRows = {
+                ...props,
+                frozenCols: 2,
+                frozenRows: 2,
+                borderWidth: 1,
+                rowHeight: 10,
+                columns: [ { width: 10 }, { width: 10 } ],
+            } as ReactCanvasGridProps<any>;
+            const scrollParent = {
+                getBoundingClientRect: () => ({
+                    top: 0, left: 0, bottom: 1000, right: 1000,
+                }),
+            } as unknown as HTMLElement;
+            const sizer = {
+                getBoundingClientRect: () => ({
+                    top: -50, left: -50, bottom: 950, right: 950,
+                }),
+            } as unknown as HTMLDivElement;
+            const screen: Screen = { availHeight: 1000, availWidth: 1000 } as unknown as Screen;
+
+            const rect = GridGeometry.calculateViewRect(propsWithRows, scrolledGridOffset, scrollParent, sizer, screen);
+
+            expect(rect).toEqual({
+                top: 50,
+                left: 50,
+                bottom: 1000,
+                right: 1000,
+                height: 950,
+                width: 950,
             });
         });
     });

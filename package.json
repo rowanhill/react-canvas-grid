@@ -12,6 +12,7 @@
     "watch": "tsc -w",
     "test": "jest && cypress run --browser chrome",
     "cypress": "cypress open",
+    "cypress:once": "cypress run --browser chrome",
     "jest": "jest --watch",
     "jest:once": "jest",
     "tslint": "tslint src/**/*.ts* cypress/**/*.ts* examples/**/*.ts*"

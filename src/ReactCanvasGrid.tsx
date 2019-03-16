@@ -1,16 +1,24 @@
 import * as React from 'react';
 import { BaseCanvas } from './BaseCanvas';
 import { CanvasHolder } from './CanvasHolder';
+import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
 import { HighlightCanvas } from './HighlightCanvas';
 import { ColumnDef, Coord, DataRow } from './types';
 
-export interface ReactCanvasGridProps<T> {
+interface RequiredProps<T> {
     columns: ColumnDef[];
     data: Array<DataRow<T>>;
     rowHeight: number;
-    borderWidth: number;
 }
+interface DefaultedProps {
+    borderWidth: number;
+    frozenRows: number;
+    frozenCols: number;
+}
+
+export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<DefaultedProps>;
+export type ReactCanvasGridProps<T> = RequiredProps<T> & DefaultedProps;
 
 interface ReactCanvasGridState {
     visibleRect: ClientRect;
@@ -28,6 +36,8 @@ export interface SelectRange {
 export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
     public static defaultProps = {
         borderWidth: 1,
+        frozenRows: 0,
+        frozenCols: 0,
     };
 
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
@@ -76,6 +86,8 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             GridGeometry.calculateMaxViewSize(this.props, this.scrollParent) :
             { height: 0, width: 0 };
         const gridSize = GridGeometry.calculateGridSize(this.props);
+        const frozenRowsHeight = GridGeometry.calculateFrozenRowsHeight(this.props);
+        const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
 
         return (
             <div
@@ -110,6 +122,20 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                         selectedRange={this.state.selectedRange}
                         borderWidth={this.props.borderWidth}
                     />
+                    <FrozenCanvas
+                        data={this.props.data}
+                        columns={this.props.columns}
+                        colBoundaries={columnBoundaries}
+                        rowHeight={this.props.rowHeight}
+                        borderWidth={this.props.borderWidth}
+                        width={canvasSize.width}
+                        height={canvasSize.height}
+                        gridOffset={this.state.gridOffset}
+                        frozenRows={this.props.frozenRows}
+                        frozenCols={this.props.frozenCols}
+                        frozenRowsHeight={frozenRowsHeight}
+                        frozenColsWidth={frozenColsWidth}
+                    />
                 </CanvasHolder>
             </div>
         );
@@ -134,7 +160,12 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
         this.setState({
             gridOffset,
-            visibleRect: GridGeometry.calculateViewRect(this.scrollParent, this.sizerRef.current),
+            visibleRect: GridGeometry.calculateViewRect(
+                this.props,
+                gridOffset,
+                this.scrollParent,
+                this.sizerRef.current,
+            ),
         });
     }
 

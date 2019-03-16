@@ -34,7 +34,12 @@ const highlights: HighlightPosition[] = [
   'none', 'none', 'none', 'none', 'none', 'none', // Hacky way to make 'none' more likely
 ];
 
-const renderBackground = (
+const renderHeaderBackground = (context: CanvasRenderingContext2D, cellBounds: ClientRect) => {
+  context.fillStyle = '#eee';
+  context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
+};
+
+const renderCellBackground = (
   context: CanvasRenderingContext2D,
   cellBounds: ClientRect,
   cell: CustomBgCellDef,
@@ -84,6 +89,7 @@ function createData() {
       date: {
         getText: () => (i + 1).toString(),
         data: null,
+        renderBackground: renderHeaderBackground,
       },
     };
     for (let j = 0; j < numCols; j++) {
@@ -92,7 +98,7 @@ function createData() {
       const cell: CustomBgCellDef = {
         getText: () => label.text,
         data: { bgColour: label.colour, highlight },
-        renderBackground,
+        renderBackground: i === 0 ? renderHeaderBackground : renderCellBackground,
       };
       row[j.toString()] = cell as CellDef<AllCellDataTypes>;
     }
@@ -129,7 +135,13 @@ class App extends Component<{}, AppState> {
               <span>Body header</span>
             </div>
             <div style={{paddingLeft: '100px', paddingRight: '100px', backgroundColor: 'purple'}}>
-              <ReactCanvasGrid<AllCellDataTypes> columns={colDefs} data={this.state.data} rowHeight={20} />
+              <ReactCanvasGrid<AllCellDataTypes>
+                columns={colDefs}
+                data={this.state.data}
+                rowHeight={20}
+                frozenRows={1}
+                frozenCols={1}
+              />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
               <span>Body footer</span>

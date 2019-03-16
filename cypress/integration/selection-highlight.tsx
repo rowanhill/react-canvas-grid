@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {ReactCanvasGrid, ReactCanvasGridProps} from '../../src/index';
+import {ReactCanvasGrid} from '../../src/index';
+import { DefaultedReactCanvasGridProps } from '../../src/ReactCanvasGrid';
 import { Holder } from '../components/ScrollingHolder';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 const getProps = () => {
     const colsAndRows = createFakeDataAndColumns(100, 20, () => null);
-    const props: ReactCanvasGridProps<null> = {
+    const props: DefaultedReactCanvasGridProps<null> = {
         data: colsAndRows.rows,
         columns: colsAndRows.columns,
         borderWidth: 1,
@@ -49,7 +50,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
             release: boolean = false,
         ) {
             cy.get('#rcg-holder canvas').eq(1)
-                .trigger('mousedown', 'center')
+                .trigger('mousedown', 'center', { force: true })
                 .trigger('mousemove', finalPos, { buttons: 1, force: true });
             if (release) {
                 cy.get('#rcg-holder canvas').eq(1)

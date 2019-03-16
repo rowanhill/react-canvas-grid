@@ -48,7 +48,7 @@ export class GridGeometry {
     }
 
     /**
-     * Calculate the largest amount of grid that could potentially be visible
+     * Calculate the largest amount of grid (including frozen cells) that could potentially be visible
      */
     public static calculateMaxViewSize = (
         props: ReactCanvasGridProps<any>,
@@ -64,28 +64,52 @@ export class GridGeometry {
     }
 
     /**
-     * Calculate the portion of the grid that is currently visible. The result is in the sizer div's
+     * Calculate the (unfrozen) portion of the grid that is currently visible. The result is in the sizer div's
      * frame of reference.
      */
     public static calculateViewRect = (
+        props: ReactCanvasGridProps<any>,
+        gridOffset: Coord,
         scrollParent: HTMLElement|null,
         sizer: HTMLDivElement,
         screen: Screen = window.screen,
     ): ClientRect => {
-        if (!scrollParent) {
-            throw new Error('Cannot resize canvas: scrollParent is null');
-        }
         const sizerClientRect = sizer.getBoundingClientRect();
         const scrollParentClientRect = GridGeometry.getScrollParentClientRect(scrollParent, screen);
+
+        const frozenRowHeight = GridGeometry.calculateFrozenRowsHeight(props);
+        const frozenColWidth = GridGeometry.calculateFrozenColsWidth(props);
+
         const bounds = {
-            top: Math.max(sizerClientRect.top, scrollParentClientRect.top, 0) - sizerClientRect.top,
-            left: Math.max(sizerClientRect.left, scrollParentClientRect.left, 0) - sizerClientRect.left,
+            top: Math.max(sizerClientRect.top + gridOffset.y + frozenRowHeight, scrollParentClientRect.top, 0) -
+                sizerClientRect.top,
+            left: Math.max(sizerClientRect.left + gridOffset.x + frozenColWidth, scrollParentClientRect.left, 0) -
+                sizerClientRect.left,
             bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, screen.availHeight) -
                 sizerClientRect.top,
             right: Math.min(sizerClientRect.right, scrollParentClientRect.right, screen.availWidth) -
                 sizerClientRect.left,
         };
         return { ...bounds, height: bounds.bottom - bounds.top, width: bounds.right - bounds.left };
+    }
+
+    /*
+     * Calculate the height of all the frozen rows and their bottom borders
+     */
+    public static calculateFrozenRowsHeight = (props: ReactCanvasGridProps<any>): number => {
+        return (props.rowHeight + props.borderWidth) * props.frozenRows;
+    }
+
+    /*
+     * Calculate the width of all the frozen rows and their right borders
+     */
+    public static calculateFrozenColsWidth = (props: ReactCanvasGridProps<any>): number => {
+        const columnBoundaries = GridGeometry.calculateColumnBoundaries(props);
+        const rightmostColIndex = props.frozenCols - 1;
+        if (rightmostColIndex < 0) {
+            return 0;
+        }
+        return columnBoundaries[rightmostColIndex].right + props.borderWidth;
     }
 
     /**
