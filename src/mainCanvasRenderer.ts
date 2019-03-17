@@ -1,4 +1,4 @@
-import { CommonCanvasRenderer } from './commonCanvasRenderer';
+import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
 import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
 import { Coord } from './types';
 
@@ -92,7 +92,7 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
      */
     public drawWholeBorderBackground(propsWidth: number, propsHeight: number) {
         // Draw base in border colour; cells will draw over this, leaving only the borders
-        this.context.fillStyle = 'lightgrey';
+        this.context.fillStyle = borderColour;
         this.context.fillRect(0, 0, propsWidth, propsHeight);
     }
 
@@ -114,7 +114,7 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     public drawNewBorderBackground(xDiff: number, yDiff: number, propsWidth: number, propsHeight: number) {
         // Draw base in border colour in new areas; cells will draw over this, leaving only the borders
         // (Note, we might fill a corner twice if scrolling diagnally, but the perf cost seems minimal)
-        this.context.fillStyle = 'lightgrey';
+        this.context.fillStyle = borderColour;
         if (yDiff < 0) {
             // Moved down - draw bottom
             const top = propsHeight + yDiff;

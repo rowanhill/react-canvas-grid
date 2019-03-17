@@ -1,4 +1,4 @@
-import { CommonCanvasRenderer } from './commonCanvasRenderer';
+import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
 import { FrozenCanvasProps, FrozenPreviousDrawInfo } from './FrozenCanvas';
 
 export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
@@ -51,7 +51,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     }
 
     public drawInvalidatedAreaBackground(rowAreaToPaint: ClientRect|null, colAreaToPaint: ClientRect|null) {
-        this.context.fillStyle = 'lightgrey';
+        this.context.fillStyle = borderColour;
         if (rowAreaToPaint) {
             this.context.fillRect(
                 rowAreaToPaint.left,

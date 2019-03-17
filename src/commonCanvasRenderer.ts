@@ -1,5 +1,7 @@
 import { CellDef, ColumnDef } from './types';
 
+export const borderColour = 'lightgrey';
+
 export class CommonCanvasRenderer<T> {
     protected readonly canvas: HTMLCanvasElement;
     protected readonly context: CanvasRenderingContext2D;
