@@ -154,6 +154,10 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     }
 
     public drawInvalidatedCellsRows(props: FrozenCanvasProps<T>, rowAreaToPaint: ClientRect|null) {
+        if (!rowAreaToPaint) {
+            return;
+        }
+
         this.context.save();
 
         // Set the clip area to the frozen rows part of the canvas
@@ -184,7 +188,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             for (let rowIndex = 0; rowIndex < props.frozenRows; rowIndex++) {
                 const cellBounds = calculateCellBounds(props, rowIndex, colIndex);
 
-                if (!rowAreaToPaint || rectsInsersect(cellBounds, rowAreaToPaint)) {
+                if (rectsInsersect(cellBounds, rowAreaToPaint)) {
                     // Cell overlaps with redraw area, so needs drawing
                     const row = props.data[rowIndex];
                     const cell = row[col.fieldName];
@@ -198,6 +202,10 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     }
 
     public drawInvalidatedCellsCols(props: FrozenCanvasProps<T>, colAreaToPaint: ClientRect|null) {
+        if (!colAreaToPaint) {
+            return;
+        }
+
         this.context.save();
 
         // Set the clip area to the frozen cols part of the canvas
@@ -221,7 +229,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             for (let rowIndex = minRowIndex; rowIndex < maxRowIndex; rowIndex++) {
                 const cellBounds = calculateCellBounds(props, rowIndex, colIndex);
 
-                if (!colAreaToPaint || rectsInsersect(cellBounds, colAreaToPaint)) {
+                if (rectsInsersect(cellBounds, colAreaToPaint)) {
                     // Cell overlaps with redraw area, so needs drawing
                     const row = props.data[rowIndex];
                     const cell = row[col.fieldName];
