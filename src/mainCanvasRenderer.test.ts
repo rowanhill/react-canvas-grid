@@ -69,14 +69,6 @@ describe('MainCanvasRenderer', () => {
     let mockCanvas: HTMLCanvasElement;
     let renderer: MainCanvasRenderer<null>;
 
-    describe('fixScale', () => {
-        it('set the scale on the canvas to the device pixel ratio', () => {
-            renderer.fixScale();
-
-            expect(mockContext.scale).toHaveBeenCalledWith(dpr, dpr);
-        });
-    });
-
     describe('draw', () => {
         const normalisedProps: NormalisedProps<null> = {
             borderWidth: 1,

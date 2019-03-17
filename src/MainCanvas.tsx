@@ -20,7 +20,7 @@ export interface PreviousDrawInfo {
     rect: { top: number; left: number; right: number; bottom: number };
 }
 
-const dpr =  window.devicePixelRatio;
+const dpr = window.devicePixelRatio;
 
 export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
