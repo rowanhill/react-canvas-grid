@@ -1,7 +1,5 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
 import { FrozenCanvasProps, FrozenPreviousDrawInfo } from './FrozenCanvas';
-import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
-import { CellDef, ColumnDef, Coord } from './types';
 
 export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     constructor(canvas: HTMLCanvasElement, dpr: number) {
