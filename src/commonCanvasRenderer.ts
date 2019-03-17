@@ -44,6 +44,8 @@ export class CommonCanvasRenderer<T> {
         column: ColumnDef,
     ) => {
         context.fillStyle = 'black';
-        context.fillText(cell.getText(), cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
+        context.textBaseline = 'middle';
+        const verticalCentre = cellBounds.top + (cellBounds.height / 2);
+        context.fillText(cell.getText(), cellBounds.left + 2, verticalCentre, cellBounds.width - 4);
     }
 }
