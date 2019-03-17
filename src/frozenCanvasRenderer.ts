@@ -7,140 +7,167 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     }
 
     public drawFrozenCells(props: FrozenCanvasProps<T>, prevDraw: FrozenPreviousDrawInfo|null): FrozenPreviousDrawInfo {
-        // Draw the background in border colour
-        this.context.fillStyle = 'lightgrey';
-        let rowAreaToPaint: ClientRect;
-        let colAreaToPaint: ClientRect;
+        let rowAreaToPaint: ClientRect|null;
+        let colAreaToPaint: ClientRect|null;
         if (!prevDraw) {
-            // Draw the rows bg
-            this.context.fillRect(0, 0, props.width, props.frozenRowsHeight);
-            // Draw the cols bg, minus the overlap with rows
-            const frozenColsHeight = props.height - props.frozenRowsHeight;
-            this.context.fillRect(0, props.frozenRowsHeight, props.frozenColsWidth, frozenColsHeight);
-
-            // Draw immobile cell(s) in top left
-            for (let colIndex = 0; colIndex < props.frozenCols; colIndex++) {
-                const col = props.columns[colIndex];
-                const {left: cellLeft} = props.colBoundaries[colIndex];
-                for (let rowIndex = 0; rowIndex < props.frozenRows; rowIndex++) {
-                    const row = props.data[rowIndex];
-                    const cell = row[col.fieldName];
-
-                    const cellBounds = {
-                        left: cellLeft,
-                        top: rowIndex * (props.rowHeight + props.borderWidth),
-                        right: cellLeft + col.width,
-                        bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
-                        width: col.width,
-                        height: props.rowHeight,
-                    };
-
-                    this.drawCell(cell, cellBounds, col);
-                }
-            }
-
-            // It's the first draw, so set the paint areas to the entire rects
+            // It's the first draw, the entire area is 'invalidated'
             rowAreaToPaint = {
-                left: props.frozenColsWidth + props.gridOffset.x, right: props.width + props.gridOffset.x,
-                width: props.width - props.frozenColsWidth,
-                top: props.gridOffset.y, bottom: props.frozenRowsHeight + props.gridOffset.y,
-                height: props.frozenRowsHeight,
+                left: 0, right: props.width, width: props.width,
+                top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
             };
             colAreaToPaint = {
-                left: props.gridOffset.x, right: props.frozenColsWidth + props.gridOffset.x,
-                width: props.frozenColsWidth,
-                top: props.frozenRowsHeight + props.gridOffset.y, bottom: props.height + props.gridOffset.y,
-                height: props.height - props.frozenRowsHeight,
+                left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
+                top: props.frozenRowsHeight, bottom: props.height, height: props.height - props.frozenRowsHeight,
             };
+
+            // Fill the background with border colour
+            this.drawInvalidatedAreaBackground(rowAreaToPaint, colAreaToPaint);
+
+            // Draw immobile cell(s) in top left; these will not be redrawn (or overdrawn) when scrolling
+            this.drawTopLeftCells(props);
         } else {
-            // Translate rows according to difference from previous draw
             const xDiff = (prevDraw.gridOffset.x - props.gridOffset.x);
-            this.context.drawImage(
-                this.canvas,
-                // source rows from right of top-left immobile cell(s) plus the delta
-                (props.frozenColsWidth - xDiff) * this.dpr, 0,
-                (this.canvas.width - props.frozenColsWidth) * this.dpr, props.frozenRowsHeight * this.dpr,
-                // destination to right of top-left immobile cell(s)
-                props.frozenColsWidth, 0,
-                this.canvas.width - props.frozenColsWidth, props.frozenRowsHeight,
-            );
-
-            // Fill the newly revealed part of the rows with border colour as background
-            if (xDiff < 0) {
-                // Moved right - draw right
-                const left = props.width + xDiff;
-                const width = -xDiff;
-                this.context.fillRect(left, 0, width, props.frozenRowsHeight);
-
-                rowAreaToPaint = {
-                    left: left + props.gridOffset.x, width, right: left + width + props.gridOffset.x,
-                    top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
-                };
-            } else if (xDiff > 0) {
-                // Moved left - draw left
-                const left = props.frozenColsWidth;
-                const width = xDiff;
-                this.context.fillRect(left, 0, width, props.frozenRowsHeight);
-
-                rowAreaToPaint = {
-                    left: left + props.gridOffset.x, width, right: left + width + props.gridOffset.x,
-                    top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
-                };
-            } else {
-                rowAreaToPaint = {
-                    left: 0, width: 0, right: 0,
-                    top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
-                };
-            }
-
-            // Translate cols according to difference from previous draw
             const yDiff = (prevDraw.gridOffset.y - props.gridOffset.y);
-            this.context.drawImage(
-                this.canvas,
-                // source rows from bottom of top-left immobile cell(s) plus the delta
-                0, (props.frozenRowsHeight - yDiff) * this.dpr,
-                props.frozenColsWidth * this.dpr, (this.canvas.height - props.frozenRowsHeight) * this.dpr ,
-                // destination to bottom of top-left immobile cell(s)
-                0, props.frozenRowsHeight,
-                props.frozenColsWidth, this.canvas.height - props.frozenRowsHeight,
-            );
 
-            // Fill the newly revealed part of the cols with border colour as background
-            if (yDiff < 0) {
-                // Moved down - draw bottom
-                const top = props.height + yDiff;
-                const height = -yDiff;
-                this.context.fillRect(0, top, props.frozenColsWidth, height);
+            // Translate rows and cols according to difference from previous draw
+            this.shiftRowsHorizontally(props, xDiff);
+            this.shiftColsVertically(props, yDiff);
 
-                colAreaToPaint = {
-                    top: top + props.gridOffset.y, height, bottom: top + height + props.gridOffset.y,
-                    left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
-                };
-            } else if (yDiff > 0) {
-                // Moved up - draw top
-                const top = props.frozenRowsHeight;
-                const height = yDiff;
-                this.context.fillRect(0, top, props.frozenColsWidth, height);
+            // Work out the rects that have been revealed since the last drawn
+            rowAreaToPaint = this.calculateInvalidatedAreaRows(props, xDiff);
+            colAreaToPaint = this.calculateInvalidatedAreaCols(props, yDiff);
 
-                colAreaToPaint = {
-                    top: top + props.gridOffset.y, height, bottom: top + height + props.gridOffset.y,
-                    left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
-                };
-            } else {
-                colAreaToPaint = {
-                    top: 0, height: 0, bottom: 0,
-                    left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
-                };
-            }
+            // Fill the newly revealed part of the rows and cols with border colour as background
+            this.drawInvalidatedAreaBackground(rowAreaToPaint, colAreaToPaint);
         }
 
         // Draw frozen rows
+        this.drawInvalidatedCellsRows(props, rowAreaToPaint);
+
+        // Draw frozen cols
+        this.drawInvalidatedCellsCols(props, colAreaToPaint);
+
+        return { gridOffset: props.gridOffset };
+    }
+
+    public drawInvalidatedAreaBackground(rowAreaToPaint: ClientRect|null, colAreaToPaint: ClientRect|null) {
+        this.context.fillStyle = 'lightgrey';
+        if (rowAreaToPaint) {
+            this.context.fillRect(
+                rowAreaToPaint.left,
+                rowAreaToPaint.top,
+                rowAreaToPaint.width,
+                rowAreaToPaint.height,
+            );
+        }
+        if (colAreaToPaint) {
+            this.context.fillRect(
+                colAreaToPaint.left,
+                colAreaToPaint.top,
+                colAreaToPaint.width,
+                colAreaToPaint.height,
+            );
+        }
+    }
+
+    public shiftRowsHorizontally(props: FrozenCanvasProps<T>, xDiff: number) {
+        this.context.drawImage(
+            this.canvas,
+            // source rows from right of top-left immobile cell(s) plus the delta
+            (props.frozenColsWidth - xDiff) * this.dpr, 0,
+            (this.canvas.width - props.frozenColsWidth) * this.dpr, props.frozenRowsHeight * this.dpr,
+            // destination to right of top-left immobile cell(s)
+            props.frozenColsWidth, 0,
+            this.canvas.width - props.frozenColsWidth, props.frozenRowsHeight,
+        );
+    }
+
+    public shiftColsVertically(props: FrozenCanvasProps<T>, yDiff: number) {
+        this.context.drawImage(
+            this.canvas,
+            // source rows from bottom of top-left immobile cell(s) plus the delta
+            0, (props.frozenRowsHeight - yDiff) * this.dpr,
+            props.frozenColsWidth * this.dpr, (this.canvas.height - props.frozenRowsHeight) * this.dpr ,
+            // destination to bottom of top-left immobile cell(s)
+            0, props.frozenRowsHeight,
+            props.frozenColsWidth, this.canvas.height - props.frozenRowsHeight,
+        );
+    }
+
+    public calculateInvalidatedAreaRows(props: FrozenCanvasProps<T>, xDiff: number): ClientRect|null {
+        if (xDiff < 0) {
+            // Moved right - draw right
+            const left = props.width + xDiff;
+            const width = -xDiff;
+            return {
+                left, width, right: left + width,
+                top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
+            };
+        } else if (xDiff > 0) {
+            // Moved left - draw left
+            const left = props.frozenColsWidth;
+            const width = xDiff;
+            return {
+                left, width, right: left + width,
+                top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
+            };
+        } else {
+            // Didn't move horiztonally - no area to invalidate
+            return null;
+        }
+    }
+
+    public calculateInvalidatedAreaCols(props: FrozenCanvasProps<T>, yDiff: number): ClientRect|null {
+        if (yDiff < 0) {
+            // Moved down - draw bottom
+            const top = props.height + yDiff;
+            const height = -yDiff;
+            return {
+                top, height, bottom: top + height,
+                left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
+            };
+        } else if (yDiff > 0) {
+            // Moved up - draw top
+            const top = props.frozenRowsHeight;
+            const height = yDiff;
+            return {
+                top, height, bottom: top + height,
+                left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
+            };
+        } else {
+            // Didn't move vertically - no area to invalidate
+            return null;
+        }
+    }
+
+    public drawTopLeftCells(props: FrozenCanvasProps<T>) {
+        for (let colIndex = 0; colIndex < props.frozenCols; colIndex++) {
+            const col = props.columns[colIndex];
+            for (let rowIndex = 0; rowIndex < props.frozenRows; rowIndex++) {
+                const cellBounds = calculateCellBounds(props, rowIndex, colIndex);
+
+                const row = props.data[rowIndex];
+                const cell = row[col.fieldName];
+                this.drawCell(cell, cellBounds, col);
+            }
+        }
+    }
+
+    public drawInvalidatedCellsRows(props: FrozenCanvasProps<T>, rowAreaToPaint: ClientRect|null) {
         this.context.save();
+
+        // Set the clip area to the frozen rows part of the canvas
         this.context.beginPath();
         this.context.rect(props.frozenColsWidth, 0, props.width - props.frozenColsWidth, props.frozenRowsHeight);
         this.context.closePath();
         this.context.clip();
+
+        // Translate the context (and invalidated rect) to go from canvas coords to grid coords
         this.context.translate(-props.gridOffset.x, 0);
+        if (rowAreaToPaint) {
+            rowAreaToPaint = translateRectX(rowAreaToPaint, props.gridOffset.x);
+        }
+
         const visibleLeft = props.gridOffset.x + props.frozenColsWidth;
         const visibleRight = props.gridOffset.x + props.width;
         for (let colIndex = 0; colIndex < props.columns.length; colIndex++) {
@@ -155,69 +182,91 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             }
             const col = props.columns[colIndex];
             for (let rowIndex = 0; rowIndex < props.frozenRows; rowIndex++) {
-                const row = props.data[rowIndex];
-                const cell = row[col.fieldName];
+                const cellBounds = calculateCellBounds(props, rowIndex, colIndex);
 
-                const cellBounds = {
-                    left: cellLeft,
-                    top: rowIndex * (props.rowHeight + props.borderWidth),
-                    right: cellLeft + col.width,
-                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
-                    width: col.width,
-                    height: props.rowHeight,
-                };
-
-                if (cellBounds.left < rowAreaToPaint.right &&
-                    cellBounds.right > rowAreaToPaint.left &&
-                    cellBounds.top < rowAreaToPaint.bottom &&
-                    cellBounds.bottom > rowAreaToPaint.top
-                ) {
+                if (!rowAreaToPaint || rectsInsersect(cellBounds, rowAreaToPaint)) {
                     // Cell overlaps with redraw area, so needs drawing
+                    const row = props.data[rowIndex];
+                    const cell = row[col.fieldName];
+
                     this.drawCell(cell, cellBounds, col);
                 }
             }
         }
-        this.context.restore();
 
-        // Draw frozen cols
+        this.context.restore();
+    }
+
+    public drawInvalidatedCellsCols(props: FrozenCanvasProps<T>, colAreaToPaint: ClientRect|null) {
         this.context.save();
+
+        // Set the clip area to the frozen cols part of the canvas
         this.context.beginPath();
         this.context.rect(0, props.frozenRowsHeight, props.frozenColsWidth, props.height - props.frozenRowsHeight);
         this.context.closePath();
         this.context.clip();
+
+        // Translate the context (and invalidated rect) to go from canvas coords to grid coords
         this.context.translate(0, -props.gridOffset.y);
+        if (colAreaToPaint) {
+            colAreaToPaint = translateRectY(colAreaToPaint, props.gridOffset.y);
+        }
+
         const visibleTop = props.gridOffset.y + props.frozenRowsHeight;
         const visibleBottom = props.gridOffset.y + props.height;
         const minRowIndex = Math.floor(visibleTop / (props.rowHeight + props.borderWidth));
         const maxRowIndex = Math.ceil(visibleBottom / (props.rowHeight + props.borderWidth));
         for (let colIndex = 0; colIndex < props.frozenCols; colIndex++) {
             const col = props.columns[colIndex];
-            const {left: cellLeft} = props.colBoundaries[colIndex];
             for (let rowIndex = minRowIndex; rowIndex < maxRowIndex; rowIndex++) {
-                const row = props.data[rowIndex];
-                const cell = row[col.fieldName];
+                const cellBounds = calculateCellBounds(props, rowIndex, colIndex);
 
-                const cellBounds = {
-                    left: cellLeft,
-                    top: rowIndex * (props.rowHeight + props.borderWidth),
-                    right: cellLeft + col.width,
-                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
-                    width: col.width,
-                    height: props.rowHeight,
-                };
-
-                if (cellBounds.left < colAreaToPaint.right &&
-                    cellBounds.right > colAreaToPaint.left &&
-                    cellBounds.top < colAreaToPaint.bottom &&
-                    cellBounds.bottom > colAreaToPaint.top
-                ) {
+                if (!colAreaToPaint || rectsInsersect(cellBounds, colAreaToPaint)) {
                     // Cell overlaps with redraw area, so needs drawing
+                    const row = props.data[rowIndex];
+                    const cell = row[col.fieldName];
+
                     this.drawCell(cell, cellBounds, col);
                 }
             }
         }
-        this.context.restore();
 
-        return { gridOffset: props.gridOffset };
+        this.context.restore();
     }
+}
+
+function calculateCellBounds(props: FrozenCanvasProps<any>, rowIndex: number, colIndex: number) {
+    const col = props.columns[colIndex];
+    const {left: cellLeft} = props.colBoundaries[colIndex];
+    return {
+        left: cellLeft,
+        top: rowIndex * (props.rowHeight + props.borderWidth),
+        right: cellLeft + col.width,
+        bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
+        width: col.width,
+        height: props.rowHeight,
+    };
+}
+
+function rectsInsersect(rect1: ClientRect, rect2: ClientRect) {
+    return rect1.left < rect2.right &&
+        rect1.right > rect2.left &&
+        rect1.top < rect2.bottom &&
+        rect1.bottom > rect2.top;
+}
+
+function translateRectX(rect: ClientRect, x: number): ClientRect {
+    return {
+        ...rect,
+        left: rect.left + x,
+        right: rect.right + x,
+    };
+}
+
+function translateRectY(rect: ClientRect, y: number): ClientRect {
+    return {
+        ...rect,
+        top: rect.top + y,
+        bottom: rect.bottom + y,
+    };
 }
