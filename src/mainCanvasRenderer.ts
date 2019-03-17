@@ -1,8 +1,8 @@
-import { BaseCanvasProps, PreviousDrawInfo } from './BaseCanvas';
 import { FrozenCanvasProps, FrozenPreviousDrawInfo } from './FrozenCanvas';
+import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
 import { CellDef, ColumnDef, Coord } from './types';
 
-export class BaseCanvasRenderer<T> {
+export class MainCanvasRenderer<T> {
     private readonly canvas: HTMLCanvasElement;
     private readonly context: CanvasRenderingContext2D;
     private readonly dpr: number;
@@ -21,7 +21,7 @@ export class BaseCanvasRenderer<T> {
         this.context.scale(this.dpr, this.dpr);
     }
 
-    public draw(props: BaseCanvasProps<T>, prevDraw: PreviousDrawInfo|null): PreviousDrawInfo {
+    public draw(props: MainCanvasProps<T>, prevDraw: PreviousDrawInfo|null): PreviousDrawInfo {
         if (prevDraw) {
             // Translate according to difference from previous draw
             const xDiff = (prevDraw.gridOffset.x - props.gridOffset.x);

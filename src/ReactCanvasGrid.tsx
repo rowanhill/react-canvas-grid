@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { BaseCanvas } from './BaseCanvas';
 import { CanvasHolder } from './CanvasHolder';
 import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
 import { HighlightCanvas } from './HighlightCanvas';
+import { MainCanvas } from './MainCanvas';
 import { ColumnDef, Coord, DataRow } from './types';
 
 interface RequiredProps<T> {
@@ -101,7 +101,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 }}
             >
                 <CanvasHolder ref={this.canvasHolderRef} canvasSize={canvasSize}>
-                    <BaseCanvas<T>
+                    <MainCanvas<T>
                         data={this.props.data}
                         columns={this.props.columns}
                         rowHeight={this.props.rowHeight}

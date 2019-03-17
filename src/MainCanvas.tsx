@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { BaseCanvasRenderer } from './baseCanvasRenderer';
+import { MainCanvasRenderer } from './mainCanvasRenderer';
 import { ColumnDef, Coord, DataRow } from './types';
 
-export interface BaseCanvasProps<T> {
+export interface MainCanvasProps<T> {
     data: Array<DataRow<T>>;
     width: number;
     height: number;
@@ -22,13 +22,13 @@ export interface PreviousDrawInfo {
 
 const dpr =  window.devicePixelRatio;
 
-export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
+export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
     private prevDraw: PreviousDrawInfo|null = null;
-    private renderer: BaseCanvasRenderer<T>|null = null;
+    private renderer: MainCanvasRenderer<T>|null = null;
 
-    constructor(props: BaseCanvasProps<T>) {
+    constructor(props: MainCanvasProps<T>) {
         super(props);
     }
 
@@ -53,10 +53,10 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
         if (!this.canvasRef.current) {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
-        this.renderer = new BaseCanvasRenderer(this.canvasRef.current, dpr);
+        this.renderer = new MainCanvasRenderer(this.canvasRef.current, dpr);
     }
 
-    public componentDidUpdate(prevProps: BaseCanvasProps<T>) {
+    public componentDidUpdate(prevProps: MainCanvasProps<T>) {
         if (!this.renderer) {
             throw new Error('renderer is null in componentDidUpdate - cannot draw');
         }
@@ -71,7 +71,7 @@ export class BaseCanvas<T> extends React.Component<BaseCanvasProps<T>, {}> {
 
         // If anything that affects the grid other than the gridOffset / visibleRect has changed
         // then invalidate the previously drawn region
-        for (const key of Object.keys(this.props) as Array<keyof BaseCanvasProps<T>>) {
+        for (const key of Object.keys(this.props) as Array<keyof MainCanvasProps<T>>) {
             if (key === 'gridOffset' || key === 'visibleRect') {
                 continue;
             }

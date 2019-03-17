@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { BaseCanvasRenderer } from './baseCanvasRenderer';
+import { MainCanvasRenderer } from './mainCanvasRenderer';
 import { ColumnDef, Coord, DataRow } from './types';
 
 export interface FrozenCanvasProps<T> {
@@ -27,7 +27,7 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
     private prevDraw: FrozenPreviousDrawInfo|null = null;
-    private renderer: BaseCanvasRenderer<T>|null = null;
+    private renderer: MainCanvasRenderer<T>|null = null;
 
     constructor(props: FrozenCanvasProps<T>) {
         super(props);
@@ -54,7 +54,7 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
         if (!this.canvasRef.current) {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
-        this.renderer = new BaseCanvasRenderer(this.canvasRef.current, dpr, true);
+        this.renderer = new MainCanvasRenderer(this.canvasRef.current, dpr, true);
     }
 
     public componentDidUpdate(prevProps: FrozenCanvasProps<T>) {

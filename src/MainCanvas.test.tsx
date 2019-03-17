@@ -1,13 +1,13 @@
 import { mount } from 'enzyme';
 import * as React from 'react';
-import { BaseCanvas, BaseCanvasProps } from './BaseCanvas';
-import { BaseCanvasRenderer } from './baseCanvasRenderer';
+import { MainCanvas, MainCanvasProps } from './MainCanvas';
+import { MainCanvasRenderer } from './mainCanvasRenderer';
 
 const mockFixScale = jest.fn();
 const mockDraw = jest.fn();
-jest.mock('./baseCanvasRenderer', () => {
+jest.mock('./mainCanvasRenderer', () => {
     return {
-        BaseCanvasRenderer: jest.fn().mockImplementation(() => {
+        MainCanvasRenderer: jest.fn().mockImplementation(() => {
             return {
                 fixScale: mockFixScale,
                 draw: mockDraw,
@@ -15,9 +15,9 @@ jest.mock('./baseCanvasRenderer', () => {
         }),
     };
 });
-const MockedRenderer = BaseCanvasRenderer as jest.Mock<BaseCanvasRenderer<null>>;
+const MockedRenderer = MainCanvasRenderer as jest.Mock<MainCanvasRenderer<null>>;
 
-const props: BaseCanvasProps<null> = {
+const props: MainCanvasProps<null> = {
     borderWidth: 1,
     colBoundaries: [],
     columns: [],
@@ -30,13 +30,13 @@ const props: BaseCanvasProps<null> = {
     visibleRect: { top: 0, left: 0, width: 100, height: 100, right: 100, bottom: 100 },
 };
 
-describe('BaseCanvas', () => {
+describe('MainCanvas', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it('draws to it\'s canvas when mounted', () => {
-        const bc = mount(<BaseCanvas {...props} />);
+        const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
 
         expect(MockedRenderer).toHaveBeenCalled();
@@ -44,9 +44,9 @@ describe('BaseCanvas', () => {
     });
 
     it('fixes the scale of the canvas context exactly once', () => {
-        const cduSpy = jest.spyOn(BaseCanvas.prototype, 'componentDidUpdate');
+        const cduSpy = jest.spyOn(MainCanvas.prototype, 'componentDidUpdate');
 
-        const bc = mount(<BaseCanvas {...props} />);
+        const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
         bc.setProps({ ...props, gridOffset: { x: 1, y: 1 } });
 
@@ -61,7 +61,7 @@ describe('BaseCanvas', () => {
             rect: {},
         });
 
-        const bc = mount(<BaseCanvas {...props} />);
+        const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
         bc.setProps({ ...props, gridOffset: { x: 1, y: 1 } });
 
@@ -79,7 +79,7 @@ describe('BaseCanvas', () => {
             rect: {},
         });
 
-        const bc = mount(<BaseCanvas {...props} />);
+        const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
         bc.setProps({ ...props, rowHeight: 30 });
 

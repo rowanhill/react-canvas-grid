@@ -1,14 +1,14 @@
-import { BaseCanvasProps, PreviousDrawInfo } from './BaseCanvas';
-import { BaseCanvasRenderer } from './baseCanvasRenderer';
+import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
+import { MainCanvasRenderer } from './mainCanvasRenderer';
 import { CellDef, ColumnDef, DataRow } from './types';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 // Some props can be derived from others, so they are in a sense 'denormalised'. To prevent these
 // getting out of sync in the tests, we calculate the full props from a 'normalised' set of props.
-type NormalisedProps<T> = Omit<Omit<BaseCanvasProps<T>, 'colBoundaries'>, 'gridHeight'>;
+type NormalisedProps<T> = Omit<Omit<MainCanvasProps<T>, 'colBoundaries'>, 'gridHeight'>;
 
-function calcProps<T>(props: NormalisedProps<T>): BaseCanvasProps<T> {
+function calcProps<T>(props: NormalisedProps<T>): MainCanvasProps<T> {
     let curLeft = 0;
     const colBoundaries = props.columns.map((column) => {
         const boundary = { left: curLeft, right: curLeft + column.width };
@@ -45,7 +45,7 @@ function row(): DataRow<null> {
     return dataRow;
 }
 
-describe('BaseCanvasRenderer', () => {
+describe('MainCanvasRenderer', () => {
     beforeEach(() => {
         mockContext = {
             scale: jest.fn(),
@@ -57,7 +57,7 @@ describe('BaseCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new BaseCanvasRenderer<null>(mockCanvas, dpr);
+        renderer = new MainCanvasRenderer<null>(mockCanvas, dpr);
     });
 
     afterEach(() => {
@@ -67,7 +67,7 @@ describe('BaseCanvasRenderer', () => {
     const dpr = 2;
     let mockContext: CanvasRenderingContext2D;
     let mockCanvas: HTMLCanvasElement;
-    let renderer: BaseCanvasRenderer<null>;
+    let renderer: MainCanvasRenderer<null>;
 
     describe('fixScale', () => {
         it('set the scale on the canvas to the device pixel ratio', () => {
@@ -88,7 +88,7 @@ describe('BaseCanvasRenderer', () => {
             rowHeight: 9,
             visibleRect: { left: 10, top: 10, width: 50, height: 50, right: 60, bottom: 60 },
         };
-        const props: BaseCanvasProps<null> = calcProps(normalisedProps);
+        const props: MainCanvasProps<null> = calcProps(normalisedProps);
 
         function getDrawnCellRects() {
             const mockDrawCell = renderer.drawCell as jest.Mock<typeof renderer.drawCell>;
