@@ -1,4 +1,5 @@
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
+import { OFFSCREEN_CANVAS_PADDING } from './gridGeometry';
 import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
 import { Coord } from './types';
 
@@ -18,12 +19,31 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             this.drawWholeBorderBackground(props.width, props.height);
         }
 
+        const newDrawnRect = {
+            left: Math.max(props.gridOffset.x, props.visibleRect.left),
+            top: Math.max(props.gridOffset.y, props.visibleRect.top),
+            right: Math.min(props.gridOffset.x + props.width, props.visibleRect.right),
+            bottom: Math.min(props.gridOffset.y + props.height, props.visibleRect.bottom),
+        };
+        if (prevDraw &&
+            prevDraw.rect.left - newDrawnRect.left < OFFSCREEN_CANVAS_PADDING &&
+            newDrawnRect.right - prevDraw.rect.right < OFFSCREEN_CANVAS_PADDING &&
+            prevDraw.rect.bottom - newDrawnRect.bottom < OFFSCREEN_CANVAS_PADDING &&
+            newDrawnRect.top - prevDraw.rect.top < OFFSCREEN_CANVAS_PADDING
+        ) {
+            return {
+                gridOffset: props.gridOffset,
+                redrawGridOffset: prevDraw.redrawGridOffset,
+                rect: prevDraw.rect,
+            };
+        }
+
         // Translate the canvas context so that it's covering the visibleRect
         this.translateToGridOffset(props.gridOffset);
 
         // Draw cells
         let colIndex = 0;
-        const minRowIndex = Math.floor(props.visibleRect.top / (props.rowHeight + props.borderWidth));
+        const minRowIndex = Math.max(0, Math.floor(props.visibleRect.top / (props.rowHeight + props.borderWidth)));
         const maxRowIndex = Math.ceil(props.visibleRect.bottom / (props.rowHeight + props.borderWidth));
         for (const {left: cellLeft, right: cellRight} of props.colBoundaries) {
             if (cellRight < props.visibleRect.left) {
@@ -70,21 +90,17 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         // Remember what area is now drawn
         return {
             gridOffset: props.gridOffset,
-            rect: {
-                left: Math.max(props.gridOffset.x, props.visibleRect.left),
-                top: Math.max(props.gridOffset.y, props.visibleRect.top),
-                right: Math.min(props.gridOffset.x + props.width, props.visibleRect.right),
-                bottom: Math.min(props.gridOffset.y + props.height, props.visibleRect.bottom),
-            },
+            redrawGridOffset: props.gridOffset,
+            rect: newDrawnRect,
         };
     }
 
     public translateToGridOffset(gridOffset: Coord) {
-        this.context.translate(-gridOffset.x, -gridOffset.y);
+        this.context.translate(-gridOffset.x + OFFSCREEN_CANVAS_PADDING, -gridOffset.y + OFFSCREEN_CANVAS_PADDING);
     }
 
     public translateToOrigin(gridOffset: Coord) {
-        this.context.translate(gridOffset.x, gridOffset.y);
+        this.context.translate(gridOffset.x - OFFSCREEN_CANVAS_PADDING, gridOffset.y - OFFSCREEN_CANVAS_PADDING);
     }
 
     /*

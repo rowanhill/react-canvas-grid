@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
+import { OFFSCREEN_CANVAS_PADDING } from './gridGeometry';
 import { ColumnDef, Coord, DataRow } from './types';
 
 export interface FrozenCanvasProps<T> {
@@ -43,8 +44,8 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
                     position: 'absolute',
                     width: `${this.props.width}px`,
                     height: `${this.props.height}px`,
-                    top: 0,
-                    left: 0,
+                    top: -OFFSCREEN_CANVAS_PADDING,
+                    left: -OFFSCREEN_CANVAS_PADDING,
                 }}
             />
         );

@@ -1,5 +1,6 @@
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
 import { FrozenCanvasProps, FrozenPreviousDrawInfo } from './FrozenCanvas';
+import { OFFSCREEN_CANVAS_PADDING } from './gridGeometry';
 
 export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     constructor(canvas: HTMLCanvasElement, dpr: number) {
@@ -12,12 +13,20 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         if (!prevDraw) {
             // It's the first draw, the entire area is 'invalidated'
             rowAreaToPaint = {
-                left: 0, right: props.width, width: props.width,
-                top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
+                left: 0,
+                right: props.width,
+                width: props.width,
+                top: OFFSCREEN_CANVAS_PADDING,
+                bottom: props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING,
+                height: props.frozenRowsHeight,
             };
             colAreaToPaint = {
-                left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
-                top: props.frozenRowsHeight, bottom: props.height, height: props.height - props.frozenRowsHeight,
+                left: OFFSCREEN_CANVAS_PADDING,
+                right: props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING,
+                width: props.frozenColsWidth,
+                top: props.frozenRowsHeight,
+                bottom: props.height,
+                height: props.height - props.frozenRowsHeight,
             };
 
             // Fill the background with border colour
@@ -74,11 +83,15 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.context.drawImage(
             this.canvas,
             // source rows from right of top-left immobile cell(s) plus the delta
-            (props.frozenColsWidth - xDiff) * this.dpr, 0,
-            (this.canvas.width - props.frozenColsWidth) * this.dpr, props.frozenRowsHeight * this.dpr,
+            (props.frozenColsWidth - xDiff + OFFSCREEN_CANVAS_PADDING) * this.dpr,
+            OFFSCREEN_CANVAS_PADDING * this.dpr,
+            (this.canvas.width - props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING) * this.dpr,
+            (props.frozenRowsHeight) * this.dpr,
             // destination to right of top-left immobile cell(s)
-            props.frozenColsWidth, 0,
-            this.canvas.width - props.frozenColsWidth, props.frozenRowsHeight,
+            props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING,
+            OFFSCREEN_CANVAS_PADDING,
+            this.canvas.width - props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING,
+            props.frozenRowsHeight,
         );
     }
 
@@ -86,11 +99,15 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.context.drawImage(
             this.canvas,
             // source rows from bottom of top-left immobile cell(s) plus the delta
-            0, (props.frozenRowsHeight - yDiff) * this.dpr,
-            props.frozenColsWidth * this.dpr, (this.canvas.height - props.frozenRowsHeight) * this.dpr ,
+            OFFSCREEN_CANVAS_PADDING * this.dpr,
+            (props.frozenRowsHeight - yDiff + OFFSCREEN_CANVAS_PADDING) * this.dpr,
+            (props.frozenColsWidth) * this.dpr,
+            (this.canvas.height - props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING) * this.dpr ,
             // destination to bottom of top-left immobile cell(s)
-            0, props.frozenRowsHeight,
-            props.frozenColsWidth, this.canvas.height - props.frozenRowsHeight,
+            OFFSCREEN_CANVAS_PADDING,
+            props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING,
+            props.frozenColsWidth,
+            this.canvas.height - props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING,
         );
     }
 
@@ -101,15 +118,17 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             const width = -xDiff;
             return {
                 left, width, right: left + width,
-                top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
+                top: OFFSCREEN_CANVAS_PADDING, bottom: props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING,
+                height: props.frozenRowsHeight,
             };
         } else if (xDiff > 0) {
             // Moved left - draw left
-            const left = props.frozenColsWidth;
+            const left = props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING;
             const width = xDiff;
             return {
                 left, width, right: left + width,
-                top: 0, bottom: props.frozenRowsHeight, height: props.frozenRowsHeight,
+                top: OFFSCREEN_CANVAS_PADDING, bottom: props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING,
+                height: props.frozenRowsHeight,
             };
         } else {
             // Didn't move horiztonally - no area to invalidate
@@ -124,15 +143,17 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             const height = -yDiff;
             return {
                 top, height, bottom: top + height,
-                left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
+                left: OFFSCREEN_CANVAS_PADDING, right: props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING,
+                width: props.frozenColsWidth,
             };
         } else if (yDiff > 0) {
             // Moved up - draw top
-            const top = props.frozenRowsHeight;
+            const top = props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING;
             const height = yDiff;
             return {
                 top, height, bottom: top + height,
-                left: 0, right: props.frozenColsWidth, width: props.frozenColsWidth,
+                left: OFFSCREEN_CANVAS_PADDING, right: props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING,
+                width: props.frozenColsWidth,
             };
         } else {
             // Didn't move vertically - no area to invalidate
@@ -162,7 +183,11 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
         // Set the clip area to the frozen rows part of the canvas
         this.context.beginPath();
-        this.context.rect(props.frozenColsWidth, 0, props.width - props.frozenColsWidth, props.frozenRowsHeight);
+        this.context.rect(
+            props.frozenColsWidth + OFFSCREEN_CANVAS_PADDING,
+            OFFSCREEN_CANVAS_PADDING,
+            props.width - props.frozenColsWidth,
+            props.frozenRowsHeight);
         this.context.closePath();
         this.context.clip();
 
@@ -210,7 +235,11 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
         // Set the clip area to the frozen cols part of the canvas
         this.context.beginPath();
-        this.context.rect(0, props.frozenRowsHeight, props.frozenColsWidth, props.height - props.frozenRowsHeight);
+        this.context.rect(
+            OFFSCREEN_CANVAS_PADDING,
+            props.frozenRowsHeight + OFFSCREEN_CANVAS_PADDING,
+            props.frozenColsWidth,
+            props.height - props.frozenRowsHeight);
         this.context.closePath();
         this.context.clip();
 
@@ -222,7 +251,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
         const visibleTop = props.gridOffset.y + props.frozenRowsHeight;
         const visibleBottom = props.gridOffset.y + props.height;
-        const minRowIndex = Math.floor(visibleTop / (props.rowHeight + props.borderWidth));
+        const minRowIndex = Math.max(0, Math.floor(visibleTop / (props.rowHeight + props.borderWidth)));
         const maxRowIndex = Math.ceil(visibleBottom / (props.rowHeight + props.borderWidth));
         for (let colIndex = 0; colIndex < props.frozenCols; colIndex++) {
             const col = props.columns[colIndex];
@@ -247,10 +276,10 @@ function calculateCellBounds(props: FrozenCanvasProps<any>, rowIndex: number, co
     const col = props.columns[colIndex];
     const {left: cellLeft} = props.colBoundaries[colIndex];
     return {
-        left: cellLeft,
-        top: rowIndex * (props.rowHeight + props.borderWidth),
-        right: cellLeft + col.width,
-        bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
+        left: cellLeft + OFFSCREEN_CANVAS_PADDING,
+        top: rowIndex * (props.rowHeight + props.borderWidth) + OFFSCREEN_CANVAS_PADDING,
+        right: cellLeft + col.width + OFFSCREEN_CANVAS_PADDING,
+        bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight + OFFSCREEN_CANVAS_PADDING,
         width: col.width,
         height: props.rowHeight,
     };
