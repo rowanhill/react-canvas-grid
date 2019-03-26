@@ -5,12 +5,17 @@ import { MainCanvasRenderer } from './mainCanvasRenderer';
 
 const mockFixScale = jest.fn();
 const mockDraw = jest.fn();
+const mockReset = jest.fn();
+const mockUpdatePos = jest.fn();
 jest.mock('./mainCanvasRenderer', () => {
     return {
         MainCanvasRenderer: jest.fn().mockImplementation(() => {
             return {
                 fixScale: mockFixScale,
                 draw: mockDraw,
+                reset: mockReset,
+                updatePos: mockUpdatePos,
+                __dummy__: 'fake MainCanvasRenderer',
             };
         }),
     };
@@ -23,11 +28,10 @@ const props: MainCanvasProps<null> = {
     columns: [],
     data: [],
     gridHeight: 100,
-    gridOffset: { x: 0, y: 0 },
     height: 100,
     width: 100,
     rowHeight: 20,
-    visibleRect: { top: 0, left: 0, width: 100, height: 100, right: 100, bottom: 100 },
+    setRenderer: jest.fn(),
 };
 
 describe('MainCanvas', () => {
@@ -40,7 +44,16 @@ describe('MainCanvas', () => {
         bc.setProps(props);
 
         expect(MockedRenderer).toHaveBeenCalled();
-        expect(mockDraw).toHaveBeenCalled();
+        expect(mockReset).toHaveBeenCalled();
+    });
+
+    it('sets the renderer when mounted', () => {
+        const bc = mount(<MainCanvas {...props} />);
+        bc.setProps(props);
+
+        expect(props.setRenderer).toHaveBeenCalledWith(
+            expect.objectContaining({__dummy__: 'fake MainCanvasRenderer'}),
+        );
     });
 
     it('fixes the scale of the canvas context exactly once', () => {
@@ -48,43 +61,20 @@ describe('MainCanvas', () => {
 
         const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
-        bc.setProps({ ...props, gridOffset: { x: 1, y: 1 } });
+        bc.setProps({ ...props, borderWidth: 2 });
 
         expect(MockedRenderer).toHaveBeenCalled();
         expect(cduSpy).toHaveBeenCalledTimes(2); // There were multiple component updates
         expect(mockFixScale).toHaveBeenCalledTimes(1); // But only one fixScale
     });
 
-    it('redraws to its canvas with details of previous draw when non-fundamental props change', () => {
-        mockDraw.mockReturnValue({
-            gridOffset: { x: 0, y: 0 },
-            rect: {},
-        });
-
+    it('redraws to its canvas when props change', () => {
         const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
-        bc.setProps({ ...props, gridOffset: { x: 1, y: 1 } });
+        bc.setProps({ ...props, borderWidth: 2 });
 
-        expect(mockDraw).toHaveBeenCalledTimes(2);
-        expect(mockDraw).toHaveBeenNthCalledWith(1, expect.anything(), null);
-        expect(mockDraw).toHaveBeenNthCalledWith(2,
-            expect.anything(),
-            expect.objectContaining({ gridOffset: expect.anything(), rect: expect.anything()}),
-        );
-    });
-
-    it('redraws to its canvas discarding prior draw info when fundamental props change', () => {
-        mockDraw.mockReturnValue({
-            gridOffset: { x: 0, y: 0 },
-            rect: {},
-        });
-
-        const bc = mount(<MainCanvas {...props} />);
-        bc.setProps(props);
-        bc.setProps({ ...props, rowHeight: 30 });
-
-        expect(mockDraw).toHaveBeenCalledTimes(2);
-        expect(mockDraw).toHaveBeenNthCalledWith(1, expect.anything(), null);
-        expect(mockDraw).toHaveBeenNthCalledWith(2, expect.anything(), null);
+        expect(mockReset).toHaveBeenCalledTimes(2);
+        expect(mockReset).toHaveBeenNthCalledWith(1, { ...props, dpr: expect.anything() });
+        expect(mockReset).toHaveBeenNthCalledWith(2, { ...props, borderWidth: 2, dpr: expect.anything() });
     });
 });

@@ -1,9 +1,12 @@
 import * as React from 'react';
 import { CanvasHolder } from './CanvasHolder';
 import { FrozenCanvas } from './FrozenCanvas';
+import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
 import { GridGeometry } from './gridGeometry';
 import { HighlightCanvas } from './HighlightCanvas';
+import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 import { MainCanvas } from './MainCanvas';
+import { MainCanvasRenderer } from './mainCanvasRenderer';
 import { ColumnDef, Coord, DataRow } from './types';
 
 interface RequiredProps<T> {
@@ -21,11 +24,7 @@ export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<Defaul
 export type ReactCanvasGridProps<T> = RequiredProps<T> & DefaultedProps;
 
 interface ReactCanvasGridState {
-    visibleRect: ClientRect;
-    gridOffset: Coord;
-
-    selectedRangeDragStart: Coord|null;
-    selectedRange: SelectRange|null;
+    scrollParent: HTMLElement|null;
 }
 
 export interface SelectRange {
@@ -42,37 +41,42 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
-    private scrollParent: HTMLElement|null = null;
+
+    private selectedRangeDragStart: Coord|null = null;
+
+    private mainRenderer: MainCanvasRenderer<T>|null = null;
+    private frozenRenderer: FrozenCanvasRenderer<T>|null = null;
+    private highlightRenderer: HighlightCanvasRenderer|null = null;
 
     constructor(props: ReactCanvasGridProps<T>) {
         super(props);
-
         this.state = {
-            gridOffset: {x: 0, y: 0},
-            visibleRect: {top: 0, left: 0, right: 0, bottom: 0, height: 0, width: 0},
-            selectedRangeDragStart: null,
-            selectedRange: null,
+            scrollParent: null,
         };
     }
 
     public componentDidMount() {
-        if (this.canvasHolderRef.current) {
-            this.scrollParent = getScrollParent(this.canvasHolderRef.current, true);
+        if (!this.canvasHolderRef.current) {
+            throw new Error('canvasHolder ref not set in componentDidMount, so cannot determine scroll parent');
         }
+        const scrollParent = getScrollParent(this.canvasHolderRef.current, true);
 
-        // Calculate the visible region and the canvases' offset, and set them as state,
-        // causing us to re-render
-        this.onScroll();
-
-        if (this.scrollParent && this.scrollParent !== document.body) {
-            this.scrollParent.addEventListener('scroll', this.onScroll);
+        if (scrollParent && scrollParent !== document.body) {
+            scrollParent.addEventListener('scroll', this.onScroll);
         }
         window.addEventListener('scroll', this.onScroll);
+
+        // Set the scrollParent, causing a re-render, at which point the canvases will be properly sized.
+        this.setState({ scrollParent }, () => {
+            // Once the canvases are sized, we can trigger a draw with initial position information
+            // An easy way to do this is fake a scroll event
+            this.onScroll();
+        });
     }
 
     public componentWillUnmount() {
-        if (this.scrollParent && this.scrollParent !== document.body) {
-            this.scrollParent.removeEventListener('scroll', this.onScroll);
+        if (this.state.scrollParent && this.state.scrollParent !== document.body) {
+            this.state.scrollParent.removeEventListener('scroll', this.onScroll);
         }
         window.removeEventListener('scroll', this.onScroll);
     }
@@ -82,8 +86,8 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         // First render is before componentDidMount, so before we have found scrollParent.
         // In this case, we just render as 0x0. componentDidMount will then update state,
         // and we'll re-render
-        const canvasSize = this.scrollParent ?
-            GridGeometry.calculateMaxViewSize(this.props, this.scrollParent) :
+        const canvasSize = this.state.scrollParent ?
+            GridGeometry.calculateMaxViewSize(this.props, this.state.scrollParent) :
             { height: 0, width: 0 };
         const gridSize = GridGeometry.calculateGridSize(this.props);
         const frozenRowsHeight = GridGeometry.calculateFrozenRowsHeight(this.props);
@@ -107,20 +111,18 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                         rowHeight={this.props.rowHeight}
                         width={canvasSize.width}
                         height={canvasSize.height}
-                        visibleRect={this.state.visibleRect}
-                        gridOffset={this.state.gridOffset}
                         gridHeight={gridSize.height}
                         colBoundaries={columnBoundaries}
                         borderWidth={this.props.borderWidth}
+                        setRenderer={(r) => this.mainRenderer = r}
                     />
                     <HighlightCanvas
                         rowHeight={this.props.rowHeight}
                         width={canvasSize.width}
                         height={canvasSize.height}
-                        gridOffset={this.state.gridOffset}
                         colBoundaries={columnBoundaries}
-                        selectedRange={this.state.selectedRange}
                         borderWidth={this.props.borderWidth}
+                        setRenderer={(r) => this.highlightRenderer = r}
                     />
                     <FrozenCanvas
                         data={this.props.data}
@@ -130,25 +132,37 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                         borderWidth={this.props.borderWidth}
                         width={canvasSize.width}
                         height={canvasSize.height}
-                        gridOffset={this.state.gridOffset}
                         frozenRows={this.props.frozenRows}
                         frozenCols={this.props.frozenCols}
                         frozenRowsHeight={frozenRowsHeight}
                         frozenColsWidth={frozenColsWidth}
+                        setRenderer={(r) => this.frozenRenderer = r}
                     />
                 </CanvasHolder>
             </div>
         );
     }
 
+    private scrollCanvases = (gridOffset: Coord, visibleRect: ClientRect) => {
+        if (this.mainRenderer) {
+            this.mainRenderer.updatePos({gridOffset, visibleRect});
+        }
+        if (this.frozenRenderer) {
+            this.frozenRenderer.updatePos({gridOffset});
+        }
+        if (this.highlightRenderer) {
+            this.highlightRenderer.updatePos({gridOffset});
+        }
+    }
+
     private onScroll = () => {
         if (!this.sizerRef.current) {
             return;
         }
-        if (!this.scrollParent) {
+        if (!this.state.scrollParent) {
             return;
         }
-        const gridOffset = GridGeometry.calculateGridOffset(this.props, this.scrollParent, this.sizerRef.current);
+        const gridOffset = GridGeometry.calculateGridOffset(this.props, this.state.scrollParent, this.sizerRef.current);
 
         // Update the canvas holder's position outside of React, for performance reasons
         if (this.canvasHolderRef.current) {
@@ -158,65 +172,73 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             this.canvasHolderRef.current.style.transform = transform;
         }
 
-        this.setState({
+        const visibleRect = GridGeometry.calculateViewRect(
+            this.props,
             gridOffset,
-            visibleRect: GridGeometry.calculateViewRect(
-                this.props,
-                gridOffset,
-                this.scrollParent,
-                this.sizerRef.current,
-            ),
-        });
+            this.state.scrollParent,
+            this.sizerRef.current,
+        );
+        this.scrollCanvases(gridOffset, visibleRect);
     }
 
     private onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (!this.highlightRenderer) {
+            return;
+        }
         const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: gridCoords,
             bottomRight: gridCoords,
         };
-        this.setState({selectedRange, selectedRangeDragStart: gridCoords});
+        this.selectedRangeDragStart = gridCoords;
+        this.highlightRenderer.updateSelection({ selectedRange });
     }
 
     private onMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (!this.state.selectedRange || !this.state.selectedRangeDragStart) {
+        if (!this.selectedRangeDragStart) {
             return;
         }
         // tslint:disable-next-line: no-bitwise
         if ((event.buttons & 1) === 0) {
             return;
         }
-        const gridCoords = this.calculateGridCellCoords(event);
-        const selectedRange = {
-            topLeft: {
-                x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.min(this.state.selectedRangeDragStart.y, gridCoords.y),
-            },
-            bottomRight: {
-                x: Math.max(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.max(this.state.selectedRangeDragStart.y, gridCoords.y),
-            },
-        };
-        this.setState({selectedRange});
-    }
-
-    private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (!this.state.selectedRange || !this.state.selectedRangeDragStart) {
+        if (!this.highlightRenderer) {
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: {
-                x: Math.min(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.min(this.state.selectedRangeDragStart.y, gridCoords.y),
+                x: Math.min(this.selectedRangeDragStart.x, gridCoords.x),
+                y: Math.min(this.selectedRangeDragStart.y, gridCoords.y),
             },
             bottomRight: {
-                x: Math.max(this.state.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.max(this.state.selectedRangeDragStart.y, gridCoords.y),
+                x: Math.max(this.selectedRangeDragStart.x, gridCoords.x),
+                y: Math.max(this.selectedRangeDragStart.y, gridCoords.y),
             },
         };
-        const selectedRangeDragStart = null;
-        this.setState({selectedRange, selectedRangeDragStart});
+        this.highlightRenderer.updateSelection({ selectedRange });
+    }
+
+    private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (!this.selectedRangeDragStart) {
+            return;
+        }
+        if (!this.highlightRenderer) {
+            return;
+        }
+        const gridCoords = this.calculateGridCellCoords(event);
+        const selectedRange = {
+            topLeft: {
+                x: Math.min(this.selectedRangeDragStart.x, gridCoords.x),
+                y: Math.min(this.selectedRangeDragStart.y, gridCoords.y),
+            },
+            bottomRight: {
+                x: Math.max(this.selectedRangeDragStart.x, gridCoords.x),
+                y: Math.max(this.selectedRangeDragStart.y, gridCoords.y),
+            },
+        };
+        this.selectedRangeDragStart = null;
+        this.highlightRenderer.updateSelection({ selectedRange });
     }
 
     private calculateGridCellCoords = (event: React.MouseEvent<any, any>) => {

@@ -14,7 +14,7 @@ export interface FrozenCanvasProps<T> {
     frozenCols: number;
     frozenRowsHeight: number;
     frozenColsWidth: number;
-    gridOffset: Coord;
+    setRenderer: (r: FrozenCanvasRenderer<T>) => void;
 }
 
 export interface FrozenPreviousDrawInfo {
@@ -26,7 +26,6 @@ const dpr = window.devicePixelRatio;
 export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
-    private prevDraw: FrozenPreviousDrawInfo|null = null;
     private renderer: FrozenCanvasRenderer<T>|null = null;
 
     constructor(props: FrozenCanvasProps<T>) {
@@ -54,7 +53,9 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
         if (!this.canvasRef.current) {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
-        this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, dpr);
+        const { setRenderer, ...basicProps } = this.props;
+        this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, { ...basicProps, dpr });
+        setRenderer(this.renderer);
     }
 
     public componentDidUpdate(prevProps: FrozenCanvasProps<T>) {
@@ -70,18 +71,6 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
             this.hasFixedScale = true;
         }
 
-        // If anything that affects the grid other than the gridOffset / visibleRect has changed
-        // then invalidate the previously drawn region
-        for (const key of Object.keys(this.props) as Array<keyof FrozenCanvasProps<T>>) {
-            if (key === 'gridOffset') {
-                continue;
-            }
-            if (this.props[key] !== prevProps[key]) {
-                this.prevDraw = null;
-                break;
-            }
-        }
-
-        this.prevDraw = this.renderer.drawFrozenCells(this.props, this.prevDraw);
+        this.renderer.reset({ ...this.props, dpr });
     }
 }

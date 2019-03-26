@@ -1,14 +1,14 @@
-import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
-import { MainCanvasRenderer } from './mainCanvasRenderer';
+import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
 import { CellDef, ColumnDef, DataRow } from './types';
+import { render } from 'enzyme';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 // Some props can be derived from others, so they are in a sense 'denormalised'. To prevent these
 // getting out of sync in the tests, we calculate the full props from a 'normalised' set of props.
-type NormalisedProps<T> = Omit<Omit<MainCanvasProps<T>, 'colBoundaries'>, 'gridHeight'>;
+type NormalisedProps<T> = Omit<Omit<MainCanvasRendererBasics<T>, 'colBoundaries'>, 'gridHeight'>;
 
-function calcProps<T>(props: NormalisedProps<T>): MainCanvasProps<T> {
+function calcProps<T>(props: NormalisedProps<T>): MainCanvasRendererBasics<T> {
     let curLeft = 0;
     const colBoundaries = props.columns.map((column) => {
         const boundary = { left: curLeft, right: curLeft + column.width };
@@ -57,7 +57,7 @@ describe('MainCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new MainCanvasRenderer<null>(mockCanvas, dpr);
+        renderer = new MainCanvasRenderer<null>(mockCanvas, props);
     });
 
     afterEach(() => {
@@ -69,18 +69,22 @@ describe('MainCanvasRenderer', () => {
     let mockCanvas: HTMLCanvasElement;
     let renderer: MainCanvasRenderer<null>;
 
+    const normalisedProps: NormalisedProps<null> = {
+        borderWidth: 1,
+        columns: [col(), col(), col(), col(), col(), col(), col(), col(), col(), col()],
+        data: [row(), row(), row(), row(), row(), row(), row(), row(), row(), row()],
+        height: 50,
+        width: 50,
+        rowHeight: 9,
+        dpr,
+    };
+    const props: MainCanvasRendererBasics<null> = calcProps(normalisedProps);
+
     describe('draw', () => {
-        const normalisedProps: NormalisedProps<null> = {
-            borderWidth: 1,
-            columns: [col(), col(), col(), col(), col(), col(), col(), col(), col(), col()],
-            data: [row(), row(), row(), row(), row(), row(), row(), row(), row(), row()],
+        const posProps: MainCanvasRendererPosition = {
             gridOffset: { x: 10, y: 10 },
-            height: 50,
-            width: 50,
-            rowHeight: 9,
             visibleRect: { left: 10, top: 10, width: 50, height: 50, right: 60, bottom: 60 },
         };
-        const props: MainCanvasProps<null> = calcProps(normalisedProps);
 
         function getDrawnCellRects() {
             const mockDrawCell = renderer.drawCell as jest.Mock<typeof renderer.drawCell>;
@@ -88,21 +92,19 @@ describe('MainCanvasRenderer', () => {
             return calls.map((c) => c[1]);
         }
 
-        describe('with no previous draw info', () => {
+        describe('with no previous draw', () => {
             it('fills the entire canvas with border colour (before drawing cells)', () => {
                 jest.spyOn(renderer, 'drawWholeBorderBackground');
                 jest.spyOn(renderer, 'shiftExistingCanvas');
 
-                renderer.draw(props, null);
+                renderer.draw();
 
                 expect(renderer.drawWholeBorderBackground).toHaveBeenCalledTimes(1);
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
             });
 
             it('only draws (at least partially) visible cells', () => {
-                jest.spyOn(renderer, 'drawCell');
-                const shiftedNormalisedProps = {
-                    ...normalisedProps,
+                const shiftedPosProps = {
                     gridOffset: { x: 25, y: 25 },
                     visibleRect: {
                         left: 25, // scrolled right to quarter-way through 2nd col
@@ -113,41 +115,37 @@ describe('MainCanvasRenderer', () => {
                         bottom: 75,
                     },
                 };
-                const shiftedProps = calcProps(shiftedNormalisedProps);
+                renderer.updatePos(shiftedPosProps);
+                jest.spyOn(renderer, 'drawCell');
 
-                renderer.draw(shiftedProps, null);
+                renderer.reset(props);
 
                 expect(renderer.drawCell).toHaveBeenCalledTimes(18);
                 getDrawnCellRects().forEach((r) => {
                     // Cell is in view horizontally
-                    expect(r.right).toBeGreaterThanOrEqual(shiftedProps.visibleRect.left);
-                    expect(r.left).toBeLessThanOrEqual(shiftedProps.visibleRect.right);
+                    expect(r.right).toBeGreaterThanOrEqual(shiftedPosProps.visibleRect.left);
+                    expect(r.left).toBeLessThanOrEqual(shiftedPosProps.visibleRect.right);
 
                     // Cell is in view vertically
-                    expect(r.bottom).toBeGreaterThanOrEqual(shiftedProps.visibleRect.top);
-                    expect(r.top).toBeLessThanOrEqual(shiftedProps.visibleRect.bottom);
+                    expect(r.bottom).toBeGreaterThanOrEqual(shiftedPosProps.visibleRect.top);
+                    expect(r.top).toBeLessThanOrEqual(shiftedPosProps.visibleRect.bottom);
                 });
             });
         });
 
-        describe('with previous draw info', () => {
-            const prevDraw: PreviousDrawInfo = {
-                gridOffset: props.gridOffset,
-                rect: props.visibleRect,
-            };
-            function getNewProps(dx: number, dy: number) {
+        describe('with previous draw', () => {
+            function getNewPosProps(dx: number, dy: number) {
                 return {
-                    ...props,
                     gridOffset: {
-                        x: props.gridOffset.x + dx,
-                        y: props.gridOffset.y + dy,
+                        x: posProps.gridOffset.x + dx,
+                        y: posProps.gridOffset.y + dy,
                     },
                     visibleRect: {
-                        ...props.visibleRect,
-                        left: props.visibleRect.left + dx,
-                        right: props.visibleRect.right + dx,
-                        top: props.visibleRect.top + dy,
-                        bottom: props.visibleRect.bottom + dy,
+                        ...posProps.visibleRect,
+                        left: posProps.visibleRect.left + dx,
+                        right: posProps.visibleRect.right + dx,
+                        top: posProps.visibleRect.top + dy,
+                        bottom: posProps.visibleRect.bottom + dy,
                     },
                 };
             }
@@ -155,20 +153,22 @@ describe('MainCanvasRenderer', () => {
             it('shifts the old image and paints the newly revealed areas in border colour', () => {
                 jest.spyOn(renderer, 'drawNewBorderBackground');
                 jest.spyOn(renderer, 'shiftExistingCanvas');
-                const newProps = getNewProps(3, 5);
+                const newProps = getNewPosProps(3, 5);
+                renderer.updatePos(posProps);
 
-                renderer.draw(newProps, prevDraw);
+                renderer.updatePos(newProps);
 
                 expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
-                expect(renderer.drawNewBorderBackground).toHaveBeenCalledWith(-3, -5, newProps.width, newProps.height);
+                expect(renderer.drawNewBorderBackground).toHaveBeenCalledWith(-3, -5, props.width, props.height);
             });
 
             describe('cell redrawing', () => {
                 it('redraws cells on the bottom when scrolling down', () => {
+                    const newProps = getNewPosProps(0, 5);
+                    renderer.updatePos(posProps);
                     jest.spyOn(renderer, 'drawCell');
-                    const newProps = getNewProps(0, 5);
 
-                    renderer.draw(newProps, prevDraw);
+                    renderer.updatePos(newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
@@ -177,10 +177,11 @@ describe('MainCanvasRenderer', () => {
                 });
 
                 it('redraws cells on the top when scrolling up', () => {
+                    const newProps = getNewPosProps(0, -5);
+                    renderer.updatePos(posProps);
                     jest.spyOn(renderer, 'drawCell');
-                    const newProps = getNewProps(0, -5);
 
-                    renderer.draw(newProps, prevDraw);
+                    renderer.updatePos(newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
@@ -189,10 +190,11 @@ describe('MainCanvasRenderer', () => {
                 });
 
                 it('redraws cells on the right when scrolling right`', () => {
+                    const newProps = getNewPosProps(5, 0);
+                    renderer.updatePos(posProps);
                     jest.spyOn(renderer, 'drawCell');
-                    const newProps = getNewProps(5, 0);
 
-                    renderer.draw(newProps, prevDraw);
+                    renderer.updatePos(newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {
@@ -201,10 +203,11 @@ describe('MainCanvasRenderer', () => {
                 });
 
                 it('redraws cells on the left when scrolling left`', () => {
+                    const newProps = getNewPosProps(-5, 0);
+                    renderer.updatePos(posProps);
                     jest.spyOn(renderer, 'drawCell');
-                    const newProps = getNewProps(-5, 0);
 
-                    renderer.draw(newProps, prevDraw);
+                    renderer.updatePos(newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {

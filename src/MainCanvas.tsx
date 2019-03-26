@@ -1,23 +1,17 @@
 import * as React from 'react';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
-import { ColumnDef, Coord, DataRow } from './types';
+import { ColumnDef, DataRow } from './types';
 
 export interface MainCanvasProps<T> {
     data: Array<DataRow<T>>;
     width: number;
     height: number;
-    visibleRect: ClientRect;
-    gridOffset: Coord;
     rowHeight: number;
     colBoundaries: Array<{left: number; right: number}>;
     columns: ColumnDef[];
     gridHeight: number;
     borderWidth: number;
-}
-
-export interface PreviousDrawInfo {
-    gridOffset: Coord;
-    rect: { top: number; left: number; right: number; bottom: number };
+    setRenderer: (r: MainCanvasRenderer<T>) => void;
 }
 
 const dpr = window.devicePixelRatio;
@@ -25,7 +19,6 @@ const dpr = window.devicePixelRatio;
 export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private hasFixedScale = false;
-    private prevDraw: PreviousDrawInfo|null = null;
     private renderer: MainCanvasRenderer<T>|null = null;
 
     constructor(props: MainCanvasProps<T>) {
@@ -53,10 +46,13 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
         if (!this.canvasRef.current) {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
-        this.renderer = new MainCanvasRenderer(this.canvasRef.current, dpr);
+
+        const { setRenderer, ...basicProps } = this.props;
+        this.renderer = new MainCanvasRenderer(this.canvasRef.current, { ...basicProps, dpr });
+        setRenderer(this.renderer);
     }
 
-    public componentDidUpdate(prevProps: MainCanvasProps<T>) {
+    public componentDidUpdate() {
         if (!this.renderer) {
             throw new Error('renderer is null in componentDidUpdate - cannot draw');
         }
@@ -69,18 +65,6 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             this.hasFixedScale = true;
         }
 
-        // If anything that affects the grid other than the gridOffset / visibleRect has changed
-        // then invalidate the previously drawn region
-        for (const key of Object.keys(this.props) as Array<keyof MainCanvasProps<T>>) {
-            if (key === 'gridOffset' || key === 'visibleRect') {
-                continue;
-            }
-            if (this.props[key] !== prevProps[key]) {
-                this.prevDraw = null;
-                break;
-            }
-        }
-
-        this.prevDraw = this.renderer.draw(this.props, this.prevDraw);
+        this.renderer.reset({ ...this.props, dpr });
     }
 }

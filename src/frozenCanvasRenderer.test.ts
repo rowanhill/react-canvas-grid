@@ -1,5 +1,4 @@
-import { FrozenCanvasProps } from './FrozenCanvas';
-import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
+import { FrozenCanvasRenderer, FrozenCanvasRendererBasics, FrozenCanvasRendererPosition } from './frozenCanvasRenderer';
 import { CellDef, ColumnDef, DataRow } from './types';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
@@ -7,10 +6,10 @@ type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 // Some props can be derived from others, so they are in a sense 'denormalised'. To prevent these
 // getting out of sync in the tests, we calculate the full props from a 'normalised' set of props.
 type NormalisedProps<T> =
-    Omit<Omit<Omit<FrozenCanvasProps<T>, 'colBoundaries'>, 'frozenColsWidth'>, 'frozenRowsHeight'>;
+    Omit<Omit<Omit<FrozenCanvasRendererBasics<T>, 'colBoundaries'>, 'frozenColsWidth'>, 'frozenRowsHeight'>;
 
-function calcProps<T>(props: NormalisedProps<T>): FrozenCanvasProps<T> {
-    const result = {...props} as FrozenCanvasProps<T>;
+function calcProps<T>(props: NormalisedProps<T>): FrozenCanvasRendererBasics<T> {
+    const result = {...props} as FrozenCanvasRendererBasics<T>;
 
     let curLeft = 0;
     const colBoundaries = props.columns.map((column) => {
@@ -91,7 +90,7 @@ describe('FrozenCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new FrozenCanvasRenderer<null>(mockCanvas, dpr);
+        // renderer = new FrozenCanvasRenderer<null>(mockCanvas, dpr);
     });
 
     afterEach(() => {
@@ -104,7 +103,12 @@ describe('FrozenCanvasRenderer', () => {
     let renderer: FrozenCanvasRenderer<null>;
 
     describe('calculateInvalidatedAreaRows', () => {
-        const props = { width: 400, frozenRowsHeight: 20, frozenColsWidth: 80 } as FrozenCanvasProps<any>;
+        const props = { width: 400, frozenRowsHeight: 20, frozenColsWidth: 80 } as FrozenCanvasRendererBasics<any>;
+
+        beforeEach(() => {
+            renderer = new FrozenCanvasRenderer(mockCanvas, props);
+        });
+
         it('returns null when there has been no horizontal movement', () => {
             const rect = renderer.calculateInvalidatedAreaRows(props, 0);
 
@@ -131,7 +135,12 @@ describe('FrozenCanvasRenderer', () => {
     });
 
     describe('calculateInvalidatedAreaCols', () => {
-        const props = { height: 400, frozenRowsHeight: 20, frozenColsWidth: 80 } as FrozenCanvasProps<any>;
+        const props = { height: 400, frozenRowsHeight: 20, frozenColsWidth: 80 } as FrozenCanvasRendererBasics<any>;
+
+        beforeEach(() => {
+            renderer = new FrozenCanvasRenderer(mockCanvas, props);
+        });
+
         it('returns null when there has been no vertical movement', () => {
             const rect = renderer.calculateInvalidatedAreaCols(props, 0);
 
@@ -160,9 +169,14 @@ describe('FrozenCanvasRenderer', () => {
     describe('drawInvalidatedCellsRows', () => {
 
         it('does nothing if there is no invalidated row area', () => {
+            renderer = new FrozenCanvasRenderer(mockCanvas, {} as FrozenCanvasRendererBasics<any>);
             jest.spyOn(renderer, 'drawCell');
 
-            renderer.drawInvalidatedCellsRows({} as FrozenCanvasProps<any>, null);
+            renderer.drawInvalidatedCellsRows(
+                {} as FrozenCanvasRendererBasics<any>,
+                {} as FrozenCanvasRendererPosition,
+                null,
+            );
 
             expect(renderer.drawCell).not.toHaveBeenCalled();
             expect(mockContext.save).not.toHaveBeenCalled();
@@ -176,14 +190,18 @@ describe('FrozenCanvasRenderer', () => {
                 frozenCols: 1,
                 rowHeight: 20,
                 borderWidth: 1,
-                gridOffset: { x: 100, y: 100 },
                 columns: cols(50),
                 data: [ row(), row() ],
+                dpr,
             } as NormalisedProps<any>);
+            const posProps: FrozenCanvasRendererPosition = {
+                gridOffset: { x: 100, y: 100 },
+            };
             const invalidArea = { left: 390, right: 400, top: 0, bottom: props.frozenRowsHeight } as ClientRect;
+            renderer = new FrozenCanvasRenderer(mockCanvas, props);
             jest.spyOn(renderer, 'drawCell');
 
-            renderer.drawInvalidatedCellsRows(props, invalidArea);
+            renderer.drawInvalidatedCellsRows(props, posProps, invalidArea);
 
             expect(renderer.drawCell).toHaveBeenCalledTimes(1);
         });
@@ -192,9 +210,14 @@ describe('FrozenCanvasRenderer', () => {
     describe('drawInvalidatedCellsCols', () => {
 
         it('does nothing if there is no invalidated row area', () => {
+            renderer = new FrozenCanvasRenderer(mockCanvas, {} as FrozenCanvasRendererBasics<any>);
             jest.spyOn(renderer, 'drawCell');
 
-            renderer.drawInvalidatedCellsCols({} as FrozenCanvasProps<any>, null);
+            renderer.drawInvalidatedCellsRows(
+                {} as FrozenCanvasRendererBasics<any>,
+                {} as FrozenCanvasRendererPosition,
+                null,
+            );
 
             expect(renderer.drawCell).not.toHaveBeenCalled();
             expect(mockContext.save).not.toHaveBeenCalled();
@@ -208,14 +231,17 @@ describe('FrozenCanvasRenderer', () => {
                 frozenCols: 1,
                 rowHeight: 20,
                 borderWidth: 1,
-                gridOffset: { x: 100, y: 100 },
                 columns: cols(50),
                 data: rows(100),
+                dpr,
             } as NormalisedProps<any>);
+            const posProps: FrozenCanvasRendererPosition = {
+                gridOffset: { x: 100, y: 100 },
+            };
             const invalidArea = { top: 390, bottom: 400, left: 0, right: props.frozenColsWidth } as ClientRect;
             jest.spyOn(renderer, 'drawCell');
 
-            renderer.drawInvalidatedCellsCols(props, invalidArea);
+            renderer.drawInvalidatedCellsCols(props, posProps, invalidArea);
 
             expect(renderer.drawCell).toHaveBeenCalledTimes(1);
         });

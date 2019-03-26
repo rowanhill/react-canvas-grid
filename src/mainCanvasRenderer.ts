@@ -1,59 +1,104 @@
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
-import { MainCanvasProps, PreviousDrawInfo } from './MainCanvas';
-import { Coord } from './types';
+import { Bounds, ColumnDef, Coord, DataRow } from './types';
+
+export interface MainCanvasRendererBasics<T> {
+    data: Array<DataRow<T>>;
+    width: number;
+    height: number;
+    rowHeight: number;
+    colBoundaries: Array<{left: number; right: number}>;
+    columns: ColumnDef[];
+    gridHeight: number;
+    borderWidth: number;
+    dpr: number;
+}
+
+export interface MainCanvasRendererPosition {
+    gridOffset: Coord;
+    visibleRect: ClientRect;
+}
+
+interface PreviousDrawInfo {
+    gridOffset: Coord;
+    rect: Bounds;
+}
+
+const defaultPosProps = {
+    gridOffset: { x: 0, y: 0 },
+    visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
+};
 
 export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
-    constructor(canvas: HTMLCanvasElement, dpr: number) {
-        super(canvas, dpr, false);
+    private basicProps: MainCanvasRendererBasics<T>;
+    private posProps: MainCanvasRendererPosition = defaultPosProps;
+    private prevDraw: PreviousDrawInfo|null = null;
+
+    constructor(canvas: HTMLCanvasElement, basicProps: MainCanvasRendererBasics<T>) {
+        super(canvas, basicProps.dpr, false);
+        this.basicProps = basicProps;
     }
 
-    public draw(props: MainCanvasProps<T>, prevDraw: PreviousDrawInfo|null): PreviousDrawInfo {
+    public reset(basicProps: MainCanvasRendererBasics<T>) {
+        this.basicProps = basicProps;
+        this.prevDraw = null;
+        this.draw();
+    }
+
+    public updatePos(posProps: MainCanvasRendererPosition) {
+        this.posProps = posProps;
+        this.draw();
+    }
+
+    public draw() {
+        const prevDraw = this.prevDraw;
+        const basicProps = this.basicProps;
+        const posProps = this.posProps;
         if (prevDraw) {
             // Translate according to difference from previous draw
-            const xDiff = (prevDraw.gridOffset.x - props.gridOffset.x);
-            const yDiff = (prevDraw.gridOffset.y - props.gridOffset.y);
+            const xDiff = (prevDraw.gridOffset.x - posProps.gridOffset.x);
+            const yDiff = (prevDraw.gridOffset.y - posProps.gridOffset.y);
             this.shiftExistingCanvas(xDiff, yDiff);
-            this.drawNewBorderBackground(xDiff, yDiff, props.width, props.height);
+            this.drawNewBorderBackground(xDiff, yDiff, basicProps.width, basicProps.height);
         } else {
-            this.drawWholeBorderBackground(props.width, props.height);
+            this.drawWholeBorderBackground(basicProps.width, basicProps.height);
         }
 
         // Translate the canvas context so that it's covering the visibleRect
-        this.translateToGridOffset(props.gridOffset);
+        this.translateToGridOffset(posProps.gridOffset);
 
         // Draw cells
         let colIndex = 0;
-        const minRowIndex = Math.floor(props.visibleRect.top / (props.rowHeight + props.borderWidth));
-        const maxRowIndex = Math.ceil(props.visibleRect.bottom / (props.rowHeight + props.borderWidth));
-        for (const {left: cellLeft, right: cellRight} of props.colBoundaries) {
-            if (cellRight < props.visibleRect.left) {
+        const minRowIndex = Math.floor(posProps.visibleRect.top / (basicProps.rowHeight + basicProps.borderWidth));
+        const maxRowIndex = Math.ceil(posProps.visibleRect.bottom / (basicProps.rowHeight + basicProps.borderWidth));
+        for (const {left: cellLeft, right: cellRight} of basicProps.colBoundaries) {
+            if (cellRight < posProps.visibleRect.left) {
                 // Cell is off screen to left, so skip this column
                 colIndex++;
                 continue;
             }
-            if (cellLeft > props.visibleRect.right) {
+            if (cellLeft > posProps.visibleRect.right) {
                 // Cell is off screen to right, so skip this and all future columns
                 break;
             }
-            const col = props.columns[colIndex];
+            const col = basicProps.columns[colIndex];
             for (let rowIndex = minRowIndex; rowIndex < maxRowIndex; rowIndex++) {
-                const row = props.data[rowIndex];
+                const row = basicProps.data[rowIndex];
                 const cell = row[col.fieldName];
 
                 const cellBounds = {
                     left: cellLeft,
-                    top: rowIndex * (props.rowHeight + props.borderWidth),
+                    top: rowIndex * (basicProps.rowHeight + basicProps.borderWidth),
                     right: cellLeft + col.width,
-                    bottom: rowIndex * (props.rowHeight + props.borderWidth) + props.rowHeight,
+                    bottom: rowIndex * (basicProps.rowHeight + basicProps.borderWidth) + basicProps.rowHeight,
                     width: col.width,
-                    height: props.rowHeight,
+                    height: basicProps.rowHeight,
                 };
 
                 if (prevDraw &&
-                    Math.max(cellLeft, props.visibleRect.left) >= prevDraw.rect.left &&
-                    Math.min(cellRight, props.visibleRect.right) <= prevDraw.rect.right &&
-                    Math.max(cellBounds.top, props.visibleRect.top) >= prevDraw.rect.top &&
-                    Math.min(cellBounds.bottom, props.visibleRect.bottom) <= prevDraw.rect.bottom
+                    Math.max(cellLeft, posProps.visibleRect.left) >= prevDraw.rect.left &&
+                    Math.min(cellRight, posProps.visibleRect.right) <= prevDraw.rect.right &&
+                    Math.max(cellBounds.top, posProps.visibleRect.top) >= prevDraw.rect.top &&
+                    Math.min(cellBounds.bottom, posProps.visibleRect.bottom) <= prevDraw.rect.bottom
                 ) {
                     // Visible portion of cell is entirely contained within previously drawn region, so we can skip
                     continue;
@@ -65,16 +110,16 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         }
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
-        this.translateToOrigin(props.gridOffset);
+        this.translateToOrigin(posProps.gridOffset);
 
         // Remember what area is now drawn
-        return {
-            gridOffset: props.gridOffset,
+        this.prevDraw = {
+            gridOffset: posProps.gridOffset,
             rect: {
-                left: Math.max(props.gridOffset.x, props.visibleRect.left),
-                top: Math.max(props.gridOffset.y, props.visibleRect.top),
-                right: Math.min(props.gridOffset.x + props.width, props.visibleRect.right),
-                bottom: Math.min(props.gridOffset.y + props.height, props.visibleRect.bottom),
+                left: Math.max(posProps.gridOffset.x, posProps.visibleRect.left),
+                top: Math.max(posProps.gridOffset.y, posProps.visibleRect.top),
+                right: Math.min(posProps.gridOffset.x + basicProps.width, posProps.visibleRect.right),
+                bottom: Math.min(posProps.gridOffset.y + basicProps.height, posProps.visibleRect.bottom),
             },
         };
     }
