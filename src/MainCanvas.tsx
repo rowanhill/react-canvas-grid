@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { OFFSCREEN_CANVAS_PADDING } from './gridGeometry';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
 import { ColumnDef, Coord, DataRow } from './types';
 
@@ -18,7 +17,6 @@ export interface MainCanvasProps<T> {
 
 export interface PreviousDrawInfo {
     gridOffset: Coord;
-    redrawGridOffset: Coord;
     rect: { top: number; left: number; right: number; bottom: number };
 }
 
@@ -44,8 +42,8 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
                     position: 'absolute',
                     width: `${this.props.width}px`,
                     height: `${this.props.height}px`,
-                    top: -OFFSCREEN_CANVAS_PADDING,
-                    left: -OFFSCREEN_CANVAS_PADDING,
+                    top: 0,
+                    left: 0,
                 }}
             />
         );

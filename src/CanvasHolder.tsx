@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { OFFSCREEN_CANVAS_PADDING } from './gridGeometry';
-import { Size } from './types';
+import { Coord, Size } from './types';
 
 export interface CanvasHolderProps {
     canvasSize: Size;
@@ -10,9 +9,7 @@ export interface CanvasHolderProps {
 export const CanvasHolder = React.forwardRef((props: CanvasHolderProps, ref: React.Ref<HTMLDivElement>) => {
     const style: React.CSSProperties = {
         position: 'relative',
-        width: `${props.canvasSize.width - 2 * OFFSCREEN_CANVAS_PADDING}px`,
-        height: `${props.canvasSize.height - 2 * OFFSCREEN_CANVAS_PADDING}px`,
-        overflow: 'hidden',
+        width: `${props.canvasSize.width}px`,
     };
 
     return (

@@ -131,7 +131,7 @@ class App extends Component<{}, AppState> {
             <button onClick={this.updateCell}>Update cell</button>
           </header>
           <div style={{height: '600px', width: '800px', overflow: 'scroll'}}>
-            <div style={{height: '120px', backgroundColor: 'blue'}}>
+            <div style={{height: '80px', backgroundColor: 'blue'}}>
               <span>Body header</span>
             </div>
             <div style={{paddingLeft: '100px', paddingRight: '100px', backgroundColor: 'purple'}}>

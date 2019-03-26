@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { OFFSCREEN_CANVAS_PADDING } from './gridGeometry';
 import { SelectRange } from './ReactCanvasGrid';
-import { Coord } from './types';
+import { CellDef, ColumnDef, Coord, DataRow } from './types';
 
 export interface HighlightCanvasProps {
     width: number;
@@ -33,8 +32,8 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
                     position: 'absolute',
                     width: `${this.props.width}px`,
                     height: `${this.props.height}px`,
-                    top: -OFFSCREEN_CANVAS_PADDING,
-                    left: -OFFSCREEN_CANVAS_PADDING,
+                    top: 0,
+                    left: 0,
                 }}
             />
         );
@@ -69,9 +68,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
 
         // Translate the canvas context so that it's covering the visibleRect
         // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
-        context.translate(
-            -this.props.gridOffset.x + OFFSCREEN_CANVAS_PADDING,
-            -this.props.gridOffset.y + OFFSCREEN_CANVAS_PADDING);
+        context.translate(-this.props.gridOffset.x, -this.props.gridOffset.y);
 
         // Draw selected cell highlights
         context.fillStyle = '#44aaff55';
@@ -84,9 +81,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         }
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
-        context.translate(
-            this.props.gridOffset.x - OFFSCREEN_CANVAS_PADDING,
-            this.props.gridOffset.y - OFFSCREEN_CANVAS_PADDING);
+        context.translate(this.props.gridOffset.x, this.props.gridOffset.y);
     }
 
     private gridToSizer = ({x, y}: {x: number; y: number}): ClientRect => {

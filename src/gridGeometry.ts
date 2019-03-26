@@ -25,8 +25,6 @@ const memoizedCalcColumnBoundaries = memoizeOne((columns: ColumnDef[], borderWid
     });
 });
 
-export const OFFSCREEN_CANVAS_PADDING = 100;
-
 export class GridGeometry {
     /**
      * Calculate the boundaries of all columns in the grid, excluding borders. The 'left's are inclusive,
@@ -60,8 +58,8 @@ export class GridGeometry {
         const dataSize = GridGeometry.calculateGridSize(props);
         const scrollParentClientRect = GridGeometry.getScrollParentClientRect(scrollParent, screen);
         return {
-            height: Math.min(dataSize.height, scrollParentClientRect.height, screen.availHeight) + 200,
-            width: Math.min(dataSize.width, scrollParentClientRect.width, screen.availWidth) + 200,
+            height: Math.min(dataSize.height, scrollParentClientRect.height, screen.availHeight),
+            width: Math.min(dataSize.width, scrollParentClientRect.width, screen.availWidth),
         };
     }
 
@@ -83,26 +81,14 @@ export class GridGeometry {
         const frozenColWidth = GridGeometry.calculateFrozenColsWidth(props);
 
         const bounds = {
-            top: Math.max(
-                sizerClientRect.top + gridOffset.y - 100,
-                scrollParentClientRect.top - 100,
-                sizerClientRect.top + frozenRowHeight,
-                ) - sizerClientRect.top,
-            left: Math.max(
-                sizerClientRect.left + gridOffset.x,
-                scrollParentClientRect.left,
-                sizerClientRect.left + frozenColWidth,
-                ) - sizerClientRect.left,
-            bottom: Math.min(
-                sizerClientRect.bottom,
-                scrollParentClientRect.bottom + 100,
-                screen.availHeight + 100,
-                ) - sizerClientRect.top,
-            right: Math.min(
-                sizerClientRect.right,
-                scrollParentClientRect.right + 100,
-                screen.availWidth + 100,
-                ) - sizerClientRect.left,
+            top: Math.max(sizerClientRect.top + gridOffset.y + frozenRowHeight, scrollParentClientRect.top, 0) -
+                sizerClientRect.top,
+            left: Math.max(sizerClientRect.left + gridOffset.x + frozenColWidth, scrollParentClientRect.left, 0) -
+                sizerClientRect.left,
+            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, screen.availHeight) -
+                sizerClientRect.top,
+            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, screen.availWidth) -
+                sizerClientRect.left,
         };
         return { ...bounds, height: bounds.bottom - bounds.top, width: bounds.right - bounds.left };
     }
