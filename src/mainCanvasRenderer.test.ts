@@ -1,6 +1,5 @@
 import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
 import { CellDef, ColumnDef, DataRow } from './types';
-import { render } from 'enzyme';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 

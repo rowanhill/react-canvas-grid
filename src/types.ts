@@ -39,4 +39,4 @@ export interface Bounds {
     left: number;
     right: number;
     bottom: number;
-};
+}
