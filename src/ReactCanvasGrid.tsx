@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { CanvasHolder } from './CanvasHolder';
+import { CursorState } from './cursorState';
+import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
 import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
 import { GridGeometry } from './gridGeometry';
@@ -27,21 +29,6 @@ interface ReactCanvasGridState {
     scrollParent: HTMLElement|null;
 }
 
-export interface CursorState {
-    editCursorCell: Coord|null;
-    selection: SelectionState|null;
-}
-
-export interface SelectionState {
-    selectionStartCell: Coord;
-    selectedRange: SelectRange;
-}
-
-interface SelectRange {
-    topLeft: Coord;
-    bottomRight: Coord;
-}
-
 export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
     public static defaultProps = {
         borderWidth: 1,
@@ -52,10 +39,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-    private cursorState: CursorState = {
-        editCursorCell: null,
-        selection: null,
-    };
+    private cursorState: CursorState = cursorState.createDefault();
 
     private mainRenderer: MainCanvasRenderer<T>|null = null;
     private frozenRenderer: FrozenCanvasRenderer<T>|null = null;
@@ -199,18 +183,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
-        const selectedRange = {
-            topLeft: gridCoords,
-            bottomRight: gridCoords,
-        };
-        this.cursorState = {
-            ...this.cursorState,
-            editCursorCell: gridCoords,
-            selection: {
-                selectedRange,
-                selectionStartCell: gridCoords,
-            },
-        };
+        this.cursorState = cursorState.startDrag(this.cursorState, gridCoords);
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
@@ -226,23 +199,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
-        const selectedRange = {
-            topLeft: {
-                x: Math.min(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
-                y: Math.min(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
-            },
-            bottomRight: {
-                x: Math.max(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
-                y: Math.max(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
-            },
-        };
-        this.cursorState = {
-            ...this.cursorState,
-            selection: {
-                ...this.cursorState.selection,
-                selectedRange,
-            },
-        };
+        this.cursorState = cursorState.updateDrag(this.cursorState, gridCoords);
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
@@ -254,23 +211,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
-        const selectedRange = {
-            topLeft: {
-                x: Math.min(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
-                y: Math.min(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
-            },
-            bottomRight: {
-                x: Math.max(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
-                y: Math.max(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
-            },
-        };
-        this.cursorState = {
-            ...this.cursorState,
-            selection: {
-                ...this.cursorState.selection,
-                selectedRange,
-            },
-        };
+        this.cursorState = cursorState.updateDrag(this.cursorState, gridCoords);
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 

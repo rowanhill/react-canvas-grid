@@ -1,5 +1,5 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
-import { CursorState, SelectionState } from './ReactCanvasGrid';
+import { CursorState, SelectionState } from './cursorState';
 import { Coord } from './types';
 
 export interface HighlightCanvassRendererBasics {
