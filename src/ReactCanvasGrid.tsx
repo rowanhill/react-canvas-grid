@@ -27,7 +27,17 @@ interface ReactCanvasGridState {
     scrollParent: HTMLElement|null;
 }
 
-export interface SelectRange {
+export interface CursorState {
+    editCursorCell: Coord|null;
+    selection: SelectionState|null;
+}
+
+export interface SelectionState {
+    selectionStartCell: Coord;
+    selectedRange: SelectRange;
+}
+
+interface SelectRange {
     topLeft: Coord;
     bottomRight: Coord;
 }
@@ -42,7 +52,10 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     private readonly sizerRef: React.RefObject<HTMLDivElement> = React.createRef();
     private readonly canvasHolderRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-    private selectedRangeDragStart: Coord|null = null;
+    private cursorState: CursorState = {
+        editCursorCell: null,
+        selection: null,
+    };
 
     private mainRenderer: MainCanvasRenderer<T>|null = null;
     private frozenRenderer: FrozenCanvasRenderer<T>|null = null;
@@ -190,12 +203,19 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             topLeft: gridCoords,
             bottomRight: gridCoords,
         };
-        this.selectedRangeDragStart = gridCoords;
-        this.highlightRenderer.updateSelection({ selectedRange });
+        this.cursorState = {
+            ...this.cursorState,
+            editCursorCell: gridCoords,
+            selection: {
+                selectedRange,
+                selectionStartCell: gridCoords,
+            },
+        };
+        this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
     private onMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (!this.selectedRangeDragStart) {
+        if (!this.cursorState.selection) {
             return;
         }
         // tslint:disable-next-line: no-bitwise
@@ -208,19 +228,26 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: {
-                x: Math.min(this.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.min(this.selectedRangeDragStart.y, gridCoords.y),
+                x: Math.min(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
+                y: Math.min(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
             },
             bottomRight: {
-                x: Math.max(this.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.max(this.selectedRangeDragStart.y, gridCoords.y),
+                x: Math.max(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
+                y: Math.max(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
             },
         };
-        this.highlightRenderer.updateSelection({ selectedRange });
+        this.cursorState = {
+            ...this.cursorState,
+            selection: {
+                ...this.cursorState.selection,
+                selectedRange,
+            },
+        };
+        this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
     private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (!this.selectedRangeDragStart) {
+        if (!this.cursorState.selection) {
             return;
         }
         if (!this.highlightRenderer) {
@@ -229,16 +256,22 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const gridCoords = this.calculateGridCellCoords(event);
         const selectedRange = {
             topLeft: {
-                x: Math.min(this.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.min(this.selectedRangeDragStart.y, gridCoords.y),
+                x: Math.min(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
+                y: Math.min(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
             },
             bottomRight: {
-                x: Math.max(this.selectedRangeDragStart.x, gridCoords.x),
-                y: Math.max(this.selectedRangeDragStart.y, gridCoords.y),
+                x: Math.max(this.cursorState.selection.selectionStartCell.x, gridCoords.x),
+                y: Math.max(this.cursorState.selection.selectionStartCell.y, gridCoords.y),
             },
         };
-        this.selectedRangeDragStart = null;
-        this.highlightRenderer.updateSelection({ selectedRange });
+        this.cursorState = {
+            ...this.cursorState,
+            selection: {
+                ...this.cursorState.selection,
+                selectedRange,
+            },
+        };
+        this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
     private calculateGridCellCoords = (event: React.MouseEvent<any, any>) => {

@@ -1,5 +1,6 @@
-import { Coord, SelectRange } from '.';
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
+import { CursorState, SelectionState } from './ReactCanvasGrid';
+import { Coord } from './types';
 
 export interface HighlightCanvassRendererBasics {
     width: number;
@@ -15,7 +16,7 @@ export interface HighlightCanvasRendererPosition {
 }
 
 export interface HighlightCanvasRendererSelection {
-    selectedRange: SelectRange|null;
+    cursorState: CursorState;
 }
 
 const defaultPosProps = {
@@ -25,7 +26,9 @@ const defaultPosProps = {
 export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     private basicProps: HighlightCanvassRendererBasics;
     private posProps: HighlightCanvasRendererPosition = defaultPosProps;
-    private selectionProps: HighlightCanvasRendererSelection = { selectedRange: null };
+    private selectionProps: HighlightCanvasRendererSelection = {
+        cursorState: { editCursorCell: null, selection: null },
+    };
 
     constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvassRendererBasics) {
         super(canvas, basicProps.dpr, true);
@@ -60,12 +63,23 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
         context.translate(-this.posProps.gridOffset.x, -this.posProps.gridOffset.y);
 
-        // Draw selected cell highlights
         context.fillStyle = '#2276e440';
         context.strokeStyle = '#2276e4';
-        if (this.selectionProps.selectedRange) {
-            const tl = this.gridToSizer(this.selectionProps.selectedRange.topLeft);
-            const br = this.gridToSizer(this.selectionProps.selectedRange.bottomRight);
+
+        // Draw edit cursor cell outline
+        if (this.selectionProps.cursorState.editCursorCell) {
+            context.lineWidth = 2;
+            const rect = this.gridToSizer(this.selectionProps.cursorState.editCursorCell);
+            context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+            context.lineWidth = 1;
+        }
+
+        // Draw selected cell highlights
+        if (this.selectionProps.cursorState.selection &&
+            isSelectionMoreThanOneCell(this.selectionProps.cursorState.selection)
+        ) {
+            const tl = this.gridToSizer(this.selectionProps.cursorState.selection.selectedRange.topLeft);
+            const br = this.gridToSizer(this.selectionProps.cursorState.selection.selectedRange.bottomRight);
             context.fillRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
             context.strokeRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
         }
@@ -84,4 +98,10 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
             width: this.basicProps.colBoundaries[x].right - this.basicProps.colBoundaries[x].left,
         };
     }
+}
+
+function isSelectionMoreThanOneCell(selection: SelectionState) {
+    const tl = selection.selectedRange.topLeft;
+    const br = selection.selectedRange.bottomRight;
+    return tl.x !== br.x || tl.y !== br.y;
 }
