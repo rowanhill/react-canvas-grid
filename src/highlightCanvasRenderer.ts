@@ -61,8 +61,8 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.translate(-this.posProps.gridOffset.x, -this.posProps.gridOffset.y);
 
         // Draw selected cell highlights
-        context.fillStyle = '#44aaff55';
-        context.strokeStyle = '#44aaffcc';
+        context.fillStyle = '#2276e440';
+        context.strokeStyle = '#2276e4';
         if (this.selectionProps.selectedRange) {
             const tl = this.gridToSizer(this.selectionProps.selectedRange.topLeft);
             const br = this.gridToSizer(this.selectionProps.selectedRange.bottomRight);
