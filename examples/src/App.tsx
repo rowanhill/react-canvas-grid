@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { CellDef, ColumnDef, DataRow, ReactCanvasGrid } from 'react-canvas-grid';
+import { CellDef, ColumnDef, DataRow, ReactCanvasGrid, SelectRange } from 'react-canvas-grid';
 import './App.css';
 
 const numCols = 250;
@@ -109,6 +109,8 @@ function createData() {
 
 interface AppState {
   data: Array<DataRow<AllCellDataTypes>>;
+  selectedRange: SelectRange | null;
+  isDragging: boolean;
 }
 
 class App extends Component<{}, AppState> {
@@ -116,6 +118,8 @@ class App extends Component<{}, AppState> {
     super(props);
     this.state = {
       data: createData(),
+      selectedRange: null,
+      isDragging: false,
     };
   }
 
@@ -127,6 +131,11 @@ class App extends Component<{}, AppState> {
             <p>
               Page header
             </p>
+            <div>
+              {this.state.isDragging ? 'Dragging' : ''}
+              &nbsp;
+              {this.state.selectedRange ? JSON.stringify(this.state.selectedRange) : ''}
+            </div>
             <button onClick={this.replaceData}>Replace data</button>
             <button onClick={this.updateCell}>Update cell</button>
           </header>
@@ -141,6 +150,9 @@ class App extends Component<{}, AppState> {
                 rowHeight={20}
                 frozenRows={1}
                 frozenCols={1}
+                onSelectionChangeStart={this.selectionChanged}
+                onSelectionChangeUpdate={this.selectionChanged}
+                onSelectionChangeEnd={this.selectionFinished}
               />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
@@ -150,6 +162,14 @@ class App extends Component<{}, AppState> {
         </div>
       </React.Fragment>
     );
+  }
+
+  private selectionChanged = (selectedRange: SelectRange) => {
+    this.setState({ selectedRange, isDragging: true });
+  }
+
+  private selectionFinished = (selectedRange: SelectRange) => {
+    this.setState({ selectedRange, isDragging: false });
   }
 
   private replaceData = () => {

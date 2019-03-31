@@ -10,10 +10,12 @@ export interface SelectionState {
     selectedRange: SelectRange;
 }
 
-interface SelectRange {
+export interface SelectRange {
     topLeft: Coord;
     bottomRight: Coord;
 }
+
+export type CursorStateWithSelection = CursorState & { selection: SelectionState };
 
 export function createDefault(): CursorState {
     return {
@@ -22,7 +24,7 @@ export function createDefault(): CursorState {
     };
 }
 
-export function startDrag(cursorState: CursorState, gridCoords: Coord): CursorState {
+export function startDrag(cursorState: CursorState, gridCoords: Coord): CursorStateWithSelection {
     const selectedRange = {
         topLeft: gridCoords,
         bottomRight: gridCoords,
@@ -37,10 +39,7 @@ export function startDrag(cursorState: CursorState, gridCoords: Coord): CursorSt
     };
 }
 
-export function updateDrag(cursorState: CursorState, gridCoords: Coord): CursorState {
-    if (!cursorState.selection) {
-        return cursorState;
-    }
+export function updateDrag(cursorState: CursorStateWithSelection, gridCoords: Coord): CursorStateWithSelection {
     const selectedRange = {
         topLeft: {
             x: Math.min(cursorState.selection.selectionStartCell.x, gridCoords.x),

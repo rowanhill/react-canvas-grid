@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CanvasHolder } from './CanvasHolder';
-import { CursorState } from './cursorState';
+import { CursorState, CursorStateWithSelection, SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
 import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
@@ -15,6 +15,10 @@ interface RequiredProps<T> {
     columns: ColumnDef[];
     data: Array<DataRow<T>>;
     rowHeight: number;
+
+    onSelectionChangeStart?: (selectRange: SelectRange) => void;
+    onSelectionChangeUpdate?: (selectRange: SelectRange) => void;
+    onSelectionChangeEnd?: (selectRange: SelectRange) => void;
 }
 interface DefaultedProps {
     borderWidth: number;
@@ -183,7 +187,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
-        this.cursorState = cursorState.startDrag(this.cursorState, gridCoords);
+        const newCursorState = cursorState.startDrag(this.cursorState, gridCoords);
+        if (this.props.onSelectionChangeStart) {
+            this.props.onSelectionChangeStart(newCursorState.selection.selectedRange);
+        }
+        this.cursorState = newCursorState;
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
@@ -191,6 +199,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.cursorState.selection) {
             return;
         }
+        const oldCursorState: CursorStateWithSelection = this.cursorState as CursorStateWithSelection;
         // tslint:disable-next-line: no-bitwise
         if ((event.buttons & 1) === 0) {
             return;
@@ -199,7 +208,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
-        this.cursorState = cursorState.updateDrag(this.cursorState, gridCoords);
+        const newCursorState = cursorState.updateDrag(oldCursorState, gridCoords);
+        this.cursorState = newCursorState;
+        if (this.props.onSelectionChangeUpdate) { // TODO: Only trigger if state has changed
+            this.props.onSelectionChangeUpdate(newCursorState.selection.selectedRange);
+        }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
@@ -207,11 +220,16 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.cursorState.selection) {
             return;
         }
+        const oldCursorState: CursorStateWithSelection = this.cursorState as CursorStateWithSelection;
         if (!this.highlightRenderer) {
             return;
         }
         const gridCoords = this.calculateGridCellCoords(event);
-        this.cursorState = cursorState.updateDrag(this.cursorState, gridCoords);
+        const newCursorState = cursorState.updateDrag(oldCursorState, gridCoords);
+        this.cursorState = newCursorState;
+        if (this.props.onSelectionChangeEnd) {
+            this.props.onSelectionChangeEnd(newCursorState.selection.selectedRange);
+        }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
