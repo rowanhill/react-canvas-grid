@@ -210,8 +210,13 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         const gridCoords = this.calculateGridCellCoords(event);
         const newCursorState = cursorState.updateDrag(oldCursorState, gridCoords);
         this.cursorState = newCursorState;
-        if (this.props.onSelectionChangeUpdate) { // TODO: Only trigger if state has changed
-            this.props.onSelectionChangeUpdate(newCursorState.selection.selectedRange);
+        if (this.props.onSelectionChangeUpdate) {
+            const rangeChanged = cursorState.isSelectRangeDifferent(
+                oldCursorState.selection.selectedRange,
+                newCursorState.selection.selectedRange);
+            if (rangeChanged) {
+                this.props.onSelectionChangeUpdate(newCursorState.selection.selectedRange);
+            }
         }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }

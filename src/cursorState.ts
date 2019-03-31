@@ -58,3 +58,10 @@ export function updateDrag(cursorState: CursorStateWithSelection, gridCoords: Co
         },
     };
 }
+
+export function isSelectRangeDifferent(oldRange: SelectRange, newRange: SelectRange) {
+    return oldRange.bottomRight.x !== newRange.bottomRight.x ||
+        oldRange.bottomRight.y !== newRange.bottomRight.y ||
+        oldRange.topLeft.x !== newRange.topLeft.x ||
+        oldRange.topLeft.y !== newRange.topLeft.y;
+}
