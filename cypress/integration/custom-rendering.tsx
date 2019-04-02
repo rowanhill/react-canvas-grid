@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {CellDef, ReactCanvasGrid} from '../../src/index';
 import { DefaultedReactCanvasGridProps } from '../../src/ReactCanvasGrid';
+import { cellHasTextFunction } from '../../src/types';
 import { Holder } from '../components/ScrollingHolder';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
@@ -51,7 +52,8 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
                     cell: CellDef<null>,
                 ) => {
                     context.fillStyle = 'red';
-                    context.fillText(cell.getText(), cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
+                    const text = cellHasTextFunction(cell) ? cell.getText(cell.data) : cell.text;
+                    context.fillText(text, cellBounds.left + 2, cellBounds.top + 15, cellBounds.width - 4);
                 };
             }
         });

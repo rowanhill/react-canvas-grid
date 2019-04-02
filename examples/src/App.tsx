@@ -74,6 +74,8 @@ const renderCellBackground = (
 
 interface CustomCellData {
   bgColour: string;
+  text: string;
+  shouldReverseText: boolean;
   highlight: HighlightPosition;
 }
 
@@ -81,13 +83,21 @@ type CustomBgCellDef = CellDef<CustomCellData>;
 
 type AllCellDataTypes = CustomCellData | null;
 
+function getCustomCellText(data: CustomCellData) {
+  if (data.shouldReverseText) {
+    return data.text.split('').reverse().join('');
+  } else {
+    return data.text;
+  }
+}
+
 function createData() {
   const data: Array<DataRow<AllCellDataTypes>> = [];
 
   for (let i = 0; i < numRows; i++) {
     const row: DataRow<AllCellDataTypes> = {
       date: {
-        getText: () => (i + 1).toString(),
+        text: (i + 1).toString(),
         data: null,
         renderBackground: renderHeaderBackground,
       },
@@ -96,8 +106,8 @@ function createData() {
       const label = labels[Math.floor(Math.random() * labels.length)];
       const highlight = highlights[Math.floor(Math.random() * highlights.length)];
       const cell: CustomBgCellDef = {
-        getText: () => label.text,
-        data: { bgColour: label.colour, highlight },
+        getText: getCustomCellText,
+        data: { bgColour: label.colour, highlight, text: label.text, shouldReverseText: Math.random() < 0.5 },
         renderBackground: i === 0 ? renderHeaderBackground : renderCellBackground,
       };
       row[j.toString()] = cell as CellDef<AllCellDataTypes>;
@@ -188,11 +198,12 @@ class App extends Component<{}, AppState> {
             ...row,
             0: {
               ...row[0],
-              getText: () => label.text,
               data: {
                 ...row[0].data,
                 bgColour: label.colour,
                 highlight,
+                text: label.text,
+                shouldReverseText: Math.random() < 0.5,
               },
             },
           };

@@ -1,4 +1,4 @@
-import { CellDef, ColumnDef } from './types';
+import { CellDef, cellHasTextFunction, ColumnDef } from './types';
 
 export const borderColour = 'lightgrey';
 
@@ -48,6 +48,7 @@ export class CommonCanvasRenderer<T> {
         context.fillStyle = 'black';
         context.textBaseline = 'middle';
         const verticalCentre = cellBounds.top + (cellBounds.height / 2);
-        context.fillText(cell.getText(), cellBounds.left + 2, verticalCentre, cellBounds.width - 4);
+        const text = cellHasTextFunction(cell) ? cell.getText(cell.data) : cell.text;
+        context.fillText(text, cellBounds.left + 2, verticalCentre, cellBounds.width - 4);
     }
 }
