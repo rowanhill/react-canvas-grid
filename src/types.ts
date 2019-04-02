@@ -3,11 +3,16 @@ export interface ColumnDef {
     width: number;
 }
 
+export interface CustomDrawCallbackMetadata {
+    column: ColumnDef;
+    colIndex: number;
+    rowIndex: number;
+}
 type CustomDrawCallback<T> = (
     context: CanvasRenderingContext2D,
     cellBounds: ClientRect,
     cell: CellDef<T>,
-    column: ColumnDef,
+    metadata: CustomDrawCallbackMetadata,
 ) => void;
 
 interface CellDefCommon<T> {

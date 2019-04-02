@@ -195,7 +195,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
                 const row = props.data[rowIndex];
                 const cell = row[col.fieldName];
-                this.drawCell(cell, cellBounds, col);
+                this.drawCell(cell, cellBounds, {column: col, rowIndex, colIndex});
             }
         }
     }
@@ -247,7 +247,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
                     const row = basicProps.data[rowIndex];
                     const cell = row[col.fieldName];
 
-                    this.drawCell(cell, cellBounds, col);
+                    this.drawCell(cell, cellBounds, {column: col, rowIndex, colIndex});
                 }
             }
         }
@@ -295,7 +295,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
                     const row = basicProps.data[rowIndex];
                     const cell = row[col.fieldName];
 
-                    this.drawCell(cell, cellBounds, col);
+                    this.drawCell(cell, cellBounds, {column: col, rowIndex, colIndex});
                 }
             }
         }

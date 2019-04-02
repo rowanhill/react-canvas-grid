@@ -43,7 +43,6 @@ const renderCellBackground = (
   context: CanvasRenderingContext2D,
   cellBounds: ClientRect,
   cell: CustomBgCellDef,
-  column: ColumnDef,
 ) => {
   if (cell.data.highlight !== 'full') {
     context.fillStyle = cell.data.bgColour;

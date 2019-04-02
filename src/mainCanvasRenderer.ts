@@ -104,7 +104,7 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
                     continue;
                 }
 
-                this.drawCell(cell, cellBounds, col);
+                this.drawCell(cell, cellBounds, {column: col, rowIndex, colIndex});
             }
             colIndex++;
         }

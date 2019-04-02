@@ -1,4 +1,4 @@
-import { CellDef, cellHasTextFunction, ColumnDef } from './types';
+import { CellDef, cellHasTextFunction, ColumnDef, CustomDrawCallbackMetadata } from './types';
 
 export const borderColour = 'lightgrey';
 
@@ -21,19 +21,17 @@ export class CommonCanvasRenderer<T> {
         this.context.scale(this.dpr, this.dpr);
     }
 
-    public drawCell(cell: CellDef<T>, cellBounds: ClientRect, col: ColumnDef) {
+    public drawCell(cell: CellDef<T>, cellBounds: ClientRect, metadata: CustomDrawCallbackMetadata) {
         const renderBackground = cell.renderBackground || this.drawCellBackgroundDefault;
         const renderText = cell.renderText || this.drawCellTextDefault;
 
-        renderBackground(this.context, cellBounds, cell, col);
-        renderText(this.context, cellBounds, cell, col);
+        renderBackground(this.context, cellBounds, cell, metadata);
+        renderText(this.context, cellBounds, cell, metadata);
     }
 
     private drawCellBackgroundDefault = (
         context: CanvasRenderingContext2D,
         cellBounds: ClientRect,
-        cell: CellDef<T>,
-        column: ColumnDef,
     ) => {
         context.fillStyle = 'white';
         context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
@@ -43,7 +41,6 @@ export class CommonCanvasRenderer<T> {
         context: CanvasRenderingContext2D,
         cellBounds: ClientRect,
         cell: CellDef<T>,
-        column: ColumnDef,
     ) => {
         context.fillStyle = 'black';
         context.textBaseline = 'middle';
