@@ -154,6 +154,8 @@ class App extends Component<{}, AppState> {
             </div>
             <div style={{paddingLeft: '100px', paddingRight: '100px', backgroundColor: 'purple'}}>
               <ReactCanvasGrid<AllCellDataTypes>
+                cssHeight={'800px'}
+                cssWidth={'800px'}
                 columns={colDefs}
                 data={this.state.data}
                 rowHeight={20}

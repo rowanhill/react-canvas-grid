@@ -69,7 +69,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         // Draw edit cursor cell outline
         if (this.selectionProps.cursorState.editCursorCell) {
             context.lineWidth = 2;
-            const rect = this.gridToSizer(this.selectionProps.cursorState.editCursorCell);
+            const rect = this.gridCellCoordToGridPixelCoord(this.selectionProps.cursorState.editCursorCell);
             context.strokeRect(rect.left, rect.top, rect.width, rect.height);
             context.lineWidth = 1;
         }
@@ -78,8 +78,10 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         if (this.selectionProps.cursorState.selection &&
             isSelectionMoreThanOneCell(this.selectionProps.cursorState.selection)
         ) {
-            const tl = this.gridToSizer(this.selectionProps.cursorState.selection.selectedRange.topLeft);
-            const br = this.gridToSizer(this.selectionProps.cursorState.selection.selectedRange.bottomRight);
+            const tl =
+                this.gridCellCoordToGridPixelCoord(this.selectionProps.cursorState.selection.selectedRange.topLeft);
+            const br =
+                this.gridCellCoordToGridPixelCoord(this.selectionProps.cursorState.selection.selectedRange.bottomRight);
             context.fillRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
             context.strokeRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
         }
@@ -88,7 +90,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.translate(this.posProps.gridOffset.x, this.posProps.gridOffset.y);
     }
 
-    private gridToSizer = ({x, y}: {x: number; y: number}): ClientRect => {
+    private gridCellCoordToGridPixelCoord = ({x, y}: {x: number; y: number}): ClientRect => {
         return {
             top: y * (this.basicProps.rowHeight + this.basicProps.borderWidth),
             bottom: (y + 1) * (this.basicProps.rowHeight + + this.basicProps.borderWidth) - this.basicProps.borderWidth,

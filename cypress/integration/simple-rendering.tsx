@@ -31,8 +31,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
     it('can be scrolled to the middle', () => {
         cy.get('#rcg-holder')
-            .scrollTo(300, 300);
-        cy.wait(1000); // Wait to ensure scroll bar has faded away on osx
+            .trigger('wheel', { deltaX: 300, deltaY: 300 });
 
         cy.get('#rcg-holder')
             .matchImageSnapshot('scrolled-grid-in-scroll');

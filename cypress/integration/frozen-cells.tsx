@@ -28,8 +28,7 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
 
     it('keeps the frozen rows and columns shown on the grid (and fixes the top-left cells in place)', () => {
         cy.get('#rcg-holder')
-            .scrollTo(300, 300);
-        cy.wait(1000); // Wait to ensure scroll bar has faded away on osx
+            .trigger('wheel', { deltaX: 300, deltaY: 300 });
 
         cy.get('#rcg-holder')
             .matchImageSnapshot('scrolled-grid-with-frozen-cells');

@@ -4,12 +4,12 @@ import { ColumnDef, Coord, Size } from './types';
 
 export interface ColumnBoundary {
     /**
-     * The left hand edge (inclusive) of the column (excluding border), in the sizer div's frame of reference
+     * The left hand edge (inclusive) of the column (excluding border), from the grid origin
      */
     left: number;
 
     /**
-     * The right hand edge (exclusive) of the column (excluding border), in the sizer div's frame of reference
+     * The right hand edge (exclusive) of the column (excluding border), from the grid origin
      */
     right: number;
 }
@@ -63,36 +63,6 @@ export class GridGeometry {
         };
     }
 
-    /**
-     * Calculate the (unfrozen) portion of the grid that is currently visible. The result is in the sizer div's
-     * frame of reference.
-     */
-    public static calculateViewRect = (
-        props: ReactCanvasGridProps<any>,
-        gridOffset: Coord,
-        scrollParent: HTMLElement|null,
-        sizer: HTMLDivElement,
-        screen: Screen = window.screen,
-    ): ClientRect => {
-        const sizerClientRect = sizer.getBoundingClientRect();
-        const scrollParentClientRect = GridGeometry.getScrollParentClientRect(scrollParent, screen);
-
-        const frozenRowHeight = GridGeometry.calculateFrozenRowsHeight(props);
-        const frozenColWidth = GridGeometry.calculateFrozenColsWidth(props);
-
-        const bounds = {
-            top: Math.max(sizerClientRect.top + gridOffset.y + frozenRowHeight, scrollParentClientRect.top, 0) -
-                sizerClientRect.top,
-            left: Math.max(sizerClientRect.left + gridOffset.x + frozenColWidth, scrollParentClientRect.left, 0) -
-                sizerClientRect.left,
-            bottom: Math.min(sizerClientRect.bottom, scrollParentClientRect.bottom, screen.availHeight) -
-                sizerClientRect.top,
-            right: Math.min(sizerClientRect.right, scrollParentClientRect.right, screen.availWidth) -
-                sizerClientRect.left,
-        };
-        return { ...bounds, height: bounds.bottom - bounds.top, width: bounds.right - bounds.left };
-    }
-
     /*
      * Calculate the height of all the frozen rows and their bottom borders
      */
@@ -113,81 +83,30 @@ export class GridGeometry {
     }
 
     /**
-     * Calculate the coordinate of the top-left corner of the canvas in the grid's frame of reference
-     */
-    public static calculateGridOffset = (
-        props: ReactCanvasGridProps<any>,
-        scrollParent: HTMLElement,
-        sizer: HTMLDivElement,
-        screen: Screen = window.screen,
-    ): Coord => {
-        const canvasSize = GridGeometry.calculateMaxViewSize(props, scrollParent, screen);
-        const sizerClientRect = sizer.getBoundingClientRect();
-        const scrollParentClientRect = GridGeometry.getScrollParentClientRect(scrollParent, screen);
-
-        const x = GridGeometry.calcCanvasXOffset(sizerClientRect, scrollParentClientRect, canvasSize);
-        const y = GridGeometry.calcCanvasYOffset(sizerClientRect, scrollParentClientRect, canvasSize);
-
-        return { x, y };
-    }
-
-    /**
      * Calculate the column & row index (i.e. "grid cell coordinates") that contains a click. The click coordinates
      * are given in the window/viewport's frame of reference.
      */
     public static calculateGridCellCoords = (
         event: {clientX: number, clientY: number},
         props: ReactCanvasGridProps<any>,
-        sizer: HTMLDivElement,
+        gridOffset: Coord,
+        root: HTMLDivElement,
     ): Coord => {
         return GridGeometry.gridPixelToGridCell(
             GridGeometry.windowPixelToGridPixel(
                 {x: event.clientX, y: event.clientY},
-                sizer,
+                gridOffset,
+                root,
             ),
             props,
         );
     }
 
-    private static calcCanvasXOffset = (
-        sizerClientRect: ClientRect,
-        scrollParentClientRect: ClientRect,
-        canvasSize: Size,
-    ): number => {
-        if (sizerClientRect.left >= scrollParentClientRect.left) {
-            // The sizer is to the right of the left of the scroll parent, so no need to offset the canvas
-            return 0;
-        } else if (sizerClientRect.right <= scrollParentClientRect.right) {
-            // The sizer is to the left of the right of the scroll parent, so offset the canvas to align the rights
-            return sizerClientRect.width - canvasSize.width;
-        } else {
-            // The sizer spans across the scroll parent, so offset the canvas to align the lefts
-            return scrollParentClientRect.left - sizerClientRect.left;
-        }
-    }
-
-    private static calcCanvasYOffset = (
-        sizerClientRect: ClientRect,
-        scrollParentClientRect: ClientRect,
-        canvasSize: Size,
-    ): number => {
-        if (sizerClientRect.top >= scrollParentClientRect.top) {
-            // The sizer is below the top of the scroll parent, so no need to offset the canvas
-            return 0;
-        } else if (sizerClientRect.bottom <= scrollParentClientRect.bottom) {
-            // The sizer is above the bottom of the scroll parent, so offset the canvas to align the bottoms
-            return sizerClientRect.height - canvasSize.height;
-        } else {
-            // The sizer spans across the scroll parent, so offset the canvas to align the tops
-            return scrollParentClientRect.top - sizerClientRect.top;
-        }
-    }
-
-    private static windowPixelToGridPixel = ({x, y}: Coord, sizer: HTMLDivElement): Coord => {
-        const sizerClientRect = sizer.getBoundingClientRect();
+    private static windowPixelToGridPixel = ({x, y}: Coord, gridOffset: Coord, root: HTMLDivElement): Coord => {
+        const rootClientRect = root.getBoundingClientRect();
         return {
-            x: x - sizerClientRect.left,
-            y: y - sizerClientRect.top,
+            x: x + gridOffset.x - rootClientRect.left,
+            y: y + gridOffset.y - rootClientRect.top,
         };
     }
 

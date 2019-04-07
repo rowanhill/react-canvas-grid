@@ -35,10 +35,8 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
     it('scrolls the selection overlay with the grid', () => {
         cy.get('#rcg-holder')
-            .click();
-        cy.get('#rcg-holder')
-            .scrollTo(50, 50);
-        cy.wait(1000); // Wait to ensure scroll bar has faded away on osx
+            .click()
+            .trigger('wheel', { deltaX: 50, deltaY: 50 });
 
         cy.get('#rcg-holder')
             .matchImageSnapshot('simple-grid-after-click-then-scroll');

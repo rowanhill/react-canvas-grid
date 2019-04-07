@@ -82,7 +82,6 @@ describe('MainCanvasRenderer', () => {
     describe('draw', () => {
         const posProps: MainCanvasRendererPosition = {
             gridOffset: { x: 10, y: 10 },
-            visibleRect: { left: 10, top: 10, width: 50, height: 50, right: 60, bottom: 60 },
         };
 
         function getDrawnCellRects() {
@@ -138,13 +137,6 @@ describe('MainCanvasRenderer', () => {
                     gridOffset: {
                         x: posProps.gridOffset.x + dx,
                         y: posProps.gridOffset.y + dy,
-                    },
-                    visibleRect: {
-                        ...posProps.visibleRect,
-                        left: posProps.visibleRect.left + dx,
-                        right: posProps.visibleRect.right + dx,
-                        top: posProps.visibleRect.top + dy,
-                        bottom: posProps.visibleRect.bottom + dy,
                     },
                 };
             }
