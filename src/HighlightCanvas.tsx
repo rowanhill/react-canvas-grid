@@ -1,9 +1,13 @@
 import * as React from 'react';
 import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
+import { Size } from './types';
 
 export interface HighlightCanvasProps {
     width: number;
     height: number;
+    gridSize: Size;
+    frozenColsWidth: number;
+    frozenRowsHeight: number;
     rowHeight: number;
     colBoundaries: Array<{left: number; right: number}>;
     borderWidth: number;

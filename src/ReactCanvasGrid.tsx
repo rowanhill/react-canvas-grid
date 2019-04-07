@@ -122,6 +122,9 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                     rowHeight={this.props.rowHeight}
                     width={canvasSize.width}
                     height={canvasSize.height}
+                    gridSize={gridSize}
+                    frozenRowsHeight={frozenRowsHeight}
+                    frozenColsWidth={frozenColsWidth}
                     colBoundaries={columnBoundaries}
                     borderWidth={this.props.borderWidth}
                     setRenderer={(r) => this.highlightRenderer = r}

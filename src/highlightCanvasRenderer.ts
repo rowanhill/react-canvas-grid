@@ -1,10 +1,14 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
 import { CursorState, SelectionState } from './cursorState';
-import { Coord } from './types';
+import * as ScrollGeometry from './scrollbarGeometry';
+import { Coord, Size } from './types';
 
 export interface HighlightCanvassRendererBasics {
     width: number;
     height: number;
+    gridSize: Size;
+    frozenColsWidth: number;
+    frozenRowsHeight: number;
     rowHeight: number;
     colBoundaries: Array<{left: number; right: number}>;
     borderWidth: number;
@@ -63,6 +67,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
         context.translate(-this.posProps.gridOffset.x, -this.posProps.gridOffset.y);
 
+        context.lineCap = 'butt';
         context.fillStyle = '#2276e440';
         context.strokeStyle = '#2276e4';
 
@@ -88,6 +93,49 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
         context.translate(this.posProps.gridOffset.x, this.posProps.gridOffset.y);
+
+        // Set up for drawing scrollbars
+        context.lineWidth = ScrollGeometry.barWidth;
+        context.lineCap = 'round';
+        context.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+
+        // Draw horizontal scrollbar (if needed)
+        if (this.basicProps.gridSize.width > this.basicProps.width) {
+            const xPos = ScrollGeometry.calculatePosition(
+                this.posProps.gridOffset.x,
+                this.basicProps.width,
+                this.basicProps.gridSize.width,
+                ScrollGeometry.calculateLength(
+                    this.basicProps.width,
+                    this.basicProps.gridSize.width,
+                    this.basicProps.frozenColsWidth,
+                ),
+                this.basicProps.frozenColsWidth,
+            );
+            context.beginPath();
+            context.moveTo(xPos.start, this.basicProps.height - ScrollGeometry.barWidth);
+            context.lineTo(xPos.end, this.basicProps.height - ScrollGeometry.barWidth);
+            context.stroke();
+        }
+
+        // Draw vertical scrollbar (if needed)
+        if (this.basicProps.gridSize.height > this.basicProps.height) {
+            const yPos = ScrollGeometry.calculatePosition(
+                this.posProps.gridOffset.y,
+                this.basicProps.height,
+                this.basicProps.gridSize.height,
+                ScrollGeometry.calculateLength(
+                    this.basicProps.height,
+                    this.basicProps.gridSize.height,
+                    this.basicProps.height,
+                ),
+                this.basicProps.frozenRowsHeight,
+            );
+            context.beginPath();
+            context.moveTo(this.basicProps.width - ScrollGeometry.barWidth, yPos.start);
+            context.lineTo(this.basicProps.width - ScrollGeometry.barWidth, yPos.end);
+            context.stroke();
+        }
     }
 
     private gridCellCoordToGridPixelCoord = ({x, y}: {x: number; y: number}): ClientRect => {
