@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { CursorState, CursorStateWithSelection, SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
+import { CursorState, CursorStateWithSelection, SelectRange } from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
 import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
 import { GridGeometry } from './gridGeometry';
@@ -8,6 +8,7 @@ import { HighlightCanvas } from './HighlightCanvas';
 import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 import { MainCanvas } from './MainCanvas';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
+import * as ScrollbarGeometry from './scrollbarGeometry';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
 interface RequiredProps<T> {
@@ -48,6 +49,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     private queuedRender: number|null = null;
     private gridOffset: Coord = { x: 0, y: 0 };
     private cursorState: CursorState = cursorState.createDefault();
+    private draggedScrollbar: { bar: 'x' | 'y'; origScrollbarStart: number; origClick: number } | null = null;
 
     private mainRenderer: MainCanvasRenderer<T>|null = null;
     private frozenRenderer: FrozenCanvasRenderer<T>|null = null;
@@ -164,24 +166,39 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.state.canvasSize) {
             return;
         }
+
+        const willUpdate = this.updateOffset(e.deltaX, e.deltaY);
+
+        if (willUpdate) {
+            // The grid is going to move, so we want to prevent any other scrolling from happening
+            e.preventDefault();
+        }
+    }
+
+    private updateOffset = (deltaX: number, deltaY: number): boolean => {
+        if (!this.state.canvasSize) {
+            return false;
+        }
         const canvasSize = this.state.canvasSize;
         const gridSize = GridGeometry.calculateGridSize(this.props);
-        const newX = intBetween(this.gridOffset.x + e.deltaX, 0, gridSize.width - canvasSize.width);
-        const newY = intBetween(this.gridOffset.y + e.deltaY, 0, gridSize.height - canvasSize.height);
+        const newX = intBetween(this.gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
+        const newY = intBetween(this.gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
 
         if (newX === this.gridOffset.x && newY === this.gridOffset.y) {
-            // The wheel will result in no movement - we're likely at the edge of the grid - so we can
-            // bail out and let the browser handle as normal
-            return;
+            // We won't be moving, so return false
+            return false;
         }
 
-        // Otherwise, the grid is going to move, so we want to prevent any other scrolling from happening
-        e.preventDefault();
+        this.setOffset(newX, newY);
 
-        // We remember the grid offset, and request an animation frame. Another wheel event might come in
+        return true;
+    }
+
+    private setOffset = (x: number, y: number) => {
+        // We remember the grid offset, and request an animation frame. Another update event might come in
         // before the rAF callback is called, but that's not a problem - we'll just render the latest grid
         // offset.
-        this.gridOffset = { x: newX, y: newY };
+        this.gridOffset = { x, y };
         if (this.queuedRender === null) {
             this.queuedRender = window.requestAnimationFrame(() => {
                 this.queuedRender = null;
@@ -194,16 +211,75 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         if (!this.highlightRenderer) {
             return;
         }
-        const gridCoords = this.calculateGridCellCoords(event);
-        const newCursorState = cursorState.startDrag(this.cursorState, gridCoords);
-        if (this.props.onSelectionChangeStart) {
-            this.props.onSelectionChangeStart(newCursorState.selection.selectedRange);
+
+        const coord = this.calculateCanvasPixel(event);
+        const scrollbarPositions = this.highlightRenderer.getScrollbarPositions();
+        const hitScrollbar = ScrollbarGeometry.getHitScrollBar(
+            coord,
+            scrollbarPositions,
+        );
+
+        if (hitScrollbar) {
+            this.draggedScrollbar = {
+                bar: hitScrollbar,
+                origScrollbarStart: hitScrollbar === 'x' ?
+                    scrollbarPositions.horizontal!.extent.start :
+                    scrollbarPositions.vertical!.extent.start,
+                origClick: hitScrollbar === 'x' ? coord.x : coord.y,
+            };
+        } else {
+            const gridCoords = this.calculateGridCellCoords(event);
+            const newCursorState = cursorState.startDrag(this.cursorState, gridCoords);
+            if (this.props.onSelectionChangeStart) {
+                this.props.onSelectionChangeStart(newCursorState.selection.selectedRange);
+            }
+            this.cursorState = newCursorState;
+            this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
         }
-        this.cursorState = newCursorState;
-        this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
     private onMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (this.draggedScrollbar) {
+            const coord = this.calculateCanvasPixel(event);
+            const scrollbarPositions = this.highlightRenderer!.getScrollbarPositions();
+            const gridSize = GridGeometry.calculateGridSize(this.props);
+            const canvasSize = this.state.canvasSize!;
+            if (this.draggedScrollbar.bar === 'x') {
+                const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
+                const dragDistance = coord.x - this.draggedScrollbar.origClick;
+                const desiredStart = this.draggedScrollbar.origScrollbarStart + dragDistance;
+                const desiredFraction = ScrollbarGeometry.calculateFractionFromStartPos(
+                    desiredStart,
+                    frozenColsWidth,
+                    this.state.canvasSize ? this.state.canvasSize.width : 0,
+                    scrollbarPositions.horizontal!.extent.end - scrollbarPositions.horizontal!.extent.start,
+                );
+                const offsetX = GridGeometry.calculateGridOffsetFromFraction(
+                    desiredFraction,
+                    gridSize.width,
+                    canvasSize.width,
+                );
+                this.setOffset(offsetX, this.gridOffset.y);
+            } else {
+                const frozenRowsHeight = GridGeometry.calculateFrozenRowsHeight(this.props);
+                const dragDistance = coord.y - this.draggedScrollbar.origClick;
+                const desiredStart = this.draggedScrollbar.origScrollbarStart + dragDistance;
+                const desiredFraction = ScrollbarGeometry.calculateFractionFromStartPos(
+                    desiredStart,
+                    frozenRowsHeight,
+                    this.state.canvasSize ? this.state.canvasSize.width : 0,
+                    scrollbarPositions.vertical!.extent.end - scrollbarPositions.vertical!.extent.start,
+                );
+                const offsetY = GridGeometry.calculateGridOffsetFromFraction(
+                    desiredFraction,
+                    gridSize.height,
+                    canvasSize.height,
+                );
+                this.setOffset(this.gridOffset.x, offsetY);
+            }
+            return;
+        }
+
         if (!this.cursorState.selection) {
             return;
         }
@@ -230,6 +306,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (this.draggedScrollbar) {
+            this.draggedScrollbar = null;
+            return;
+        }
+
         if (!this.cursorState.selection) {
             return;
         }
@@ -244,6 +325,16 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             this.props.onSelectionChangeEnd(newCursorState.selection.selectedRange);
         }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
+    }
+
+    private calculateCanvasPixel = (event: React.MouseEvent<any, any>) => {
+        if (!this.rootRef.current) {
+            throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
+        }
+        return GridGeometry.windowPixelToCanvasPixel(
+            {x: event.pageX, y: event.clientY},
+            this.rootRef.current,
+        );
     }
 
     private calculateGridCellCoords = (event: React.MouseEvent<any, any>) => {

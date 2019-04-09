@@ -102,6 +102,22 @@ export class GridGeometry {
         );
     }
 
+    public static calculateGridOffsetFromFraction = (
+        fraction: number,
+        gridLength: number,
+        canvasLength: number,
+    ): number => {
+        return Math.floor((gridLength - canvasLength) * fraction);
+    }
+
+    public static windowPixelToCanvasPixel = ({x, y}: Coord, root: HTMLDivElement): Coord => {
+        const rootClientRect = root.getBoundingClientRect();
+        return {
+            x: x - rootClientRect.left,
+            y: y - rootClientRect.top,
+        };
+    }
+
     private static windowPixelToGridPixel = ({x, y}: Coord, gridOffset: Coord, root: HTMLDivElement): Coord => {
         const rootClientRect = root.getBoundingClientRect();
         return {

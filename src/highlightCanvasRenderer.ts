@@ -1,6 +1,7 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
 import { CursorState, SelectionState } from './cursorState';
 import * as ScrollGeometry from './scrollbarGeometry';
+import { ScrollbarPosition } from './scrollbarGeometry';
 import { Coord, Size } from './types';
 
 export interface HighlightCanvassRendererBasics {
@@ -34,6 +35,9 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         cursorState: { editCursorCell: null, selection: null },
     };
 
+    private xScrollBarPos: { extent: ScrollbarPosition, y: number } | null = null;
+    private yScrollBarPos: { extent: ScrollbarPosition, x: number } | null = null;
+
     constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvassRendererBasics) {
         super(canvas, basicProps.dpr, true);
         this.basicProps = basicProps;
@@ -41,11 +45,13 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
 
     public reset(basicProps: HighlightCanvassRendererBasics) {
         this.basicProps = basicProps;
+        this.recalculateScrollbars();
         this.draw();
     }
 
     public updatePos(posProps: HighlightCanvasRendererPosition) {
         this.posProps = posProps;
+        this.recalculateScrollbars();
         this.draw();
     }
 
@@ -100,6 +106,31 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.strokeStyle = 'rgba(0, 0, 0, 0.4)';
 
         // Draw horizontal scrollbar (if needed)
+        if (this.xScrollBarPos) {
+            context.beginPath();
+            context.moveTo(this.xScrollBarPos.extent.start, this.xScrollBarPos.y);
+            context.lineTo(this.xScrollBarPos.extent.end, this.xScrollBarPos.y);
+            context.stroke();
+        }
+
+        // Draw vertical scrollbar (if needed)
+        if (this.yScrollBarPos) {
+            context.beginPath();
+            context.moveTo(this.yScrollBarPos.x, this.yScrollBarPos.extent.start);
+            context.lineTo(this.yScrollBarPos.x, this.yScrollBarPos.extent.end);
+            context.stroke();
+        }
+    }
+
+    public getScrollbarPositions = () => {
+        return {
+            horizontal: this.xScrollBarPos,
+            vertical: this.yScrollBarPos,
+        };
+    }
+
+    private recalculateScrollbars = () => {
+        // Recalc horizontal scrollbar
         if (this.basicProps.gridSize.width > this.basicProps.width) {
             const xPos = ScrollGeometry.calculatePosition(
                 this.posProps.gridOffset.x,
@@ -112,13 +143,13 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
                 ),
                 this.basicProps.frozenColsWidth,
             );
-            context.beginPath();
-            context.moveTo(xPos.start, this.basicProps.height - ScrollGeometry.barWidth);
-            context.lineTo(xPos.end, this.basicProps.height - ScrollGeometry.barWidth);
-            context.stroke();
+            const y = ScrollGeometry.calculateTransversePosition(this.basicProps.height);
+            this.xScrollBarPos = { extent: xPos, y };
+        } else {
+            this.xScrollBarPos = null;
         }
 
-        // Draw vertical scrollbar (if needed)
+        // Recalc vertical scrollbar
         if (this.basicProps.gridSize.height > this.basicProps.height) {
             const yPos = ScrollGeometry.calculatePosition(
                 this.posProps.gridOffset.y,
@@ -131,10 +162,10 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
                 ),
                 this.basicProps.frozenRowsHeight,
             );
-            context.beginPath();
-            context.moveTo(this.basicProps.width - ScrollGeometry.barWidth, yPos.start);
-            context.lineTo(this.basicProps.width - ScrollGeometry.barWidth, yPos.end);
-            context.stroke();
+            const x = ScrollGeometry.calculateTransversePosition(this.basicProps.width);
+            this.yScrollBarPos = { extent: yPos, x };
+        } else {
+            this.yScrollBarPos = null;
         }
     }
 

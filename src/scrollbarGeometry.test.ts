@@ -98,4 +98,88 @@ describe('ScrollbarGeometry', () => {
             expect(position.start).toBe(50 + ScrollbarGeometry.barCapMargin);
         });
     });
+
+    describe('calculateFractionFromStartPos', () => {
+        it('returns 0 when the start pos is within the frozen length', () => {
+            const frozenLength = 100;
+            const canvasLength = 500;
+            const barLength = 80;
+            const start = 50;
+
+            const fraction =
+                ScrollbarGeometry.calculateFractionFromStartPos(start, frozenLength, canvasLength, barLength);
+
+            expect(fraction).toEqual(0);
+        });
+
+        it('returns 0 when the start pos is just to the right of the frozen length', () => {
+            const frozenLength = 100;
+            const canvasLength = 500;
+            const barLength = 80;
+            const start = frozenLength + ScrollbarGeometry.barCapMargin;
+
+            const fraction =
+                ScrollbarGeometry.calculateFractionFromStartPos(start, frozenLength, canvasLength, barLength);
+
+            expect(fraction).toEqual(0);
+        });
+
+        it('returns a small fraction when the start pos is only 1px to the right of the leftmost possible', () => {
+            const frozenLength = 100;
+            const canvasLength = 500;
+            const barLength = 80;
+            const start = frozenLength + ScrollbarGeometry.barCapMargin + 1;
+
+            const fraction =
+                ScrollbarGeometry.calculateFractionFromStartPos(start, frozenLength, canvasLength, barLength);
+
+            expect(fraction).toBeGreaterThan(0);
+        });
+
+        it('returns nearly 1 when the start pos is only 1px to the left of the rightmost possible', () => {
+            const frozenLength = 100;
+            const canvasLength = 500;
+            const barLength = 80;
+            const rightMargin = ScrollbarGeometry.barCapMargin +
+                ScrollbarGeometry.barWidth +
+                ScrollbarGeometry.barMarginToEdge;
+            const start = canvasLength - rightMargin - barLength - 1;
+
+            const fraction =
+                ScrollbarGeometry.calculateFractionFromStartPos(start, frozenLength, canvasLength, barLength);
+
+            expect(fraction).toBeCloseTo(1);
+            expect(fraction).toBeLessThan(1);
+        });
+
+        it('returns 1 when the start is the rightmost possible', () => {
+            const frozenLength = 100;
+            const canvasLength = 500;
+            const barLength = 80;
+            const rightMargin = ScrollbarGeometry.barCapMargin +
+                ScrollbarGeometry.barWidth +
+                ScrollbarGeometry.barMarginToEdge;
+            const start = canvasLength - rightMargin - barLength;
+
+            const fraction =
+                ScrollbarGeometry.calculateFractionFromStartPos(start, frozenLength, canvasLength, barLength);
+
+            expect(fraction).toEqual(1);
+        });
+
+        it('returns 1 when the start is to the right of the rightmost possible', () => {
+            const frozenLength = 100;
+            const canvasLength = 500;
+            const barLength = 80;
+            const rightMargin = ScrollbarGeometry.barCapMargin +
+                ScrollbarGeometry.barWidth +
+                ScrollbarGeometry.barMarginToEdge;
+            const start = canvasLength - rightMargin - barLength + 50;
+
+            const fraction =
+                ScrollbarGeometry.calculateFractionFromStartPos(start, frozenLength, canvasLength, barLength);
+
+            expect(fraction).toEqual(1);
+        });
+    });
 });
