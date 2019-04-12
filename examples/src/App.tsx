@@ -2,21 +2,9 @@ import React, { Component } from 'react';
 import { CellDef, ColumnDef, DataRow, ReactCanvasGrid, SelectRange } from 'react-canvas-grid';
 import './App.css';
 
-const numCols = 250;
+const numColsLarge = 250;
+const numColsSmall = 3;
 const numRows = 250;
-
-const colDefs: ColumnDef[] = [
-  {
-    fieldName: 'date',
-    width: 80,
-  },
-];
-for (let i = 0; i < numCols; i++) {
-  colDefs.push({
-    fieldName: i.toString(),
-    width: 100,
-  });
-}
 
 const labels = [
   {text: 'Lorem', colour: 'red'},
@@ -90,7 +78,23 @@ function getCustomCellText(data: CustomCellData) {
   }
 }
 
-function createData() {
+function createCols(numCols: number) {
+  const colDefs: ColumnDef[] = [
+    {
+      fieldName: 'date',
+      width: 80,
+    },
+  ];
+  for (let i = 0; i < numCols; i++) {
+    colDefs.push({
+      fieldName: i.toString(),
+      width: 100,
+    });
+  }
+  return colDefs;
+}
+
+function createData(numCols: number) {
   const data: Array<DataRow<AllCellDataTypes>> = [];
 
   for (let i = 0; i < numRows; i++) {
@@ -117,6 +121,7 @@ function createData() {
 }
 
 interface AppState {
+  colDefs: ColumnDef[];
   data: Array<DataRow<AllCellDataTypes>>;
   selectedRange: SelectRange | null;
   isDragging: boolean;
@@ -126,7 +131,8 @@ class App extends Component<{}, AppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      data: createData(),
+      colDefs: createCols(numColsLarge),
+      data: createData(numColsLarge),
       selectedRange: null,
       isDragging: false,
     };
@@ -145,7 +151,8 @@ class App extends Component<{}, AppState> {
               &nbsp;
               {this.state.selectedRange ? JSON.stringify(this.state.selectedRange) : ''}
             </div>
-            <button onClick={this.replaceData}>Replace data</button>
+            <button onClick={this.replaceDataLarge}>Replace data (Large)</button>
+            <button onClick={this.replaceDataSmall}>Replace data (Small)</button>
             <button onClick={this.updateCell}>Update cell</button>
           </header>
           <div style={{height: '600px', width: '800px', overflow: 'scroll'}}>
@@ -156,7 +163,7 @@ class App extends Component<{}, AppState> {
               <ReactCanvasGrid<AllCellDataTypes>
                 cssHeight={'800px'}
                 cssWidth={'800px'}
-                columns={colDefs}
+                columns={this.state.colDefs}
                 data={this.state.data}
                 rowHeight={20}
                 frozenRows={1}
@@ -183,9 +190,17 @@ class App extends Component<{}, AppState> {
     this.setState({ selectedRange, isDragging: false });
   }
 
-  private replaceData = () => {
+  private replaceDataLarge = () => {
     this.setState({
-      data: createData(),
+      colDefs: createCols(numColsLarge),
+      data: createData(numColsLarge),
+    });
+  }
+
+  private replaceDataSmall = () => {
+    this.setState({
+      colDefs: createCols(numColsSmall),
+      data: createData(numColsSmall),
     });
   }
 

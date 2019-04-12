@@ -41,15 +41,15 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     public reset(basicProps: FrozenCanvasRendererBasics<T>) {
         this.basicProps = basicProps;
         this.prevDraw = null;
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
     public updatePos(posProps: FrozenCanvasRendererPosition) {
         this.posProps = posProps;
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
-    public draw() {
+    public draw = () => {
         const basicProps = this.basicProps;
         const posProps = this.posProps;
         const prevDraw = this.prevDraw;
@@ -93,8 +93,6 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
         // Draw frozen cols
         this.drawInvalidatedCellsCols(basicProps, posProps, colAreaToPaint);
-
-        return { gridOffset: posProps.gridOffset };
     }
 
     public drawInvalidatedAreaBackground(rowAreaToPaint: ClientRect|null, colAreaToPaint: ClientRect|null) {

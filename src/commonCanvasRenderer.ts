@@ -17,8 +17,13 @@ export class CommonCanvasRenderer<T> {
         this.dpr = dpr;
     }
 
-    public fixScale() {
+    public drawScaled(draw: () => void) {
         this.context.scale(this.dpr, this.dpr);
+        try {
+            draw();
+        } finally {
+            this.context.scale(1 / this.dpr, 1 / this.dpr);
+        }
     }
 
     public drawCell(cell: CellDef<T>, cellBounds: ClientRect, metadata: CustomDrawCallbackMetadata) {

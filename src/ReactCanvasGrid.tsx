@@ -32,7 +32,7 @@ export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<Defaul
 export type ReactCanvasGridProps<T> = RequiredProps<T> & DefaultedProps;
 
 interface ReactCanvasGridState {
-    canvasSize: Size|null;
+    rootSize: Size|null;
 }
 
 export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
@@ -58,7 +58,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     constructor(props: ReactCanvasGridProps<T>) {
         super(props);
         this.state = {
-            canvasSize: null,
+            rootSize: null,
         };
     }
 
@@ -67,16 +67,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             throw new Error('root element ref not set in componentDidMount, so cannot determine canvas size');
         }
         const rootRect = this.rootRef.current.getBoundingClientRect();
-        const gridSize = GridGeometry.calculateGridSize(this.props);
-        const canvasSize = {
-            width: Math.min(rootRect.width, gridSize.width),
-            height: Math.min(rootRect.height, gridSize.height),
-        };
 
         this.rootRef.current.addEventListener('wheel', this.onWheel);
 
-        // Set the canvasSize, causing a re-render, at which point the canvases will be properly sized.
-        this.setState({ canvasSize }, () => {
+        // Set the rootSize, causing a re-render, at which point the canvases will be properly sized.
+        this.setState({ rootSize: { width: rootRect.width, height: rootRect.height } }, () => {
             this.scrollCanvases();
         });
     }
@@ -89,10 +84,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
     public render() {
         const columnBoundaries = GridGeometry.calculateColumnBoundaries(this.props);
-        // First render is before componentDidMount, so before we have calculated the canvas size.
-        // In this case, we just render as 0x0. componentDidMount will then update state,
-        // and we'll re-render
-        const canvasSize = this.state.canvasSize || { height: 0, width: 0 };
+        const canvasSize = this.calculateCanvasSize();
         const gridSize = GridGeometry.calculateGridSize(this.props);
         const frozenRowsHeight = GridGeometry.calculateFrozenRowsHeight(this.props);
         const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
@@ -163,10 +155,6 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private onWheel = (e: WheelEvent) => {
-        if (!this.state.canvasSize) {
-            return;
-        }
-
         const willUpdate = this.updateOffset(e.deltaX, e.deltaY);
 
         if (willUpdate) {
@@ -176,10 +164,10 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private updateOffset = (deltaX: number, deltaY: number): boolean => {
-        if (!this.state.canvasSize) {
+        if (!this.state.rootSize) {
             return false;
         }
-        const canvasSize = this.state.canvasSize;
+        const canvasSize = this.calculateCanvasSize();
         const gridSize = GridGeometry.calculateGridSize(this.props);
         const newX = intBetween(this.gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
         const newY = intBetween(this.gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
@@ -243,7 +231,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             const coord = this.calculateCanvasPixel(event);
             const scrollbarPositions = this.highlightRenderer!.getScrollbarPositions();
             const gridSize = GridGeometry.calculateGridSize(this.props);
-            const canvasSize = this.state.canvasSize!;
+            const canvasSize = this.calculateCanvasSize();
             if (this.draggedScrollbar.bar === 'x') {
                 const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
                 const dragDistance = coord.x - this.draggedScrollbar.origClick;
@@ -251,7 +239,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 const desiredFraction = ScrollbarGeometry.calculateFractionFromStartPos(
                     desiredStart,
                     frozenColsWidth,
-                    this.state.canvasSize ? this.state.canvasSize.width : 0,
+                    canvasSize.width,
                     scrollbarPositions.horizontal!.extent.end - scrollbarPositions.horizontal!.extent.start,
                 );
                 const offsetX = GridGeometry.calculateGridOffsetFromFraction(
@@ -267,7 +255,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 const desiredFraction = ScrollbarGeometry.calculateFractionFromStartPos(
                     desiredStart,
                     frozenRowsHeight,
-                    this.state.canvasSize ? this.state.canvasSize.height : 0,
+                    canvasSize.height,
                     scrollbarPositions.vertical!.extent.end - scrollbarPositions.vertical!.extent.start,
                 );
                 const offsetY = GridGeometry.calculateGridOffsetFromFraction(
@@ -325,6 +313,19 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             this.props.onSelectionChangeEnd(newCursorState.selection.selectedRange);
         }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
+    }
+
+    private calculateCanvasSize = () => {
+        const gridSize = GridGeometry.calculateGridSize(this.props);
+        const rootSize = this.state.rootSize;
+        // First render is before componentDidMount, so before we have calculated the root element's size.
+        // In this case, we just render as 0x0. componentDidMount will then update state,
+        // and we'll re-render
+        if (rootSize === null) {
+            return { width: 0, height: 0 };
+        }
+
+        return { width: Math.min(rootSize.width, gridSize.width), height: Math.min(rootSize.height, gridSize.height) };
     }
 
     private calculateCanvasPixel = (event: React.MouseEvent<any, any>) => {

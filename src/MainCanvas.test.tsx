@@ -56,18 +56,6 @@ describe('MainCanvas', () => {
         );
     });
 
-    it('fixes the scale of the canvas context exactly once', () => {
-        const cduSpy = jest.spyOn(MainCanvas.prototype, 'componentDidUpdate');
-
-        const bc = mount(<MainCanvas {...props} />);
-        bc.setProps(props);
-        bc.setProps({ ...props, borderWidth: 2 });
-
-        expect(MockedRenderer).toHaveBeenCalled();
-        expect(cduSpy).toHaveBeenCalledTimes(2); // There were multiple component updates
-        expect(mockFixScale).toHaveBeenCalledTimes(1); // But only one fixScale
-    });
-
     it('redraws to its canvas when props change', () => {
         const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);

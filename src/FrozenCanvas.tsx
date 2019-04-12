@@ -25,7 +25,6 @@ const dpr = window.devicePixelRatio;
 
 export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
-    private hasFixedScale = false;
     private renderer: FrozenCanvasRenderer<T>|null = null;
 
     constructor(props: FrozenCanvasProps<T>) {
@@ -61,14 +60,6 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     public componentDidUpdate(prevProps: FrozenCanvasProps<T>) {
         if (!this.renderer) {
             throw new Error('renderer is null in componentDidUpdate - cannot draw');
-        }
-
-        // Fix the scale if we haven't already.
-        // (Note, we can't do this in componentDidMount for some reason - perhaps because the canvas mounts
-        //  with a zero size?)
-        if (!this.hasFixedScale) {
-            this.renderer.fixScale();
-            this.hasFixedScale = true;
         }
 
         this.renderer.reset({ ...this.props, dpr });

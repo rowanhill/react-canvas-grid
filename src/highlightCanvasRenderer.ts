@@ -46,25 +46,22 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     public reset(basicProps: HighlightCanvassRendererBasics) {
         this.basicProps = basicProps;
         this.recalculateScrollbars();
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
     public updatePos(posProps: HighlightCanvasRendererPosition) {
         this.posProps = posProps;
         this.recalculateScrollbars();
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
     public updateSelection(selectProps: HighlightCanvasRendererSelection) {
         this.selectionProps = selectProps;
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
-    public draw() {
-        const context = this.canvas.getContext('2d', { alpha: true });
-        if (!context) {
-            return;
-        }
+    public draw = () => {
+        const context = this.context;
 
         // Clear the higlight layer
         context.clearRect(0, 0, this.canvas.width, this.canvas.height);

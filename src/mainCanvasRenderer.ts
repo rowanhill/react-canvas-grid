@@ -40,15 +40,15 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     public reset(basicProps: MainCanvasRendererBasics<T>) {
         this.basicProps = basicProps;
         this.prevDraw = null;
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
     public updatePos(posProps: MainCanvasRendererPosition) {
         this.posProps = posProps;
-        this.draw();
+        this.drawScaled(this.draw);
     }
 
-    public draw() {
+    public draw = () => {
         const prevDraw = this.prevDraw;
         const basicProps = this.basicProps;
         const posProps = this.posProps;

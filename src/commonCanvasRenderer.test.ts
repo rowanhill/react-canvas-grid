@@ -24,11 +24,12 @@ describe('CommonCanvasRenderer', () => {
     let mockCanvas: HTMLCanvasElement;
     let renderer: CommonCanvasRenderer<null>;
 
-    describe('fixScale', () => {
-        it('set the scale on the canvas to the device pixel ratio', () => {
-            renderer.fixScale();
+    describe('drawScaled', () => {
+        it('scales the context and reduces the scale to 1 again', () => {
+            renderer.drawScaled(() => { /* no op */});
 
             expect(mockContext.scale).toHaveBeenCalledWith(dpr, dpr);
+            expect(mockContext.scale).toHaveBeenCalledWith(1 / dpr, 1 / dpr);
         });
     });
 });
