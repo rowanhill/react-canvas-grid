@@ -267,7 +267,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 const desiredFraction = ScrollbarGeometry.calculateFractionFromStartPos(
                     desiredStart,
                     frozenRowsHeight,
-                    this.state.canvasSize ? this.state.canvasSize.width : 0,
+                    this.state.canvasSize ? this.state.canvasSize.height : 0,
                     scrollbarPositions.vertical!.extent.end - scrollbarPositions.vertical!.extent.start,
                 );
                 const offsetY = GridGeometry.calculateGridOffsetFromFraction(
