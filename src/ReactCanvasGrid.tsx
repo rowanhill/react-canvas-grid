@@ -200,7 +200,13 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
 
+        const gridSize = GridGeometry.calculateGridSize(this.props);
         const coord = this.calculateCanvasPixel(event);
+
+        if (coord.x >= gridSize.width || coord.y >= gridSize.height) {
+            return;
+        }
+
         const scrollbarPositions = this.highlightRenderer.getScrollbarPositions();
         const hitScrollbar = ScrollbarGeometry.getHitScrollBar(
             coord,
@@ -227,10 +233,14 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private onMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        const coord = this.calculateCanvasPixel(event);
+        const gridSize = GridGeometry.calculateGridSize(this.props);
+        if (coord.x >= gridSize.width || coord.y >= gridSize.height) {
+            return;
+        }
+
         if (this.draggedScrollbar) {
-            const coord = this.calculateCanvasPixel(event);
             const scrollbarPositions = this.highlightRenderer!.getScrollbarPositions();
-            const gridSize = GridGeometry.calculateGridSize(this.props);
             const canvasSize = this.calculateCanvasSize();
             if (this.draggedScrollbar.bar === 'x') {
                 const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
@@ -293,24 +303,17 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
 
-    private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    private onMouseUp = () => {
         if (this.draggedScrollbar) {
             this.draggedScrollbar = null;
             return;
         }
 
-        if (!this.cursorState.selection) {
+        if (!(this.cursorState.selection && this.highlightRenderer)) {
             return;
         }
-        const oldCursorState: CursorStateWithSelection = this.cursorState as CursorStateWithSelection;
-        if (!this.highlightRenderer) {
-            return;
-        }
-        const gridCoords = this.calculateGridCellCoords(event);
-        const newCursorState = cursorState.updateDrag(oldCursorState, gridCoords);
-        this.cursorState = newCursorState;
         if (this.props.onSelectionChangeEnd) {
-            this.props.onSelectionChangeEnd(newCursorState.selection.selectedRange);
+            this.props.onSelectionChangeEnd(this.cursorState.selection.selectedRange);
         }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
     }
@@ -333,7 +336,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
         }
         return GridGeometry.windowPixelToCanvasPixel(
-            {x: event.pageX, y: event.clientY},
+            {x: event.clientX, y: event.clientY},
             this.rootRef.current,
         );
     }
