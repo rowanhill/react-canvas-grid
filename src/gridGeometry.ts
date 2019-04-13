@@ -110,6 +110,19 @@ export class GridGeometry {
         return Math.floor((gridLength - canvasLength) * fraction);
     }
 
+    public static truncateGridOffset = (oldOffset: Coord, gridSize: Size, canvasSize: Size): Coord|null => {
+        const maxX = gridSize.width - canvasSize.width;
+        const maxY = gridSize.height - canvasSize.height;
+        if (oldOffset.x > maxX || oldOffset.y > maxY) {
+            return {
+                x: Math.min(maxX, oldOffset.x),
+                y: Math.min(maxY, oldOffset.y),
+            };
+        } else {
+            return null;
+        }
+    }
+
     public static windowPixelToCanvasPixel = ({x, y}: Coord, root: HTMLDivElement): Coord => {
         const rootClientRect = root.getBoundingClientRect();
         return {

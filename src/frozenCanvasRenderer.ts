@@ -1,5 +1,5 @@
-import { ColumnDef, Coord, DataRow } from '.';
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
+import { ColumnDef, Coord, DataRow } from './types';
 
 export interface FrozenCanvasRendererBasics<T> {
     data: Array<DataRow<T>>;

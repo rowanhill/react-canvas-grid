@@ -86,6 +86,13 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 }
             }
         }
+
+        const gridSize = GridGeometry.calculateGridSize(this.props);
+        const canvasSize = this.calculateCanvasSize();
+        const truncatedOffset = GridGeometry.truncateGridOffset(this.gridOffset, gridSize, canvasSize);
+        if (truncatedOffset) {
+            this.setOffset(truncatedOffset.x, truncatedOffset.y);
+        }
     }
 
     public componentWillUnmount() {

@@ -98,4 +98,24 @@ describe('ReactCanvasGrid with some initial data', () => {
                 .matchImageSnapshot('keep-selection-when-only-data-values-change');
         });
     });
+
+    it('constrains the scroll when the data and/or cols shrink', () => {
+        const colsAndRowsLarge = createFakeDataAndColumns(100, 50, dataGen);
+        cy.get('@Holder')
+            .invoke('setState', {
+                columns: colsAndRowsLarge.columns,
+                data: colsAndRowsLarge.rows,
+            });
+
+        cy.get('div#cypress-jsdom > div')
+            .trigger('wheel', { deltaX: 800, deltaY: 300 });
+
+        const colsAndRowsSmall = createFakeDataAndColumns(20, 20, dataGen);
+        cy.get('@Holder')
+            .invoke('setState', {
+                columns: colsAndRowsSmall.columns,
+                data: colsAndRowsSmall.rows,
+            })
+            .matchImageSnapshot('truncate-scroll-when-shrinking-data');
+    });
 });
