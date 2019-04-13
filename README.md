@@ -15,7 +15,6 @@ particular goals are:
 There was also originally a goal of making use of browser-native scrolling, although that ultimately wasn't quite tennable. :man_shrugging:
 
 ## TODO :memo:
-* Various fixes around changing grid size (e.g. mouse events in non-grid area, old selections, old scroll offsets)
 * Scrollbar UI tweaks (e.g. highlight on mouseover)
 * Move mouse event handling to window (i.e. outside component bounds)
 * Inline editing of values (callback with string value & cell index? Or suggested data array?)
