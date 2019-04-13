@@ -171,6 +171,7 @@ class App extends Component<{}, AppState> {
                 onSelectionChangeStart={this.selectionChanged}
                 onSelectionChangeUpdate={this.selectionChanged}
                 onSelectionChangeEnd={this.selectionFinished}
+                onSelectionCleared={this.selectionCleared}
               />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
@@ -188,6 +189,10 @@ class App extends Component<{}, AppState> {
 
   private selectionFinished = (selectedRange: SelectRange) => {
     this.setState({ selectedRange, isDragging: false });
+  }
+
+  private selectionCleared = () => {
+    this.setState({ selectedRange: null, isDragging: false });
   }
 
   private replaceDataLarge = () => {

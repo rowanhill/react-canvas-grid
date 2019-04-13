@@ -1,10 +1,13 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
 import { CursorState, SelectionState } from './cursorState';
+import * as cursorState from './cursorState';
 import * as ScrollGeometry from './scrollbarGeometry';
 import { ScrollbarPosition } from './scrollbarGeometry';
-import { Coord, Size } from './types';
+import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface HighlightCanvassRendererBasics {
+    data: Array<DataRow<any>>;
+    columns: ColumnDef[];
     width: number;
     height: number;
     gridSize: Size;
@@ -32,7 +35,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     private basicProps: HighlightCanvassRendererBasics;
     private posProps: HighlightCanvasRendererPosition = defaultPosProps;
     private selectionProps: HighlightCanvasRendererSelection = {
-        cursorState: { editCursorCell: null, selection: null },
+        cursorState: cursorState.createDefault(),
     };
 
     private xScrollBarPos: { extent: ScrollbarPosition, y: number } | null = null;
@@ -44,6 +47,9 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     }
 
     public reset(basicProps: HighlightCanvassRendererBasics) {
+        if (shouldSelectionClear(this.basicProps, basicProps)) {
+            this.selectionProps = { cursorState: cursorState.createDefault() };
+        }
         this.basicProps = basicProps;
         this.recalculateScrollbars();
         this.drawScaled(this.draw);
@@ -182,4 +188,11 @@ function isSelectionMoreThanOneCell(selection: SelectionState) {
     const tl = selection.selectedRange.topLeft;
     const br = selection.selectedRange.bottomRight;
     return tl.x !== br.x || tl.y !== br.y;
+}
+
+export function shouldSelectionClear(
+    prev: { columns: ColumnDef[], data: Array<DataRow<any>>},
+    next: { columns: ColumnDef[], data: Array<DataRow<any>>},
+): boolean {
+    return (prev.columns !== next.columns || prev.data.length !== next.data.length);
 }

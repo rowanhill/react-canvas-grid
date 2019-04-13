@@ -5,7 +5,7 @@ import { FrozenCanvas } from './FrozenCanvas';
 import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
 import { GridGeometry } from './gridGeometry';
 import { HighlightCanvas } from './HighlightCanvas';
-import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
+import { HighlightCanvasRenderer, shouldSelectionClear } from './highlightCanvasRenderer';
 import { MainCanvas } from './MainCanvas';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
 import * as ScrollbarGeometry from './scrollbarGeometry';
@@ -19,6 +19,7 @@ interface RequiredProps<T> {
     onSelectionChangeStart?: (selectRange: SelectRange) => void;
     onSelectionChangeUpdate?: (selectRange: SelectRange) => void;
     onSelectionChangeEnd?: (selectRange: SelectRange) => void;
+    onSelectionCleared?: () => void;
 }
 interface DefaultedProps {
     cssWidth: string;
@@ -76,6 +77,17 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         });
     }
 
+    public componentDidUpdate(prevProps: ReactCanvasGridProps<T>) {
+        if (shouldSelectionClear(prevProps, this.props)) {
+            if (this.highlightRenderer) {
+                this.cursorState = cursorState.createDefault();
+                if (this.props.onSelectionCleared) {
+                    this.props.onSelectionCleared();
+                }
+            }
+        }
+    }
+
     public componentWillUnmount() {
         if (this.rootRef.current) {
             this.rootRef.current.removeEventListener('wheel', this.onWheel);
@@ -113,6 +125,8 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                     setRenderer={(r) => this.mainRenderer = r}
                 />
                 <HighlightCanvas
+                    data={this.props.data}
+                    columns={this.props.columns}
                     rowHeight={this.props.rowHeight}
                     width={canvasSize.width}
                     height={canvasSize.height}

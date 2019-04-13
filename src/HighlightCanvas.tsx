@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
-import { Size } from './types';
+import { ColumnDef, DataRow, Size } from './types';
 
 export interface HighlightCanvasProps {
+    data: Array<DataRow<any>>;
+    columns: ColumnDef[];
     width: number;
     height: number;
     gridSize: Size;
