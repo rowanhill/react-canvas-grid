@@ -161,7 +161,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
                 ScrollGeometry.calculateLength(
                     this.basicProps.height,
                     this.basicProps.gridSize.height,
-                    this.basicProps.height,
+                    this.basicProps.frozenRowsHeight,
                 ),
                 this.basicProps.frozenRowsHeight,
             );
