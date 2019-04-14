@@ -5,9 +5,14 @@ export const barMarginToEdge = 2;
 export const barCapMargin = 4;
 const minBarLength = 10;
 
-export interface ScrollbarPosition {
+export interface ScrollbarExtent {
     start: number;
     end: number;
+}
+
+export interface ScrollbarPosition {
+    extent: ScrollbarExtent;
+    transverse: number;
 }
 
 export function calculateLength(canvasLength: number, gridLength: number, frozenLength: number): number {
@@ -18,13 +23,13 @@ export function calculateLength(canvasLength: number, gridLength: number, frozen
     return Math.max(length, minBarLength);
 }
 
-export function calculatePosition(
+export function calculateExtent(
     gridOffset: number,
     canvasLength: number,
     gridLength: number,
     barLength: number,
     frozenLength: number,
-): ScrollbarPosition {
+): ScrollbarExtent {
     const scrollableGridLength = gridLength - canvasLength;
     const scrollFraction = gridOffset / scrollableGridLength;
     const scrollableCanvasLength =
@@ -50,25 +55,23 @@ export function calculateFractionFromStartPos(
 
 export function getHitScrollBar(
     coord: Coord,
-    scrollbarPostions: {
-        horizontal: { extent: ScrollbarPosition, y: number } | null,
-        vertical: { extent: ScrollbarPosition, x: number } | null,
-    },
+    horizontalPosition: ScrollbarPosition | null,
+    verticalPosition: ScrollbarPosition | null,
 ): 'x' | 'y' | null {
     const halfBarHeight = Math.floor(barWidth / 2);
 
-    if (scrollbarPostions.horizontal) {
-        const hTop = scrollbarPostions.horizontal.y - halfBarHeight;
-        const hBottom = scrollbarPostions.horizontal.y + halfBarHeight;
-        const hExtent = scrollbarPostions.horizontal.extent;
+    if (horizontalPosition) {
+        const hTop = horizontalPosition.transverse - halfBarHeight;
+        const hBottom = horizontalPosition.transverse + halfBarHeight;
+        const hExtent = horizontalPosition.extent;
         if (coord.x >= hExtent.start && coord.x <= hExtent.end && coord.y >= hTop && coord.y <= hBottom) {
             return 'x';
         }
     }
-    if (scrollbarPostions.vertical) {
-        const vLeft = scrollbarPostions.vertical.x - halfBarHeight;
-        const vRight = scrollbarPostions.vertical.x + halfBarHeight;
-        const vExtent = scrollbarPostions.vertical.extent;
+    if (verticalPosition) {
+        const vLeft = verticalPosition.transverse - halfBarHeight;
+        const vRight = verticalPosition.transverse + halfBarHeight;
+        const vExtent = verticalPosition.extent;
         if (coord.y >= vExtent.start && coord.y <= vExtent.end && coord.x >= vLeft && coord.x <= vRight) {
             return 'y';
         }

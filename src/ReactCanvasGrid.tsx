@@ -1,6 +1,6 @@
 import * as React from 'react';
-import * as cursorState from './cursorState';
 import { CursorState, CursorStateWithSelection, SelectRange } from './cursorState';
+import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
 import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
 import { GridGeometry } from './gridGeometry';
@@ -9,6 +9,7 @@ import { HighlightCanvasRenderer, shouldSelectionClear } from './highlightCanvas
 import { MainCanvas } from './MainCanvas';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
 import * as ScrollbarGeometry from './scrollbarGeometry';
+import { ScrollbarPosition } from './scrollbarGeometry';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
 interface RequiredProps<T> {
@@ -49,6 +50,8 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
     private queuedRender: number|null = null;
     private gridOffset: Coord = { x: 0, y: 0 };
+    private horizontalScrollbarPos: ScrollbarPosition | null = null;
+    private verticalScrollbarPos: ScrollbarPosition | null = null;
     private cursorState: CursorState = cursorState.createDefault();
     private draggedScrollbar: { bar: 'x' | 'y'; origScrollbarStart: number; origClick: number } | null = null;
 
@@ -73,6 +76,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
 
         // Set the rootSize, causing a re-render, at which point the canvases will be properly sized.
         this.setState({ rootSize: { width: rootRect.width, height: rootRect.height } }, () => {
+            this.recalculateScrollbars();
             this.scrollCanvases();
         });
     }
@@ -86,6 +90,9 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                 }
             }
         }
+
+        this.recalculateScrollbars();
+        this.scrollCanvases();
 
         const gridSize = GridGeometry.calculateGridSize(this.props);
         const canvasSize = this.calculateCanvasSize();
@@ -171,7 +178,11 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             this.frozenRenderer.updatePos({gridOffset});
         }
         if (this.highlightRenderer) {
-            this.highlightRenderer.updatePos({gridOffset});
+            this.highlightRenderer.updatePos({
+                gridOffset,
+                horizontalScrollbarPos: this.horizontalScrollbarPos,
+                verticalScrollbarPos: this.verticalScrollbarPos,
+            });
         }
     }
 
@@ -215,6 +226,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         // before the rAF callback is called, but that's not a problem - we'll just render the latest grid
         // offset.
         this.gridOffset = { x, y };
+        this.recalculateScrollbars();
         if (this.queuedRender === null) {
             this.queuedRender = window.requestAnimationFrame(() => {
                 this.queuedRender = null;
@@ -235,18 +247,18 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             return;
         }
 
-        const scrollbarPositions = this.highlightRenderer.getScrollbarPositions();
         const hitScrollbar = ScrollbarGeometry.getHitScrollBar(
             coord,
-            scrollbarPositions,
+            this.horizontalScrollbarPos,
+            this.verticalScrollbarPos,
         );
 
         if (hitScrollbar) {
             this.draggedScrollbar = {
                 bar: hitScrollbar,
                 origScrollbarStart: hitScrollbar === 'x' ?
-                    scrollbarPositions.horizontal!.extent.start :
-                    scrollbarPositions.vertical!.extent.start,
+                    this.horizontalScrollbarPos!.extent.start :
+                    this.verticalScrollbarPos!.extent.start,
                 origClick: hitScrollbar === 'x' ? coord.x : coord.y,
             };
         } else {
@@ -268,7 +280,6 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
         }
 
         if (this.draggedScrollbar) {
-            const scrollbarPositions = this.highlightRenderer!.getScrollbarPositions();
             const canvasSize = this.calculateCanvasSize();
             if (this.draggedScrollbar.bar === 'x') {
                 const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
@@ -278,7 +289,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                     desiredStart,
                     frozenColsWidth,
                     canvasSize.width,
-                    scrollbarPositions.horizontal!.extent.end - scrollbarPositions.horizontal!.extent.start,
+                    this.horizontalScrollbarPos!.extent.end - this.horizontalScrollbarPos!.extent.start,
                 );
                 const offsetX = GridGeometry.calculateGridOffsetFromFraction(
                     desiredFraction,
@@ -294,7 +305,7 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
                     desiredStart,
                     frozenRowsHeight,
                     canvasSize.height,
-                    scrollbarPositions.vertical!.extent.end - scrollbarPositions.vertical!.extent.start,
+                    this.verticalScrollbarPos!.extent.end - this.verticalScrollbarPos!.extent.start,
                 );
                 const offsetY = GridGeometry.calculateGridOffsetFromFraction(
                     desiredFraction,
@@ -344,6 +355,51 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             this.props.onSelectionChangeEnd(this.cursorState.selection.selectedRange);
         }
         this.highlightRenderer.updateSelection({ cursorState: this.cursorState });
+    }
+
+    private recalculateScrollbars = () => {
+        const gridSize = GridGeometry.calculateGridSize(this.props);
+        const canvasSize = this.calculateCanvasSize();
+        const frozenRowsHeight = GridGeometry.calculateFrozenRowsHeight(this.props);
+        const frozenColsWidth = GridGeometry.calculateFrozenColsWidth(this.props);
+
+        // Recalc horizontal scrollbar
+        if (gridSize.width > canvasSize.width) {
+            const xPos = ScrollbarGeometry.calculateExtent(
+                this.gridOffset.x,
+                canvasSize.width,
+                gridSize.width,
+                ScrollbarGeometry.calculateLength(
+                    canvasSize.width,
+                    gridSize.width,
+                    frozenColsWidth,
+                ),
+                frozenColsWidth,
+            );
+            const y = ScrollbarGeometry.calculateTransversePosition(canvasSize.height);
+            this.horizontalScrollbarPos = { extent: xPos, transverse: y };
+        } else {
+            this.horizontalScrollbarPos = null;
+        }
+
+        // Recalc vertical scrollbar
+        if (gridSize.height > canvasSize.height) {
+            const yPos = ScrollbarGeometry.calculateExtent(
+                this.gridOffset.y,
+                canvasSize.height,
+                gridSize.height,
+                ScrollbarGeometry.calculateLength(
+                    canvasSize.height,
+                    gridSize.height,
+                    frozenRowsHeight,
+                ),
+                frozenRowsHeight,
+            );
+            const x = ScrollbarGeometry.calculateTransversePosition(canvasSize.width);
+            this.verticalScrollbarPos = { extent: yPos, transverse: x };
+        } else {
+            this.verticalScrollbarPos = null;
+        }
     }
 
     private calculateCanvasSize = () => {

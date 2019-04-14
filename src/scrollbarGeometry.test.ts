@@ -55,7 +55,7 @@ describe('ScrollbarGeometry', () => {
         });
     });
 
-    describe('calculatePosition', () => {
+    describe('calculateExtent', () => {
         it('places the scrollbar to the start of the canvas when at the origin', () => {
             const gridOffset = 0;
             const canvasLength = 500;
@@ -64,7 +64,7 @@ describe('ScrollbarGeometry', () => {
             const frozenLength = 0;
 
             const position =
-                ScrollbarGeometry.calculatePosition(gridOffset, canvasLength, gridLength, barLength, frozenLength);
+                ScrollbarGeometry.calculateExtent(gridOffset, canvasLength, gridLength, barLength, frozenLength);
 
             expect(position.start).toBe(ScrollbarGeometry.barCapMargin);
         });
@@ -77,7 +77,7 @@ describe('ScrollbarGeometry', () => {
             const frozenLength = 0;
 
             const position =
-                ScrollbarGeometry.calculatePosition(gridOffset, canvasLength, gridLength, barLength, frozenLength);
+                ScrollbarGeometry.calculateExtent(gridOffset, canvasLength, gridLength, barLength, frozenLength);
 
             const margin = ScrollbarGeometry.barWidth +
                 ScrollbarGeometry.barMarginToEdge +
@@ -93,7 +93,7 @@ describe('ScrollbarGeometry', () => {
             const frozenLength = 50;
 
             const position =
-                ScrollbarGeometry.calculatePosition(gridOffset, canvasLength, gridLength, barLength, frozenLength);
+                ScrollbarGeometry.calculateExtent(gridOffset, canvasLength, gridLength, barLength, frozenLength);
 
             expect(position.start).toBe(50 + ScrollbarGeometry.barCapMargin);
         });

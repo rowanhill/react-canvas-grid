@@ -21,6 +21,8 @@ export interface HighlightCanvassRendererBasics {
 
 export interface HighlightCanvasRendererPosition {
     gridOffset: Coord;
+    horizontalScrollbarPos: ScrollbarPosition | null;
+    verticalScrollbarPos: ScrollbarPosition | null;
 }
 
 export interface HighlightCanvasRendererSelection {
@@ -29,6 +31,8 @@ export interface HighlightCanvasRendererSelection {
 
 const defaultPosProps = {
     gridOffset: { x: 0, y: 0 },
+    horizontalScrollbarPos: null,
+    verticalScrollbarPos: null,
 };
 
 export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
@@ -37,9 +41,6 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     private selectionProps: HighlightCanvasRendererSelection = {
         cursorState: cursorState.createDefault(),
     };
-
-    private xScrollBarPos: { extent: ScrollbarPosition, y: number } | null = null;
-    private yScrollBarPos: { extent: ScrollbarPosition, x: number } | null = null;
 
     constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvassRendererBasics) {
         super(canvas, basicProps.dpr, true);
@@ -51,13 +52,11 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
             this.selectionProps = { cursorState: cursorState.createDefault() };
         }
         this.basicProps = basicProps;
-        this.recalculateScrollbars();
         this.drawScaled(this.draw);
     }
 
     public updatePos(posProps: HighlightCanvasRendererPosition) {
         this.posProps = posProps;
-        this.recalculateScrollbars();
         this.drawScaled(this.draw);
     }
 
@@ -109,66 +108,21 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.strokeStyle = 'rgba(0, 0, 0, 0.4)';
 
         // Draw horizontal scrollbar (if needed)
-        if (this.xScrollBarPos) {
+        if (this.posProps.horizontalScrollbarPos) {
+            const scrollPos = this.posProps.horizontalScrollbarPos;
             context.beginPath();
-            context.moveTo(this.xScrollBarPos.extent.start, this.xScrollBarPos.y);
-            context.lineTo(this.xScrollBarPos.extent.end, this.xScrollBarPos.y);
+            context.moveTo(scrollPos.extent.start, scrollPos.transverse);
+            context.lineTo(scrollPos.extent.end, scrollPos.transverse);
             context.stroke();
         }
 
         // Draw vertical scrollbar (if needed)
-        if (this.yScrollBarPos) {
+        if (this.posProps.verticalScrollbarPos) {
+            const scrollPos = this.posProps.verticalScrollbarPos;
             context.beginPath();
-            context.moveTo(this.yScrollBarPos.x, this.yScrollBarPos.extent.start);
-            context.lineTo(this.yScrollBarPos.x, this.yScrollBarPos.extent.end);
+            context.moveTo(scrollPos.transverse, scrollPos.extent.start);
+            context.lineTo(scrollPos.transverse, scrollPos.extent.end);
             context.stroke();
-        }
-    }
-
-    public getScrollbarPositions = () => {
-        return {
-            horizontal: this.xScrollBarPos,
-            vertical: this.yScrollBarPos,
-        };
-    }
-
-    private recalculateScrollbars = () => {
-        // Recalc horizontal scrollbar
-        if (this.basicProps.gridSize.width > this.basicProps.width) {
-            const xPos = ScrollGeometry.calculatePosition(
-                this.posProps.gridOffset.x,
-                this.basicProps.width,
-                this.basicProps.gridSize.width,
-                ScrollGeometry.calculateLength(
-                    this.basicProps.width,
-                    this.basicProps.gridSize.width,
-                    this.basicProps.frozenColsWidth,
-                ),
-                this.basicProps.frozenColsWidth,
-            );
-            const y = ScrollGeometry.calculateTransversePosition(this.basicProps.height);
-            this.xScrollBarPos = { extent: xPos, y };
-        } else {
-            this.xScrollBarPos = null;
-        }
-
-        // Recalc vertical scrollbar
-        if (this.basicProps.gridSize.height > this.basicProps.height) {
-            const yPos = ScrollGeometry.calculatePosition(
-                this.posProps.gridOffset.y,
-                this.basicProps.height,
-                this.basicProps.gridSize.height,
-                ScrollGeometry.calculateLength(
-                    this.basicProps.height,
-                    this.basicProps.gridSize.height,
-                    this.basicProps.frozenRowsHeight,
-                ),
-                this.basicProps.frozenRowsHeight,
-            );
-            const x = ScrollGeometry.calculateTransversePosition(this.basicProps.width);
-            this.yScrollBarPos = { extent: yPos, x };
-        } else {
-            this.yScrollBarPos = null;
         }
     }
 
