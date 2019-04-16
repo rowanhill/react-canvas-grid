@@ -17,6 +17,8 @@ There was also originally a goal of making use of browser-native scrolling, alth
 ## TODO :memo:
 * Scrollbar UI tweaks (e.g. highlight on mouseover)
 * Move mouse event handling to window (i.e. outside component bounds)
+* Middle-click "auto-scrolling"
+* Scroll-to-cell support (for integration with a 'find' tool)
 * Inline editing of values (callback with string value & cell index? Or suggested data array?)
 * Drag to copy
 * Column dragging (callback to with suggested reordering of ColumnDefs, up to parent to actually re-order & re-render)
