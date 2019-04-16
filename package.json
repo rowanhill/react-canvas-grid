@@ -25,9 +25,11 @@
   ],
   "author": "Rowan Hill",
   "license": "ISC",
+  "peerDependencies": {
+    "react": "16.x"
+  },
   "dependencies": {
-    "memoize-one": "^5.0.0",
-    "react": "^16.7.0"
+    "memoize-one": "^5.0.0"
   },
   "devDependencies": {
     "@cypress/webpack-preprocessor": "^4.0.3",
@@ -41,6 +43,7 @@
     "enzyme": "^3.9.0",
     "enzyme-adapter-react-16": "^1.10.0",
     "jest": "^24.1.0",
+    "react": "^16.7.0",
     "react-dom": "^16.8.3",
     "ts-jest": "^24.0.0",
     "ts-loader": "^5.3.3",
