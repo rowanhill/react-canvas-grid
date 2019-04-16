@@ -176,7 +176,14 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
     }
 
     private onWheel = (e: WheelEvent) => {
-        const willUpdate = this.updateOffset(e.deltaX, e.deltaY);
+        // Browsers may use a 'delta mode' when wheeling, requesting multi-pixel movement
+        // See https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+        const scaleFactors: { [index: number]: number; } = {
+            0: 1,  // DOM_DELTA_PIXEL: 1-to-1
+            1: 16, // DOM_DELTA_LINE: 16 seems a decent guess. See https://stackoverflow.com/q/20110224
+        };
+        const scaleFactor = scaleFactors[e.deltaMode];
+        const willUpdate = this.updateOffset(e.deltaX * scaleFactor, e.deltaY * scaleFactor);
 
         if (willUpdate) {
             // The grid is going to move, so we want to prevent any other scrolling from happening
