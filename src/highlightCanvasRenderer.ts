@@ -77,7 +77,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.translate(-this.posProps.gridOffset.x, -this.posProps.gridOffset.y);
 
         context.lineCap = 'butt';
-        context.fillStyle = '#2276e440';
+        context.fillStyle = 'rgba(33, 117, 228, 0.25)';
         context.strokeStyle = '#2276e4';
 
         // Draw edit cursor cell outline
