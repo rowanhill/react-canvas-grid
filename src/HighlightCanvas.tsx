@@ -1,19 +1,17 @@
 import * as React from 'react';
-import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
-import { ColumnDef, DataRow, Size } from './types';
+import { consumer, transformer } from 'reflex';
+import { GridState } from './gridState';
+import {
+    HighlightCanvasRenderer,
+    HighlightCanvasRendererBasics,
+    HighlightCanvasRendererPosition,
+    HighlightCanvasRendererSelection,
+} from './highlightCanvasRenderer';
 
 export interface HighlightCanvasProps {
-    data: Array<DataRow<any>>;
-    columns: ColumnDef[];
     width: number;
     height: number;
-    gridSize: Size;
-    frozenColsWidth: number;
-    frozenRowsHeight: number;
-    rowHeight: number;
-    colBoundaries: Array<{left: number; right: number}>;
-    borderWidth: number;
-    setRenderer: (r: HighlightCanvasRenderer) => void;
+    gridState: GridState<any>;
 }
 
 const dpr = window.devicePixelRatio;
@@ -47,16 +45,75 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         if (!this.canvasRef.current) {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
-        const { setRenderer, ...basicProps } = this.props;
-        this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, { ...basicProps, dpr });
-        setRenderer(this.renderer);
-    }
 
-    public componentDidUpdate() {
-        if (!this.renderer) {
-            throw new Error('renderer is null in componentDidUpdate - cannot draw');
-        }
+        const gridState = this.props.gridState;
+        const basicProps = transformer([
+            gridState.data,
+            gridState.columns,
+            gridState.canvasSize,
+            gridState.gridSize,
+            gridState.frozenColsWidth,
+            gridState.frozenRowsHeight,
+            gridState.rowHeight,
+            gridState.columnBoundaries,
+            gridState.borderWidth,
+        ],
+        (
+            data,
+            columns,
+            canvasSize,
+            gridSize,
+            frozenColsWidth,
+            frozenRowsHeight,
+            rowHeight,
+            columnBoundaries,
+            borderWidth,
+        ): HighlightCanvasRendererBasics => ({
+            data,
+            columns,
+            canvasSize,
+            gridSize,
+            frozenColsWidth,
+            frozenRowsHeight,
+            rowHeight,
+            columnBoundaries,
+            borderWidth,
+        }));
 
-        this.renderer.reset({ ...this.props, dpr });
+        const posProps = transformer([
+            gridState.gridOffset,
+            gridState.horizontalScrollbarPos,
+            gridState.verticalScrollbarPos,
+        ],
+        (
+            gridOffset,
+            horizontalScrollbarPos,
+            verticalScrollbarPos,
+        ): HighlightCanvasRendererPosition => ({
+            gridOffset,
+            horizontalScrollbarPos,
+            verticalScrollbarPos,
+        }));
+
+        const selectionProps = transformer(
+            [gridState.cursorState],
+            (cursorState): HighlightCanvasRendererSelection => ({ cursorState}));
+
+        this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
+        consumer([basicProps], (newBasicProps) => {
+            if (this.renderer) {
+                this.renderer.reset(newBasicProps);
+            }
+        });
+        consumer([posProps], (newPosProps) => {
+            if (this.renderer) {
+                this.renderer.updatePos(newPosProps);
+            }
+        });
+        consumer([selectionProps], (newSelectionProps) => {
+            if (this.renderer) {
+                this.renderer.updateSelection(newSelectionProps);
+            }
+        });
     }
 }

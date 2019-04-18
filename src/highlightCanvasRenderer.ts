@@ -1,22 +1,21 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
 import { CursorState, SelectionState } from './cursorState';
 import * as cursorState from './cursorState';
+import { ColumnBoundary } from './gridGeometry';
 import * as ScrollGeometry from './scrollbarGeometry';
 import { ScrollbarPosition } from './scrollbarGeometry';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
-export interface HighlightCanvassRendererBasics {
+export interface HighlightCanvasRendererBasics {
     data: Array<DataRow<any>>;
     columns: ColumnDef[];
-    width: number;
-    height: number;
+    canvasSize: Size;
     gridSize: Size;
     frozenColsWidth: number;
     frozenRowsHeight: number;
     rowHeight: number;
-    colBoundaries: Array<{left: number; right: number}>;
+    columnBoundaries: ColumnBoundary[];
     borderWidth: number;
-    dpr: number;
 }
 
 export interface HighlightCanvasRendererPosition {
@@ -36,18 +35,18 @@ const defaultPosProps = {
 };
 
 export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
-    private basicProps: HighlightCanvassRendererBasics;
+    private basicProps: HighlightCanvasRendererBasics;
     private posProps: HighlightCanvasRendererPosition = defaultPosProps;
     private selectionProps: HighlightCanvasRendererSelection = {
         cursorState: cursorState.createDefault(),
     };
 
-    constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvassRendererBasics) {
-        super(canvas, basicProps.dpr, true);
+    constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvasRendererBasics, dpr: number) {
+        super(canvas, dpr, true);
         this.basicProps = basicProps;
     }
 
-    public reset(basicProps: HighlightCanvassRendererBasics) {
+    public reset(basicProps: HighlightCanvasRendererBasics) {
         if (shouldSelectionClear(this.basicProps, basicProps)) {
             this.selectionProps = { cursorState: cursorState.createDefault() };
         }
@@ -131,9 +130,9 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
             top: y * (this.basicProps.rowHeight + this.basicProps.borderWidth),
             bottom: (y + 1) * (this.basicProps.rowHeight + + this.basicProps.borderWidth) - this.basicProps.borderWidth,
             height: this.basicProps.rowHeight,
-            left: this.basicProps.colBoundaries[x].left,
-            right: this.basicProps.colBoundaries[x].right,
-            width: this.basicProps.colBoundaries[x].right - this.basicProps.colBoundaries[x].left,
+            left: this.basicProps.columnBoundaries[x].left,
+            right: this.basicProps.columnBoundaries[x].right,
+            width: this.basicProps.columnBoundaries[x].right - this.basicProps.columnBoundaries[x].left,
         };
     }
 }

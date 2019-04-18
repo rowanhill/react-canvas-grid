@@ -2,6 +2,7 @@ import { mount } from 'enzyme';
 import * as React from 'react';
 import { MainCanvas, MainCanvasProps } from './MainCanvas';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
+import { GridState } from './gridState';
 
 const mockFixScale = jest.fn();
 const mockDraw = jest.fn();
@@ -23,15 +24,9 @@ jest.mock('./mainCanvasRenderer', () => {
 const MockedRenderer = MainCanvasRenderer as jest.Mock<MainCanvasRenderer<null>>;
 
 const props: MainCanvasProps<null> = {
-    borderWidth: 1,
-    colBoundaries: [],
-    columns: [],
-    data: [],
-    gridHeight: 100,
     height: 100,
     width: 100,
-    rowHeight: 20,
-    setRenderer: jest.fn(),
+    gridState: new GridState([{width: 40} as any], [], 20, 1, 0, 0),
 };
 
 describe('MainCanvas', () => {
@@ -39,30 +34,22 @@ describe('MainCanvas', () => {
         jest.clearAllMocks();
     });
 
-    it('draws to it\'s canvas when mounted', () => {
+    it('draws to its canvas when base props change', () => {
         const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
+
+        props.gridState.rowHeight(30);
 
         expect(MockedRenderer).toHaveBeenCalled();
         expect(mockReset).toHaveBeenCalled();
     });
 
-    it('sets the renderer when mounted', () => {
+    it('redraws to its canvas when pos props change', () => {
         const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
 
-        expect(props.setRenderer).toHaveBeenCalledWith(
-            expect.objectContaining({__dummy__: 'fake MainCanvasRenderer'}),
-        );
-    });
+        props.gridState.gridOffset({ x: 10, y: 10 });
 
-    it('redraws to its canvas when props change', () => {
-        const bc = mount(<MainCanvas {...props} />);
-        bc.setProps(props);
-        bc.setProps({ ...props, borderWidth: 2 });
-
-        expect(mockReset).toHaveBeenCalledTimes(2);
-        expect(mockReset).toHaveBeenNthCalledWith(1, { ...props, dpr: expect.anything() });
-        expect(mockReset).toHaveBeenNthCalledWith(2, { ...props, borderWidth: 2, dpr: expect.anything() });
+        expect(mockUpdatePos).toHaveBeenCalled();
     });
 });

@@ -1,16 +1,14 @@
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
-import { Bounds, ColumnDef, Coord, DataRow } from './types';
+import { Bounds, ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface MainCanvasRendererBasics<T> {
     data: Array<DataRow<T>>;
-    width: number;
-    height: number;
+    canvasSize: Size;
     rowHeight: number;
     colBoundaries: Array<{left: number; right: number}>;
     columns: ColumnDef[];
     gridHeight: number;
     borderWidth: number;
-    dpr: number;
 }
 
 export interface MainCanvasRendererPosition {
@@ -32,8 +30,8 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     private posProps: MainCanvasRendererPosition = defaultPosProps;
     private prevDraw: PreviousDrawInfo|null = null;
 
-    constructor(canvas: HTMLCanvasElement, basicProps: MainCanvasRendererBasics<T>) {
-        super(canvas, basicProps.dpr, false);
+    constructor(canvas: HTMLCanvasElement, basicProps: MainCanvasRendererBasics<T>, dpr: number) {
+        super(canvas, dpr, false);
         this.basicProps = basicProps;
     }
 
@@ -54,20 +52,20 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         const posProps = this.posProps;
         const visibleRect: ClientRect = {
             top: posProps.gridOffset.y,
-            bottom: posProps.gridOffset.y + basicProps.height,
-            height: basicProps.height,
+            bottom: posProps.gridOffset.y + basicProps.canvasSize.height,
+            height: basicProps.canvasSize.height,
             left: posProps.gridOffset.x,
-            right: posProps.gridOffset.x + basicProps.width,
-            width: basicProps.width,
+            right: posProps.gridOffset.x + basicProps.canvasSize.width,
+            width: basicProps.canvasSize.width,
         };
         if (prevDraw) {
             // Translate according to difference from previous draw
             const xDiff = (prevDraw.gridOffset.x - posProps.gridOffset.x);
             const yDiff = (prevDraw.gridOffset.y - posProps.gridOffset.y);
             this.shiftExistingCanvas(xDiff, yDiff);
-            this.drawNewBorderBackground(xDiff, yDiff, basicProps.width, basicProps.height);
+            this.drawNewBorderBackground(xDiff, yDiff, basicProps.canvasSize.width, basicProps.canvasSize.height);
         } else {
-            this.drawWholeBorderBackground(basicProps.width, basicProps.height);
+            this.drawWholeBorderBackground(basicProps.canvasSize.width, basicProps.canvasSize.height);
         }
 
         // Translate the canvas context so that it's covering the visibleRect
@@ -128,8 +126,8 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
             rect: {
                 left: Math.max(posProps.gridOffset.x, visibleRect.left),
                 top: Math.max(posProps.gridOffset.y, visibleRect.top),
-                right: Math.min(posProps.gridOffset.x + basicProps.width, visibleRect.right),
-                bottom: Math.min(posProps.gridOffset.y + basicProps.height, visibleRect.bottom),
+                right: Math.min(posProps.gridOffset.x + basicProps.canvasSize.width, visibleRect.right),
+                bottom: Math.min(posProps.gridOffset.y + basicProps.canvasSize.height, visibleRect.bottom),
             },
         };
     }

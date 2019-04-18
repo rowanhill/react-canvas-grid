@@ -1,19 +1,17 @@
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
-import { ColumnDef, Coord, DataRow } from './types';
+import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface FrozenCanvasRendererBasics<T> {
     data: Array<DataRow<T>>;
     columns: ColumnDef[];
     colBoundaries: Array<{left: number; right: number}>;
-    width: number;
-    height: number;
+    canvasSize: Size;
     rowHeight: number;
     borderWidth: number;
     frozenRows: number;
     frozenCols: number;
     frozenRowsHeight: number;
     frozenColsWidth: number;
-    dpr: number;
 }
 
 export interface FrozenCanvasRendererPosition {
@@ -33,8 +31,8 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     private posProps: FrozenCanvasRendererPosition = defaultPosProps;
     private prevDraw: FrozenPreviousDrawInfo|null = null;
 
-    constructor(canvas: HTMLCanvasElement, basicProps: FrozenCanvasRendererBasics<T>) {
-        super(canvas, basicProps.dpr, true);
+    constructor(canvas: HTMLCanvasElement, basicProps: FrozenCanvasRendererBasics<T>, dpr: number) {
+        super(canvas, dpr, true);
         this.basicProps = basicProps;
     }
 
@@ -58,13 +56,13 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         if (!prevDraw) {
             // It's the first draw, the entire area is 'invalidated'
             rowAreaToPaint = {
-                left: 0, right: basicProps.width, width: basicProps.width,
+                left: 0, right: basicProps.canvasSize.width, width: basicProps.canvasSize.width,
                 top: 0, bottom: basicProps.frozenRowsHeight, height: basicProps.frozenRowsHeight,
             };
             colAreaToPaint = {
                 left: 0, right: basicProps.frozenColsWidth, width: basicProps.frozenColsWidth,
-                top: basicProps.frozenRowsHeight, bottom: basicProps.height,
-                height: basicProps.height - basicProps.frozenRowsHeight,
+                top: basicProps.frozenRowsHeight, bottom: basicProps.canvasSize.height,
+                height: basicProps.canvasSize.height - basicProps.frozenRowsHeight,
             };
 
             // Fill the background with border colour
@@ -142,7 +140,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     public calculateInvalidatedAreaRows(props: FrozenCanvasRendererBasics<T>, xDiff: number): ClientRect|null {
         if (xDiff < 0) {
             // Moved right - draw right
-            const left = props.width + xDiff;
+            const left = props.canvasSize.width + xDiff;
             const width = -xDiff;
             return {
                 left, width, right: left + width,
@@ -165,7 +163,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     public calculateInvalidatedAreaCols(props: FrozenCanvasRendererBasics<T>, yDiff: number): ClientRect|null {
         if (yDiff < 0) {
             // Moved down - draw bottom
-            const top = props.height + yDiff;
+            const top = props.canvasSize.height + yDiff;
             const height = -yDiff;
             return {
                 top, height, bottom: top + height,
@@ -213,7 +211,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.context.beginPath();
         this.context.rect(
             basicProps.frozenColsWidth, 0,
-            basicProps.width - basicProps.frozenColsWidth, basicProps.frozenRowsHeight,
+            basicProps.canvasSize.width - basicProps.frozenColsWidth, basicProps.frozenRowsHeight,
         );
         this.context.closePath();
         this.context.clip();
@@ -225,7 +223,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         }
 
         const visibleLeft = posProps.gridOffset.x + basicProps.frozenColsWidth;
-        const visibleRight = posProps.gridOffset.x + basicProps.width;
+        const visibleRight = posProps.gridOffset.x + basicProps.canvasSize.width;
         for (let colIndex = 0; colIndex < basicProps.columns.length; colIndex++) {
             const {left: cellLeft, right: cellRight} = basicProps.colBoundaries[colIndex];
             if (cellRight < visibleLeft) {
@@ -268,7 +266,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.context.beginPath();
         this.context.rect(
             0, basicProps.frozenRowsHeight,
-            basicProps.frozenColsWidth, basicProps.height - basicProps.frozenRowsHeight,
+            basicProps.frozenColsWidth, basicProps.canvasSize.height - basicProps.frozenRowsHeight,
         );
         this.context.closePath();
         this.context.clip();
@@ -280,7 +278,7 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         }
 
         const visibleTop = posProps.gridOffset.y + basicProps.frozenRowsHeight;
-        const visibleBottom = posProps.gridOffset.y + basicProps.height;
+        const visibleBottom = posProps.gridOffset.y + basicProps.canvasSize.height;
         const minRowIndex = Math.floor(visibleTop / (basicProps.rowHeight + basicProps.borderWidth));
         const maxRowIndex = Math.ceil(visibleBottom / (basicProps.rowHeight + basicProps.borderWidth));
         for (let colIndex = 0; colIndex < basicProps.frozenCols; colIndex++) {

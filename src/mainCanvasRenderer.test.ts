@@ -56,7 +56,7 @@ describe('MainCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new MainCanvasRenderer<null>(mockCanvas, props);
+        renderer = new MainCanvasRenderer<null>(mockCanvas, props, dpr);
     });
 
     afterEach(() => {
@@ -72,10 +72,8 @@ describe('MainCanvasRenderer', () => {
         borderWidth: 1,
         columns: [col(), col(), col(), col(), col(), col(), col(), col(), col(), col()],
         data: [row(), row(), row(), row(), row(), row(), row(), row(), row(), row()],
-        height: 50,
-        width: 50,
+        canvasSize: { height: 50, width: 50 },
         rowHeight: 9,
-        dpr,
     };
     const props: MainCanvasRendererBasics<null> = calcProps(normalisedProps);
 
@@ -150,7 +148,8 @@ describe('MainCanvasRenderer', () => {
                 renderer.updatePos(newProps);
 
                 expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
-                expect(renderer.drawNewBorderBackground).toHaveBeenCalledWith(-3, -5, props.width, props.height);
+                expect(renderer.drawNewBorderBackground)
+                    .toHaveBeenCalledWith(-3, -5, props.canvasSize.width, props.canvasSize.height);
             });
 
             describe('cell redrawing', () => {

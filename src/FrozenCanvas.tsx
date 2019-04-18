@@ -1,20 +1,13 @@
 import * as React from 'react';
-import { FrozenCanvasRenderer } from './frozenCanvasRenderer';
-import { ColumnDef, Coord, DataRow } from './types';
+import { consumer, transformer } from 'reflex';
+import { FrozenCanvasRenderer, FrozenCanvasRendererBasics, FrozenCanvasRendererPosition } from './frozenCanvasRenderer';
+import { GridState } from './gridState';
+import { Coord } from './types';
 
 export interface FrozenCanvasProps<T> {
-    data: Array<DataRow<T>>;
-    columns: ColumnDef[];
-    colBoundaries: Array<{left: number; right: number}>;
     width: number;
     height: number;
-    rowHeight: number;
-    borderWidth: number;
-    frozenRows: number;
-    frozenCols: number;
-    frozenRowsHeight: number;
-    frozenColsWidth: number;
-    setRenderer: (r: FrozenCanvasRenderer<T>) => void;
+    gridState: GridState<T>;
 }
 
 export interface FrozenPreviousDrawInfo {
@@ -26,10 +19,6 @@ const dpr = window.devicePixelRatio;
 export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: FrozenCanvasRenderer<T>|null = null;
-
-    constructor(props: FrozenCanvasProps<T>) {
-        super(props);
-    }
 
     public render() {
         return (
@@ -52,16 +41,64 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
         if (!this.canvasRef.current) {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
-        const { setRenderer, ...basicProps } = this.props;
-        this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, { ...basicProps, dpr });
-        setRenderer(this.renderer);
-    }
 
-    public componentDidUpdate(prevProps: FrozenCanvasProps<T>) {
-        if (!this.renderer) {
-            throw new Error('renderer is null in componentDidUpdate - cannot draw');
-        }
+        const gridState = this.props.gridState;
+        const basicProps = transformer([
+            gridState.data,
+            gridState.columns,
+            gridState.columnBoundaries,
+            gridState.canvasSize,
+            gridState.rowHeight,
+            gridState.borderWidth,
+            gridState.frozenRows,
+            gridState.frozenCols,
+            gridState.frozenColsWidth,
+            gridState.frozenRowsHeight,
+        ],
+        (
+            data,
+            columns,
+            colBoundaries,
+            canvasSize,
+            rowHeight,
+            borderWidth,
+            frozenRows,
+            frozenCols,
+            frozenColsWidth,
+            frozenRowsHeight,
+        ): FrozenCanvasRendererBasics<T> => ({
+            data,
+            columns,
+            colBoundaries,
+            canvasSize,
+            rowHeight,
+            borderWidth,
+            frozenRows,
+            frozenCols,
+            frozenColsWidth,
+            frozenRowsHeight,
+        }));
 
-        this.renderer.reset({ ...this.props, dpr });
+        const posProps = transformer([
+            gridState.gridOffset,
+        ],
+        (
+            gridOffset,
+        ): FrozenCanvasRendererPosition => ({
+            gridOffset,
+        }));
+
+        this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
+
+        consumer([basicProps], (newBasicProps) => {
+            if (this.renderer) {
+                this.renderer.reset(newBasicProps);
+            }
+        });
+        consumer([posProps], (newPosProps) => {
+            if (this.renderer) {
+                this.renderer.updatePos(newPosProps);
+            }
+        });
     }
 }

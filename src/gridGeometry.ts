@@ -1,6 +1,4 @@
-import memoizeOne from 'memoize-one';
-import { ReactCanvasGridProps } from './ReactCanvasGrid';
-import { ColumnDef, Coord, Size } from './types';
+import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface ColumnBoundary {
     /**
@@ -14,72 +12,72 @@ export interface ColumnBoundary {
     right: number;
 }
 
-const memoizedCalcColumnBoundaries = memoizeOne((columns: ColumnDef[], borderWidth: number) => {
-    let curLeft = 0;
-    return columns.map((col) => {
-        // Left is 0-indexed and inclusive. Right is exclusive, so we can just add the width
-        const boundary = { left: curLeft, right: curLeft + col.width};
-        // Add the border width on to skip it - the border is not within the range of any column
-        curLeft += col.width + borderWidth;
-        return boundary;
-    });
-});
-
 export class GridGeometry {
     /**
      * Calculate the boundaries of all columns in the grid, excluding borders. The 'left's are inclusive,
      * the 'right's are exclusive.
      */
-    public static calculateColumnBoundaries = (props: ReactCanvasGridProps<any>): ColumnBoundary[] => {
-        return memoizedCalcColumnBoundaries(props.columns, props.borderWidth);
+    public static calculateColumnBoundaries = (columns: ColumnDef[], borderWidth: number): ColumnBoundary[] => {
+        let curLeft = 0;
+        return columns.map((col) => {
+            // Left is 0-indexed and inclusive. Right is exclusive, so we can just add the width
+            const boundary = { left: curLeft, right: curLeft + col.width};
+            // Add the border width on to skip it - the border is not within the range of any column
+            curLeft += col.width + borderWidth;
+            return boundary;
+        });
     }
 
     /**
      * Calculate the total size of the grid, including borders, etc
      */
-    public static calculateGridSize = (props: ReactCanvasGridProps<any>): Size => {
-        const numRows = props.data.length;
-        const height = (numRows * props.rowHeight) + ((numRows - 1) * props.borderWidth);
+    public static calculateGridSize = (
+        data: Array<DataRow<any>>,
+        columnBoundaries: ColumnBoundary[],
+        rowHeight: number,
+        borderWidth: number,
+    ): Size => {
+        const numRows = data.length;
+        const height = (numRows * rowHeight) + ((numRows - 1) * borderWidth);
 
-        const columnBoundaries = GridGeometry.calculateColumnBoundaries(props);
         const width = columnBoundaries[columnBoundaries.length - 1].right;
 
         return { width, height };
     }
 
-    /**
-     * Calculate the largest amount of grid (including frozen cells) that could potentially be visible
-     */
-    public static calculateMaxViewSize = (
-        props: ReactCanvasGridProps<any>,
-        scrollParent: HTMLElement,
-        screen: Screen = window.screen,
-    ): Size => {
-        const dataSize = GridGeometry.calculateGridSize(props);
-        const scrollParentClientRect = GridGeometry.getScrollParentClientRect(scrollParent, screen);
+    public static calculateCanvasSize = (gridSize: Size, rootSize: Size|null): Size => {
+        // First render is before componentDidMount, so before we have calculated the root element's size.
+        // In this case, we just render as 0x0. componentDidMount will then update state,
+        // and we'll re-render
+        if (rootSize === null) {
+            return { width: 0, height: 0 };
+        }
         return {
-            height: Math.min(dataSize.height, scrollParentClientRect.height, screen.availHeight),
-            width: Math.min(dataSize.width, scrollParentClientRect.width, screen.availWidth),
+            width: Math.min(rootSize.width, gridSize.width),
+            height: Math.min(rootSize.height, gridSize.height),
         };
     }
 
     /*
      * Calculate the height of all the frozen rows and their bottom borders
      */
-    public static calculateFrozenRowsHeight = (props: ReactCanvasGridProps<any>): number => {
-        return (props.rowHeight + props.borderWidth) * props.frozenRows;
+    public static calculateFrozenRowsHeight = (rowHeight: number, borderWidth: number, frozenRows: number) => {
+        return (rowHeight + borderWidth) * frozenRows;
     }
 
     /*
      * Calculate the width of all the frozen rows and their right borders
      */
-    public static calculateFrozenColsWidth = (props: ReactCanvasGridProps<any>): number => {
-        const columnBoundaries = GridGeometry.calculateColumnBoundaries(props);
-        const rightmostColIndex = props.frozenCols - 1;
+    public static calculateFrozenColsWidth = (
+        columnBoundaries: ColumnBoundary[],
+        frozenCols: number,
+        borderWidth: number,
+    ) => {
+        const rightmostColIndex = frozenCols - 1;
         if (rightmostColIndex < 0) {
             return 0;
         }
-        return columnBoundaries[rightmostColIndex].right + props.borderWidth;
+        return columnBoundaries[rightmostColIndex].right + borderWidth;
     }
 
     /**
@@ -88,7 +86,9 @@ export class GridGeometry {
      */
     public static calculateGridCellCoords = (
         event: {clientX: number, clientY: number},
-        props: ReactCanvasGridProps<any>,
+        columnBoundaries: ColumnBoundary[],
+        borderWidth: number,
+        rowHeight: number,
         gridOffset: Coord,
         root: HTMLDivElement,
     ): Coord => {
@@ -98,7 +98,9 @@ export class GridGeometry {
                 gridOffset,
                 root,
             ),
-            props,
+            columnBoundaries,
+            borderWidth,
+            rowHeight,
         );
     }
 
@@ -141,9 +143,10 @@ export class GridGeometry {
 
     private static gridPixelToGridCell = (
         {x, y}: Coord,
-        props: ReactCanvasGridProps<any>,
+        columnBoundaries: ColumnBoundary[],
+        borderWidth: number,
+        rowHeight: number,
     ): Coord => {
-        const columnBoundaries = GridGeometry.calculateColumnBoundaries(props);
         let colIndex = -1;
         for (let i = 0; i < columnBoundaries.length; i++) {
             if (columnBoundaries[i].right > x) {
@@ -162,7 +165,7 @@ export class GridGeometry {
             Ycell >= (Yclick + b)/(b + c)
             Ycell = floor((Yclick + b)/(b + c))
         */
-        const rowIndex = Math.floor((y + props.borderWidth) / (props.rowHeight + props.borderWidth));
+        const rowIndex = Math.floor((y + borderWidth) / (rowHeight + borderWidth));
 
         return {
             y: rowIndex,

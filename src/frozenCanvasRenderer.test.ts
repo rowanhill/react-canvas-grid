@@ -103,10 +103,14 @@ describe('FrozenCanvasRenderer', () => {
     let renderer: FrozenCanvasRenderer<null>;
 
     describe('calculateInvalidatedAreaRows', () => {
-        const props = { width: 400, frozenRowsHeight: 20, frozenColsWidth: 80 } as FrozenCanvasRendererBasics<any>;
+        const props = {
+            canvasSize: { width: 400 },
+            frozenRowsHeight: 20,
+            frozenColsWidth: 80,
+        } as FrozenCanvasRendererBasics<any>;
 
         beforeEach(() => {
-            renderer = new FrozenCanvasRenderer(mockCanvas, props);
+            renderer = new FrozenCanvasRenderer(mockCanvas, props, dpr);
         });
 
         it('returns null when there has been no horizontal movement', () => {
@@ -135,10 +139,14 @@ describe('FrozenCanvasRenderer', () => {
     });
 
     describe('calculateInvalidatedAreaCols', () => {
-        const props = { height: 400, frozenRowsHeight: 20, frozenColsWidth: 80 } as FrozenCanvasRendererBasics<any>;
+        const props = {
+            canvasSize: {height: 400},
+            frozenRowsHeight: 20,
+            frozenColsWidth: 80,
+        } as FrozenCanvasRendererBasics<any>;
 
         beforeEach(() => {
-            renderer = new FrozenCanvasRenderer(mockCanvas, props);
+            renderer = new FrozenCanvasRenderer(mockCanvas, props, dpr);
         });
 
         it('returns null when there has been no vertical movement', () => {
@@ -169,7 +177,7 @@ describe('FrozenCanvasRenderer', () => {
     describe('drawInvalidatedCellsRows', () => {
 
         it('does nothing if there is no invalidated row area', () => {
-            renderer = new FrozenCanvasRenderer(mockCanvas, {} as FrozenCanvasRendererBasics<any>);
+            renderer = new FrozenCanvasRenderer(mockCanvas, {} as FrozenCanvasRendererBasics<any>, dpr);
             jest.spyOn(renderer, 'drawCell');
 
             renderer.drawInvalidatedCellsRows(
@@ -184,8 +192,7 @@ describe('FrozenCanvasRenderer', () => {
 
         it('only draws cells intersecting with the invalidated area', () => {
             const props = calcProps({
-                width: 400,
-                height: 400,
+                canvasSize: { width: 400, height: 400 },
                 frozenRows: 1,
                 frozenCols: 1,
                 rowHeight: 20,
@@ -198,7 +205,7 @@ describe('FrozenCanvasRenderer', () => {
                 gridOffset: { x: 100, y: 100 },
             };
             const invalidArea = { left: 390, right: 400, top: 0, bottom: props.frozenRowsHeight } as ClientRect;
-            renderer = new FrozenCanvasRenderer(mockCanvas, props);
+            renderer = new FrozenCanvasRenderer(mockCanvas, props, dpr);
             jest.spyOn(renderer, 'drawCell');
 
             renderer.drawInvalidatedCellsRows(props, posProps, invalidArea);
@@ -210,7 +217,7 @@ describe('FrozenCanvasRenderer', () => {
     describe('drawInvalidatedCellsCols', () => {
 
         it('does nothing if there is no invalidated row area', () => {
-            renderer = new FrozenCanvasRenderer(mockCanvas, {} as FrozenCanvasRendererBasics<any>);
+            renderer = new FrozenCanvasRenderer(mockCanvas, {} as FrozenCanvasRendererBasics<any>, dpr);
             jest.spyOn(renderer, 'drawCell');
 
             renderer.drawInvalidatedCellsRows(
@@ -225,8 +232,7 @@ describe('FrozenCanvasRenderer', () => {
 
         it('only draws cells intersecting with the invalidated area', () => {
             const props = calcProps({
-                width: 400,
-                height: 400,
+                canvasSize: { width: 400, height: 400 },
                 frozenRows: 1,
                 frozenCols: 1,
                 rowHeight: 20,

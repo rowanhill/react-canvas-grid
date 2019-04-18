@@ -1,17 +1,12 @@
 import * as React from 'react';
-import { MainCanvasRenderer } from './mainCanvasRenderer';
-import { ColumnDef, DataRow } from './types';
+import { consumer, transformer } from 'reflex';
+import { GridState } from './gridState';
+import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
 
 export interface MainCanvasProps<T> {
-    data: Array<DataRow<T>>;
     width: number;
     height: number;
-    rowHeight: number;
-    colBoundaries: Array<{left: number; right: number}>;
-    columns: ColumnDef[];
-    gridHeight: number;
-    borderWidth: number;
-    setRenderer: (r: MainCanvasRenderer<T>) => void;
+    gridState: GridState<T>;
 }
 
 const dpr = window.devicePixelRatio;
@@ -46,16 +41,50 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
         }
 
-        const { setRenderer, ...basicProps } = this.props;
-        this.renderer = new MainCanvasRenderer(this.canvasRef.current, { ...basicProps, dpr });
-        setRenderer(this.renderer);
-    }
+        const gridState = this.props.gridState;
+        const basicProps = transformer([
+            gridState.data,
+            gridState.canvasSize,
+            gridState.rowHeight,
+            gridState.columnBoundaries,
+            gridState.columns,
+            gridState.gridSize,
+            gridState.borderWidth,
+        ],
+        (
+            data,
+            canvasSize,
+            rowHeight,
+            colBoundaries,
+            columns,
+            gridSize,
+            borderWidth,
+        ): MainCanvasRendererBasics<T> => ({
+            data,
+            canvasSize,
+            rowHeight,
+            colBoundaries,
+            columns,
+            gridHeight: gridSize.height,
+            borderWidth,
+        }));
 
-    public componentDidUpdate() {
-        if (!this.renderer) {
-            throw new Error('renderer is null in componentDidUpdate - cannot draw');
-        }
+        const posProps = transformer(
+            [gridState.gridOffset],
+            (gridOffset): MainCanvasRendererPosition => ({ gridOffset }));
 
-        this.renderer.reset({ ...this.props, dpr });
+        this.renderer = new MainCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
+
+        consumer([basicProps], (newBasicProps) => {
+            if (this.renderer) {
+                this.renderer.reset(newBasicProps);
+            }
+        });
+        // TODO: Needs some kind of rAF throttling
+        consumer([posProps], (newPosProps) => {
+            if (this.renderer) {
+                this.renderer.updatePos(newPosProps);
+            }
+        });
     }
 }
