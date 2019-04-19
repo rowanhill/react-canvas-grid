@@ -36,7 +36,7 @@ interface ReactCanvasGridState {
     rootSize: Size|null;
 }
 
-export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>, ReactCanvasGridState> {
+export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps<T>, ReactCanvasGridState> {
     public static defaultProps: DefaultedProps = {
         cssWidth: '100%',
         cssHeight: '100%',
