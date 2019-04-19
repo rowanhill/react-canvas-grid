@@ -71,12 +71,15 @@ export class ReactCanvasGrid<T> extends React.Component<ReactCanvasGridProps<T>,
             throw new Error('root element ref not set in componentDidMount, so cannot determine canvas size');
         }
         const rootRect = this.rootRef.current.getBoundingClientRect();
-        this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
 
         this.rootRef.current.addEventListener('wheel', this.onWheel);
 
         // Set the rootSize, causing a re-render, at which point the canvases will be properly sized.
-        this.setState({ rootSize: { width: rootRect.width, height: rootRect.height } });
+        // Once the state has been set and everything has re-rendered, we can set the rootSize, causing
+        // the renderers to redraw.
+        this.setState({ rootSize: { width: rootRect.width, height: rootRect.height } }, () => {
+            this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
+        });
     }
 
     public componentDidUpdate(prevProps: ReactCanvasGridProps<T>) {
