@@ -1,21 +1,19 @@
 import { mount } from 'enzyme';
 import * as React from 'react';
+import { GridState } from './gridState';
 import { MainCanvas, MainCanvasProps } from './MainCanvas';
 import { MainCanvasRenderer } from './mainCanvasRenderer';
-import { GridState } from './gridState';
 
 const mockFixScale = jest.fn();
 const mockDraw = jest.fn();
-const mockReset = jest.fn();
-const mockUpdatePos = jest.fn();
+const mockUpdateProps = jest.fn();
 jest.mock('./mainCanvasRenderer', () => {
     return {
         MainCanvasRenderer: jest.fn().mockImplementation(() => {
             return {
                 fixScale: mockFixScale,
                 draw: mockDraw,
-                reset: mockReset,
-                updatePos: mockUpdatePos,
+                updateProps: mockUpdateProps,
                 __dummy__: 'fake MainCanvasRenderer',
             };
         }),
@@ -41,7 +39,7 @@ describe('MainCanvas', () => {
         props.gridState.rowHeight(30);
 
         expect(MockedRenderer).toHaveBeenCalled();
-        expect(mockReset).toHaveBeenCalled();
+        expect(mockUpdateProps).toHaveBeenCalled();
     });
 
     it('redraws to its canvas when pos props change', () => {
@@ -50,6 +48,6 @@ describe('MainCanvas', () => {
 
         props.gridState.gridOffset({ x: 10, y: 10 });
 
-        expect(mockUpdatePos).toHaveBeenCalled();
+        expect(mockUpdateProps).toHaveBeenCalled();
     });
 });

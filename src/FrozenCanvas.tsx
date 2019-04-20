@@ -90,14 +90,9 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
 
         this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
 
-        consumer([basicProps], (newBasicProps) => {
+        consumer([basicProps, posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {
-                this.renderer.reset(newBasicProps);
-            }
-        });
-        consumer([posProps], (newPosProps) => {
-            if (this.renderer) {
-                this.renderer.updatePos(newPosProps);
+                this.renderer.updateProps(newBasicProps, newPosProps);
             }
         });
     }

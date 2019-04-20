@@ -111,10 +111,9 @@ describe('MainCanvasRenderer', () => {
                         bottom: 75,
                     },
                 };
-                renderer.updatePos(shiftedPosProps);
                 jest.spyOn(renderer, 'drawCell');
 
-                renderer.reset(props);
+                renderer.updateProps(props, shiftedPosProps);
 
                 expect(renderer.drawCell).toHaveBeenCalledTimes(18);
                 getDrawnCellRects().forEach((r) => {
@@ -143,22 +142,36 @@ describe('MainCanvasRenderer', () => {
                 jest.spyOn(renderer, 'drawNewBorderBackground');
                 jest.spyOn(renderer, 'shiftExistingCanvas');
                 const newProps = getNewPosProps(3, 5);
-                renderer.updatePos(posProps);
+                renderer.updateProps(props, posProps);
 
-                renderer.updatePos(newProps);
+                renderer.updateProps(props, newProps);
 
                 expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
                 expect(renderer.drawNewBorderBackground)
                     .toHaveBeenCalledWith(-3, -5, props.canvasSize.width, props.canvasSize.height);
             });
 
+            it('ignores the old image and redraws everything if basic props change', () => {
+                jest.spyOn(renderer, 'drawNewBorderBackground');
+                jest.spyOn(renderer, 'shiftExistingCanvas');
+                jest.spyOn(renderer, 'drawWholeBorderBackground');
+                const newProps = calcProps({...normalisedProps, borderWidth: 2});
+                renderer.updateProps(props, posProps);
+
+                renderer.updateProps(newProps, posProps);
+
+                expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
+                expect(renderer.drawNewBorderBackground).not.toHaveBeenCalled();
+                expect(renderer.drawWholeBorderBackground).toHaveBeenCalled();
+            });
+
             describe('cell redrawing', () => {
                 it('redraws cells on the bottom when scrolling down', () => {
                     const newProps = getNewPosProps(0, 5);
-                    renderer.updatePos(posProps);
+                    renderer.updateProps(props, posProps);
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updatePos(newProps);
+                    renderer.updateProps(props, newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
@@ -168,10 +181,10 @@ describe('MainCanvasRenderer', () => {
 
                 it('redraws cells on the top when scrolling up', () => {
                     const newProps = getNewPosProps(0, -5);
-                    renderer.updatePos(posProps);
+                    renderer.updateProps(props, posProps);
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updatePos(newProps);
+                    renderer.updateProps(props, newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
@@ -181,10 +194,10 @@ describe('MainCanvasRenderer', () => {
 
                 it('redraws cells on the right when scrolling right`', () => {
                     const newProps = getNewPosProps(5, 0);
-                    renderer.updatePos(posProps);
+                    renderer.updateProps(props, posProps);
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updatePos(newProps);
+                    renderer.updateProps(props, newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {
@@ -194,10 +207,10 @@ describe('MainCanvasRenderer', () => {
 
                 it('redraws cells on the left when scrolling left`', () => {
                     const newProps = getNewPosProps(-5, 0);
-                    renderer.updatePos(posProps);
+                    renderer.updateProps(props, posProps);
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updatePos(newProps);
+                    renderer.updateProps(props, newProps);
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {

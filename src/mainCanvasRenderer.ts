@@ -1,3 +1,4 @@
+import shallowEqual from 'shallow-equals';
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
 import { Bounds, ColumnDef, Coord, DataRow, Size } from './types';
 
@@ -35,13 +36,11 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.basicProps = basicProps;
     }
 
-    public reset(basicProps: MainCanvasRendererBasics<T>) {
+    public updateProps = (basicProps: MainCanvasRendererBasics<T>, posProps: MainCanvasRendererPosition) => {
+        if (!shallowEqual(this.basicProps, basicProps)) {
+            this.prevDraw = null;
+        }
         this.basicProps = basicProps;
-        this.prevDraw = null;
-        this.drawScaled(this.draw);
-    }
-
-    public updatePos(posProps: MainCanvasRendererPosition) {
         this.posProps = posProps;
         this.drawScaled(this.draw);
     }

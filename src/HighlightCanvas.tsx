@@ -100,19 +100,9 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             (cursorState): HighlightCanvasRendererSelection => ({ cursorState}));
 
         this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
-        consumer([basicProps], (newBasicProps) => {
+        consumer([basicProps, posProps, selectionProps], (newBasicProps, newPosProps, newSelectionProps) => {
             if (this.renderer) {
-                this.renderer.reset(newBasicProps);
-            }
-        });
-        consumer([posProps], (newPosProps) => {
-            if (this.renderer) {
-                this.renderer.updatePos(newPosProps);
-            }
-        });
-        consumer([selectionProps], (newSelectionProps) => {
-            if (this.renderer) {
-                this.renderer.updateSelection(newSelectionProps);
+                this.renderer.updateProps(newBasicProps, newPosProps, newSelectionProps);
             }
         });
     }

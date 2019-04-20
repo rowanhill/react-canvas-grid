@@ -46,20 +46,13 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         this.basicProps = basicProps;
     }
 
-    public reset(basicProps: HighlightCanvasRendererBasics) {
-        if (shouldSelectionClear(this.basicProps, basicProps)) {
-            this.selectionProps = { cursorState: cursorState.createDefault() };
-        }
+    public updateProps(
+        basicProps: HighlightCanvasRendererBasics,
+        posProps: HighlightCanvasRendererPosition,
+        selectProps: HighlightCanvasRendererSelection,
+    ) {
         this.basicProps = basicProps;
-        this.drawScaled(this.draw);
-    }
-
-    public updatePos(posProps: HighlightCanvasRendererPosition) {
         this.posProps = posProps;
-        this.drawScaled(this.draw);
-    }
-
-    public updateSelection(selectProps: HighlightCanvasRendererSelection) {
         this.selectionProps = selectProps;
         this.drawScaled(this.draw);
     }
