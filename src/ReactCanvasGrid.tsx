@@ -169,7 +169,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             0: 1,  // DOM_DELTA_PIXEL: 1-to-1
             1: 16, // DOM_DELTA_LINE: 16 seems a decent guess. See https://stackoverflow.com/q/20110224
         };
-        const scaleFactor = scaleFactors[e.deltaMode];
+        const scaleFactor = scaleFactors[e.deltaMode || 0];
         const willUpdate = this.updateOffset(e.deltaX * scaleFactor, e.deltaY * scaleFactor);
 
         if (willUpdate) {
