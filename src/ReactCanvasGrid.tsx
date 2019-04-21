@@ -1,5 +1,5 @@
+import { batch } from 'instigator';
 import * as React from 'react';
-import { batch } from 'reflex';
 import { CursorStateWithSelection, SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';

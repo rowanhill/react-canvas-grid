@@ -6,6 +6,7 @@
       "lib": ["es5", "dom"],
       "types": ["cypress", "cypress-react-unit-test"],
       "jsx": "react",
+      "esModuleInterop": true,
     },
     "include": [
       "**/*.ts", "**/*.tsx"

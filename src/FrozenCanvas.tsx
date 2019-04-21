@@ -1,5 +1,5 @@
+import { consumer, transformer } from 'instigator';
 import * as React from 'react';
-import { consumer, transformer } from 'reflex';
 import { FrozenCanvasRenderer, FrozenCanvasRendererBasics, FrozenCanvasRendererPosition } from './frozenCanvasRenderer';
 import { GridState } from './gridState';
 import { Coord } from './types';

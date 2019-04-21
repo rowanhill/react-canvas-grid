@@ -1,4 +1,4 @@
-import { activeSource, ReactiveFn, transformer } from 'reflex';
+import { activeSource, ReactiveFn, transformer } from 'instigator';
 import { CursorState } from './cursorState';
 import * as cursorState from './cursorState';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
