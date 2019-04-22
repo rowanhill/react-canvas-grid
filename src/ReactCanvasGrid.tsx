@@ -312,19 +312,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         }
     }
 
-    private calculateCanvasSize = () => {
-        const gridSize = this.gridState.gridSize();
-        const rootSize = this.state.rootSize;
-        // First render is before componentDidMount, so before we have calculated the root element's size.
-        // In this case, we just render as 0x0. componentDidMount will then update state,
-        // and we'll re-render
-        if (rootSize === null) {
-            return { width: 0, height: 0 };
-        }
-
-        return { width: Math.min(rootSize.width, gridSize.width), height: Math.min(rootSize.height, gridSize.height) };
-    }
-
     private calculateCanvasPixel = (event: React.MouseEvent<any, any>) => {
         if (!this.rootRef.current) {
             throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');

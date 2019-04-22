@@ -172,22 +172,4 @@ export class GridGeometry {
             x: colIndex,
         };
     }
-
-    private static getScrollParentClientRect = (scrollParent: HTMLElement|null, screen: Screen): ClientRect => {
-        if (!scrollParent) {
-            throw new Error('Cannot get scroll parent client rect: scrollParent not set');
-        }
-        if (scrollParent === document.body) {
-            return {
-                top: 0,
-                height: screen.availHeight,
-                bottom: screen.availHeight,
-                left: 0,
-                width: screen.availWidth,
-                right: screen.availWidth,
-            };
-        } else {
-            return scrollParent.getBoundingClientRect();
-        }
-    }
 }
