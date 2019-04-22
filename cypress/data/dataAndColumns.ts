@@ -12,7 +12,7 @@ export function createFakeDataAndColumns<T>(numRows: number, numCols: number, da
     const rows: Array<DataRow<T>> = [];
     for (let i = 0; i < numRows; i++) {
         const row: DataRow<T> = {};
-        for (let j = 0; j < numRows; j++) {
+        for (let j = 0; j < numCols; j++) {
             row[`col-${j}`] = {
                 getText: () => `${i + 1}x${j + 1}`,
                 data: dataGen(j, i),
