@@ -7,6 +7,8 @@ export class CommonCanvasRenderer<T> {
     protected readonly context: CanvasRenderingContext2D;
     protected readonly dpr: number;
 
+    private queuedRender: number | null = null;
+
     constructor(canvas: HTMLCanvasElement, dpr: number, alpha: boolean) {
         this.canvas = canvas;
         const context = this.canvas.getContext('2d', { alpha });
@@ -18,12 +20,20 @@ export class CommonCanvasRenderer<T> {
     }
 
     public drawScaled(draw: () => void) {
-        this.context.scale(this.dpr, this.dpr);
-        try {
-            draw();
-        } finally {
-            this.context.scale(1 / this.dpr, 1 / this.dpr);
+        if (this.queuedRender !== null) {
+            return;
         }
+
+        this.queuedRender = window.requestAnimationFrame(() => {
+            this.context.scale(this.dpr, this.dpr);
+            try {
+                draw();
+            } finally {
+                this.context.scale(1 / this.dpr, 1 / this.dpr);
+
+                this.queuedRender = null;
+            }
+        });
     }
 
     public drawCell(cell: CellDef<T>, cellBounds: ClientRect, metadata: CustomDrawCallbackMetadata) {

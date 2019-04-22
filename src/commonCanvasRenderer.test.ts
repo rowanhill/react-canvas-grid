@@ -1,4 +1,5 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
+import { execRaf, mockRaf, resetRaf } from './rafTestHelper';
 
 describe('CommonCanvasRenderer', () => {
     beforeEach(() => {
@@ -13,10 +14,13 @@ describe('CommonCanvasRenderer', () => {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
         renderer = new CommonCanvasRenderer<null>(mockCanvas, dpr, false);
+
+        mockRaf();
     });
 
     afterEach(() => {
         jest.resetAllMocks(); // reset spies
+        resetRaf();
     });
 
     const dpr = 2;
@@ -27,6 +31,7 @@ describe('CommonCanvasRenderer', () => {
     describe('drawScaled', () => {
         it('scales the context and reduces the scale to 1 again', () => {
             renderer.drawScaled(() => { /* no op */});
+            execRaf();
 
             expect(mockContext.scale).toHaveBeenCalledWith(dpr, dpr);
             expect(mockContext.scale).toHaveBeenCalledWith(1 / dpr, 1 / dpr);

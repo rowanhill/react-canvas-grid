@@ -1,4 +1,5 @@
 import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
+import { execRaf, mockRaf, resetRaf } from './rafTestHelper';
 import { CellDef, ColumnDef, DataRow } from './types';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
@@ -57,10 +58,13 @@ describe('MainCanvasRenderer', () => {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
         renderer = new MainCanvasRenderer<null>(mockCanvas, props, dpr);
+
+        mockRaf();
     });
 
     afterEach(() => {
         jest.resetAllMocks(); // reset spies
+        resetRaf();
     });
 
     const dpr = 2;
@@ -114,6 +118,7 @@ describe('MainCanvasRenderer', () => {
                 jest.spyOn(renderer, 'drawCell');
 
                 renderer.updateProps(props, shiftedPosProps);
+                execRaf();
 
                 expect(renderer.drawCell).toHaveBeenCalledTimes(18);
                 getDrawnCellRects().forEach((r) => {
@@ -143,8 +148,10 @@ describe('MainCanvasRenderer', () => {
                 jest.spyOn(renderer, 'shiftExistingCanvas');
                 const newProps = getNewPosProps(3, 5);
                 renderer.updateProps(props, posProps);
+                execRaf();
 
                 renderer.updateProps(props, newProps);
+                execRaf();
 
                 expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
                 expect(renderer.drawNewBorderBackground)
@@ -157,8 +164,10 @@ describe('MainCanvasRenderer', () => {
                 jest.spyOn(renderer, 'drawWholeBorderBackground');
                 const newProps = calcProps({...normalisedProps, borderWidth: 2});
                 renderer.updateProps(props, posProps);
+                execRaf();
 
                 renderer.updateProps(newProps, posProps);
+                execRaf();
 
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
                 expect(renderer.drawNewBorderBackground).not.toHaveBeenCalled();
@@ -169,9 +178,11 @@ describe('MainCanvasRenderer', () => {
                 it('redraws cells on the bottom when scrolling down', () => {
                     const newProps = getNewPosProps(0, 5);
                     renderer.updateProps(props, posProps);
+                    execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
                     renderer.updateProps(props, newProps);
+                    execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
@@ -182,9 +193,11 @@ describe('MainCanvasRenderer', () => {
                 it('redraws cells on the top when scrolling up', () => {
                     const newProps = getNewPosProps(0, -5);
                     renderer.updateProps(props, posProps);
+                    execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
                     renderer.updateProps(props, newProps);
+                    execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
@@ -195,9 +208,11 @@ describe('MainCanvasRenderer', () => {
                 it('redraws cells on the right when scrolling right`', () => {
                     const newProps = getNewPosProps(5, 0);
                     renderer.updateProps(props, posProps);
+                    execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
                     renderer.updateProps(props, newProps);
+                    execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {
@@ -208,9 +223,11 @@ describe('MainCanvasRenderer', () => {
                 it('redraws cells on the left when scrolling left`', () => {
                     const newProps = getNewPosProps(-5, 0);
                     renderer.updateProps(props, posProps);
+                    execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
                     renderer.updateProps(props, newProps);
+                    execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {
