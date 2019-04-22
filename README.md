@@ -15,7 +15,6 @@ particular goals are:
 There was also originally a goal of making use of browser-native scrolling, although that ultimately wasn't quite tennable. :man_shrugging:
 
 ## TODO :memo:
-* Scrollbar UI tweaks (e.g. highlight on mouseover)
 * Move mouse event handling to window (i.e. outside component bounds)
 * Middle-click "auto-scrolling"
 * Scroll-to-cell support (for integration with a 'find' tool)

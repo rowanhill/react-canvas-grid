@@ -205,17 +205,23 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
         if (this.mouseDragOnScrollbar(coord)) {
             return;
+        } else if (this.mouseDragOnGrid(event)) {
+            return;
+        } else {
+            this.mouseHoverOnScrollbar(coord);
         }
-
-        this.mouseDragOnGrid(event);
     }
 
-    private onMouseUp = () => {
-        if (this.mouseUpOnScrollbar()) {
-            return;
-        }
+    private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        batch(() => {
+            if (this.mouseUpOnScrollbar()) {
+                const coord = this.calculateCanvasPixel(event);
+                this.mouseHoverOnScrollbar(coord);
+                return;
+            }
 
-        this.mouseUpOnGrid();
+            this.mouseUpOnGrid();
+        });
     }
 
     private updateOffsetByDelta = (deltaX: number, deltaY: number): boolean => {
@@ -316,12 +322,12 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         return true;
     }
 
-    private mouseDragOnGrid = (event: React.MouseEvent<any, any>) => {
+    private mouseDragOnGrid = (event: React.MouseEvent<any, any>): boolean => {
         if (!isLeftButton(event)) {
-            return;
+            return false;
         }
         if (!this.gridState.cursorState().selection) {
-            return;
+            return false;
         }
         const oldCursorState: CursorStateWithSelection = this.gridState.cursorState() as CursorStateWithSelection;
         const gridCoords = this.calculateGridCellCoords(event);
@@ -335,6 +341,17 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             }
         }
         this.gridState.cursorState(newCursorState);
+        return true;
+    }
+
+    private mouseHoverOnScrollbar = (coord: Coord) => {
+        const hoveredScrollbar = ScrollbarGeometry.getHitScrollBar(
+            coord,
+            this.gridState.horizontalScrollbarPos(),
+            this.gridState.verticalScrollbarPos(),
+        );
+
+        this.gridState.hoveredScrollbar(hoveredScrollbar);
     }
 
     private mouseUpOnScrollbar = (): boolean => {

@@ -5,6 +5,7 @@ import {
     HighlightCanvasRenderer,
     HighlightCanvasRendererBasics,
     HighlightCanvasRendererPosition,
+    HighlightCanvasRendererScrollbar,
     HighlightCanvasRendererSelection,
 } from './highlightCanvasRenderer';
 
@@ -80,19 +81,27 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             borderWidth,
         }));
 
-        const posProps = transformer([
-            gridState.gridOffset,
+        const scrollProps = transformer([
             gridState.horizontalScrollbarPos,
             gridState.verticalScrollbarPos,
+            gridState.hoveredScrollbar,
+        ], (
+            horizontalScrollbarPos,
+            verticalScrollbarPos,
+            hoveredScrollbar,
+        ): HighlightCanvasRendererScrollbar => ({
+            horizontalScrollbarPos,
+            verticalScrollbarPos,
+            hoveredScrollbar,
+        }));
+
+        const posProps = transformer([
+            gridState.gridOffset,
         ],
         (
             gridOffset,
-            horizontalScrollbarPos,
-            verticalScrollbarPos,
         ): HighlightCanvasRendererPosition => ({
             gridOffset,
-            horizontalScrollbarPos,
-            verticalScrollbarPos,
         }));
 
         const selectionProps = transformer(
@@ -100,10 +109,12 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             (cursorState): HighlightCanvasRendererSelection => ({ cursorState}));
 
         this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
-        consumer([basicProps, posProps, selectionProps], (newBasicProps, newPosProps, newSelectionProps) => {
-            if (this.renderer) {
-                this.renderer.updateProps(newBasicProps, newPosProps, newSelectionProps);
-            }
-        });
+        consumer(
+            [basicProps, posProps, scrollProps, selectionProps],
+            (newBasicProps, newPosProps, newScrollProps, newSelectionProps) => {
+                if (this.renderer) {
+                    this.renderer.updateProps(newBasicProps, newPosProps, newScrollProps, newSelectionProps);
+                }
+            });
     }
 }

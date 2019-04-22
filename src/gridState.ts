@@ -19,6 +19,7 @@ export class GridState<T> {
     public rootSize: ReactiveFn<Size | null>;
     public gridOffset: ReactiveFn<Coord>;
     public cursorState: ReactiveFn<CursorState>;
+    public hoveredScrollbar: ReactiveFn<'x'|'y'|null>;
 
     // Grid geometry derived properties
     public columnBoundaries: ReactiveFn<ColumnBoundary[]>;
@@ -53,6 +54,7 @@ export class GridState<T> {
         this.rootSize = activeSource<Size|null>(null);
         this.gridOffset = activeSource({ x: 0, y: 0 });
         this.cursorState = activeSource(cursorState.createDefault());
+        this.hoveredScrollbar = activeSource<'x'|'y'|null>(null);
 
         this.columnBoundaries = transformer([this.columns, this.borderWidth], GridGeometry.calculateColumnBoundaries);
         this.gridSize = transformer(
