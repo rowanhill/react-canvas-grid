@@ -261,6 +261,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private mouseDownOnGrid = (event: React.MouseEvent<any, any>) => {
+        if (!isLeftButton(event)) {
+            return;
+        }
+
         const gridCoords = this.calculateGridCellCoords(event);
         const newCursorState = cursorState.startDrag(this.gridState.cursorState(), gridCoords);
         if (this.props.onSelectionChangeStart) {
@@ -313,14 +317,13 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private mouseDragOnGrid = (event: React.MouseEvent<any, any>) => {
+        if (!isLeftButton(event)) {
+            return;
+        }
         if (!this.gridState.cursorState().selection) {
             return;
         }
         const oldCursorState: CursorStateWithSelection = this.gridState.cursorState() as CursorStateWithSelection;
-        // tslint:disable-next-line: no-bitwise
-        if ((event.buttons & 1) === 0) {
-            return;
-        }
         const gridCoords = this.calculateGridCellCoords(event);
         const newCursorState = cursorState.updateDrag(oldCursorState, gridCoords);
         if (this.props.onSelectionChangeUpdate) {
@@ -380,4 +383,9 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
 function intBetween(num: number, min: number, max: number) {
     return Math.floor(Math.max(Math.min(num, max), min));
+}
+
+function isLeftButton(event: React.MouseEvent<any, any>): boolean {
+    // tslint:disable-next-line: no-bitwise
+    return (event.buttons & 1) === 1;
 }

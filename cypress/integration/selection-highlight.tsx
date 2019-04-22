@@ -48,7 +48,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
             release: boolean = false,
         ) {
             cy.get('#rcg-holder canvas').eq(1)
-                .trigger('mousedown', 'center', { force: true })
+                .trigger('mousedown', 'center', { buttons: 1, force: true })
                 .trigger('mousemove', finalPos, { buttons: 1, force: true });
             if (release) {
                 cy.get('#rcg-holder canvas').eq(1)

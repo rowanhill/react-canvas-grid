@@ -39,7 +39,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
     it('fires onSelectionChangeStart on mouse down', () => {
         cy.get('#rcg-holder canvas').eq(1)
-            .trigger('mousedown', 'center', { force: true })
+            .trigger('mousedown', 'center', { buttons: 1, force: true })
             .then(() => expect(startStub).to.be.calledOnce);
     });
 
@@ -52,14 +52,14 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
     it('fires onSelectChangeUpdate when mousing over a new cell', () => {
         cy.get('#rcg-holder canvas').eq(1)
-            .trigger('mousedown', 'center', { force: true })
+            .trigger('mousedown', 'center', { buttons: 1, force: true })
             .trigger('mousemove', 'right', { buttons: 1, force: true })
             .then(() => expect(updateStub).to.be.calledOnce);
     });
 
     it('does not fire onSelectChangeUpdate when moving the mouse within the same cell', () => {
         cy.get('#rcg-holder canvas').eq(1)
-            .trigger('mousedown', 5, 5, { force: true })
+            .trigger('mousedown', 5, 5, { buttons: 1, force: true })
             .trigger('mousemove', 6, 6, { buttons: 1, force: true })
             .then(() => expect(updateStub).not.to.be.called);
     });
