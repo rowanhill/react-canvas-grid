@@ -1,6 +1,5 @@
-import { GridGeometry, ColumnBoundary } from './gridGeometry';
-import { ReactCanvasGridProps } from './ReactCanvasGrid';
-import { Coord } from './types';
+import { ColumnBoundary, GridGeometry } from './gridGeometry';
+import { Coord, Size } from './types';
 
 describe('GridGeomtry', () => {
     beforeEach(() => {
@@ -251,6 +250,156 @@ describe('GridGeomtry', () => {
                 root);
 
             expect(coords).toEqual({ x: 1, y: 1 });
+        });
+    });
+
+    describe('calculateGridOffsetForFocusedColumn', () => {
+        it('returns the old offset if the focused column spans the view', () => {
+            const colBoundaries: ColumnBoundary[] = [
+                { left: 0, right: 10 },
+                { left: 11, right: 811 },
+                { left: 812, right: 822 },
+            ];
+            const oldOffset: Coord = { x: 50, y: 0 };
+            const canvasSize: Size = { width: 500, height: 400 };
+            const frozenColsWidth = 0;
+            const focusedColIndex = 1;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual(oldOffset);
+        });
+
+        it('returns the old offset if the focused column is within the view', () => {
+            const colBoundaries: ColumnBoundary[] = [
+                { left: 0, right: 100 },
+                { left: 101, right: 201 },
+                { left: 202, right: 302 },
+            ];
+            const oldOffset: Coord = { x: 50, y: 0 };
+            const canvasSize: Size = { width: 200, height: 400 };
+            const frozenColsWidth = 0;
+            const focusedColIndex = 1;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual(oldOffset);
+        });
+
+        it('aligns the focused column to the left (right of the frozen cols) when focused col is to left', () => {
+            const colBoundaries: ColumnBoundary[] = [
+                { left: 0, right: 50 },
+                { left: 51, right: 500 },
+                { left: 501, right: 601 },
+                { left: 602, right: 1500 },
+            ];
+            const oldOffset: Coord = { x: 620, y: 0 };
+            const canvasSize: Size = { width: 200, height: 400 };
+            const frozenColsWidth = 50;
+            const focusedColIndex = 2;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual({ x: (501 - 50), y: 0 });
+        });
+
+        it('aligns the focused column to the right when focused col is to the right', () => {
+            const colBoundaries: ColumnBoundary[] = [
+                { left: 0, right: 100 },
+                { left: 101, right: 201 },
+                { left: 202, right: 302 },
+            ];
+            const oldOffset: Coord = { x: 50, y: 0 };
+            const canvasSize: Size = { width: 100, height: 400 };
+            const frozenColsWidth = 0;
+            const focusedColIndex = 1;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual({ x: 101, y: 0 });
+        });
+
+        it('returns a minimum x offset of 0, even when trying to bring a frozen col into view', () => {
+            const colBoundaries: ColumnBoundary[] = [
+                { left: 0, right: 50 },
+                { left: 51, right: 500 },
+                { left: 501, right: 601 },
+                { left: 602, right: 1500 },
+            ];
+            const oldOffset: Coord = { x: 620, y: 0 };
+            const canvasSize: Size = { width: 200, height: 400 };
+            const frozenColsWidth = 50;
+            const focusedColIndex = 0;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual({ x: 0, y: 0 });
+        });
+
+        it('returns the old offset if the focusedColIndex is < 0', () => {
+            const colBoundaries: ColumnBoundary[] = [{ left: 0, right: 50 }];
+            const oldOffset: Coord = { x: 620, y: 0 };
+            const canvasSize: Size = { width: 200, height: 400 };
+            const frozenColsWidth = 0;
+            const focusedColIndex = -1;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual(oldOffset);
+        });
+
+        it('returns the old offset if the focusedColIndex is higher than the current highest column index', () => {
+            const colBoundaries: ColumnBoundary[] = [{ left: 0, right: 50 }];
+            const oldOffset: Coord = { x: 620, y: 0 };
+            const canvasSize: Size = { width: 200, height: 400 };
+            const frozenColsWidth = 0;
+            const focusedColIndex = 1;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+            );
+
+            expect(offset).toEqual(oldOffset);
         });
     });
 });

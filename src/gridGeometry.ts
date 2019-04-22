@@ -125,6 +125,35 @@ export class GridGeometry {
         }
     }
 
+    public static calculateGridOffsetForFocusedColumn = (
+        oldOffset: Coord,
+        canvasSize: Size,
+        frozenColsWidth: number,
+        focusedColIndex: number,
+        columnBoundaries: ColumnBoundary[],
+    ): Coord => {
+        if (focusedColIndex < 0 || focusedColIndex >= columnBoundaries.length) {
+            // The focused column index is invalid, so ignore it
+            return oldOffset;
+        }
+        const focusedBoundaries = columnBoundaries[focusedColIndex];
+        const viewLeft = oldOffset.x + frozenColsWidth;
+        const viewRight = oldOffset.x + canvasSize.width;
+        if (focusedBoundaries.left < viewLeft && focusedBoundaries.right > viewRight) {
+            // The focused column is wider that the canvas, but already visible - no change needed
+            return oldOffset;
+        } else if (focusedBoundaries.left < viewLeft) {
+            // The focused column is to the left, so move offset so it's the leftmost column
+            return { x: Math.max(focusedBoundaries.left - frozenColsWidth, 0), y: oldOffset.y };
+        } else if (focusedBoundaries.right > viewRight) {
+            // The focused column is to the right, so move offset so it's the rightmost column
+            return { x: focusedBoundaries.right - canvasSize.width, y: oldOffset.y };
+        } else {
+            // Otherwise, the focused column must be in view, so no change is needed
+            return oldOffset;
+        }
+    }
+
     public static windowPixelToCanvasPixel = ({x, y}: Coord, root: HTMLDivElement): Coord => {
         const rootClientRect = root.getBoundingClientRect();
         return {

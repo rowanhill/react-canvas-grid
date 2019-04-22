@@ -27,6 +27,7 @@ interface DefaultedProps {
     borderWidth: number;
     frozenRows: number;
     frozenCols: number;
+    focusedColIndex: number | null;
 }
 
 export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<DefaultedProps>;
@@ -43,6 +44,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         borderWidth: 1,
         frozenRows: 0,
         frozenCols: 0,
+        focusedColIndex: null,
     };
 
     private readonly rootRef: React.RefObject<HTMLDivElement> = React.createRef();
@@ -108,6 +110,17 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             const truncatedOffset = GridGeometry.truncateGridOffset(this.gridState.gridOffset(), gridSize, canvasSize);
             if (truncatedOffset) {
                 this.gridState.gridOffset(truncatedOffset);
+            }
+
+            if (this.props.focusedColIndex !== null && this.props.focusedColIndex !== prevProps.focusedColIndex) {
+                const focusedOffset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                    this.gridState.gridOffset(),
+                    canvasSize,
+                    this.gridState.frozenColsWidth(),
+                    this.props.focusedColIndex,
+                    this.gridState.columnBoundaries(),
+                );
+                this.gridState.gridOffset(focusedOffset);
             }
         });
     }

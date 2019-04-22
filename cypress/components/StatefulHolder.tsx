@@ -5,6 +5,8 @@ import { createFakeDataAndColumns } from '../data/dataAndColumns';
 interface HolderState<T> {
     columns: ColumnDef[];
     data: Array<DataRow<T>>;
+    focusedColIndex: number | null;
+    frozenCols: number;
 }
 
 interface HolderProps<T> {
@@ -20,6 +22,8 @@ export class Holder<T> extends React.Component<HolderProps<T>, HolderState<T>> {
         this.state = {
             columns: dataAndCols.columns,
             data: dataAndCols.rows,
+            focusedColIndex: null,
+            frozenCols: 0,
         };
     }
 
@@ -31,6 +35,8 @@ export class Holder<T> extends React.Component<HolderProps<T>, HolderState<T>> {
                 data={this.state.data}
                 columns={this.state.columns}
                 rowHeight={20}
+                focusedColIndex={this.state.focusedColIndex}
+                frozenCols={this.state.frozenCols}
             />
         );
     }

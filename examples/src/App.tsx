@@ -125,6 +125,7 @@ interface AppState {
   data: Array<DataRow<AllCellDataTypes>>;
   selectedRange: SelectRange | null;
   isDragging: boolean;
+  focusedCol: number | null;
 }
 
 class App extends Component<{}, AppState> {
@@ -135,10 +136,18 @@ class App extends Component<{}, AppState> {
       data: createData(numColsLarge),
       selectedRange: null,
       isDragging: false,
+      focusedCol: null,
     };
   }
 
   public render() {
+    const colHeaders = this.state.colDefs.map((cd) => {
+      const headerRow = this.state.data[0];
+      const headerCell = headerRow[cd.fieldName];
+      const data = headerCell.data;
+      const text = (headerCell as any).text || (headerCell as any).getText(data);
+      return text;
+    });
     return (
       <React.Fragment>
         <div className="App">
@@ -154,6 +163,13 @@ class App extends Component<{}, AppState> {
             <button onClick={this.replaceDataLarge}>Replace data (Large)</button>
             <button onClick={this.replaceDataSmall}>Replace data (Small)</button>
             <button onClick={this.updateCell}>Update cell</button>
+            <label>Focus column:</label>
+            <select onChange={this.focusColumn} defaultValue={'none'}>
+              <option value={'none'}>None</option>
+              {colHeaders.map((text, i) => (
+                <option key={i} value={i}>{i} ({text})</option>
+              ))}
+            </select>
           </header>
           <div style={{height: '600px', width: '800px', overflow: 'scroll'}}>
             <div style={{height: '80px', backgroundColor: 'blue'}}>
@@ -172,6 +188,7 @@ class App extends Component<{}, AppState> {
                 onSelectionChangeUpdate={this.selectionChanged}
                 onSelectionChangeEnd={this.selectionFinished}
                 onSelectionCleared={this.selectionCleared}
+                focusedColIndex={this.state.focusedCol}
               />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
@@ -193,6 +210,14 @@ class App extends Component<{}, AppState> {
 
   private selectionCleared = () => {
     this.setState({ selectedRange: null, isDragging: false });
+  }
+
+  private focusColumn = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (event.target.value === 'none') {
+      this.setState({ focusedCol: null });
+    } else {
+      this.setState({ focusedCol: parseInt(event.target.value, 10) });
+    }
   }
 
   private replaceDataLarge = () => {
