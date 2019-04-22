@@ -75,7 +75,6 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
 
         this.renderer = new MainCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
 
-        // TODO: Needs some kind of rAF throttling
         consumer([basicProps, posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {
                 this.renderer.updateProps(newBasicProps, newPosProps);
