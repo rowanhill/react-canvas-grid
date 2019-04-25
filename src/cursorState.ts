@@ -17,6 +17,10 @@ export interface SelectRange {
 
 export type CursorStateWithSelection = CursorState & { selection: SelectionState };
 
+export function hasSelectionState(cursorState: CursorState): cursorState is CursorStateWithSelection {
+    return cursorState.selection !== null;
+}
+
 export function createDefault(): CursorState {
     return {
         editCursorCell: null,

@@ -96,5 +96,14 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
             cy.get('#rcg-holder')
                 .matchImageSnapshot('simple-grid-drag-release-move');
         });
+
+        it('when clicking then shift-clicking elsewhere', () => {
+            cy.get('#rcg-holder canvas').eq(1)
+                .click('left', { force: true })
+                .trigger('mousedown', 'center', { force: true, buttons: 1, shiftKey: true })
+                .trigger('mouseup', 'center', { force: true, buttons: 1, shiftKey: true });
+            cy.get('#rcg-holder')
+                .matchImageSnapshot('selection-highlight-click-shift-click');
+        });
     });
 });

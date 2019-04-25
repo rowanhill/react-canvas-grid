@@ -35,30 +35,46 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
         cy.get('canvas').eq(0)
             .invoke('width')
             .should('be.greaterThan', 0);
+
+        cy.get('#rcg-holder canvas').eq(1).as('Canvas');
     });
 
     it('fires onSelectionChangeStart on mouse down', () => {
-        cy.get('#rcg-holder canvas').eq(1)
+        cy.get('@Canvas')
             .trigger('mousedown', 'center', { buttons: 1, force: true })
             .then(() => expect(startStub).to.be.calledOnce);
     });
 
+    it('fires onSelectionChangeStart on mouse down with shift but no previous selection state', () => {
+        cy.get('@Canvas')
+            .trigger('mousedown', 'center', { buttons: 1, shiftKey: true, force: true })
+            .then(() => expect(startStub).to.be.calledOnce);
+    });
+
+    it('fires onSelectionChangeUpdate on mouse down with shift', () => {
+        cy.get('@Canvas').click('left', { force: true });
+
+        cy.get('@Canvas')
+            .trigger('mousedown', 'center', { buttons: 1, shiftKey: true, force: true })
+            .then(() => expect(updateStub).to.be.calledOnce);
+    });
+
     it('fires onSelectChangeStart and onSelectChangeEnd on click', () => {
-        cy.get('#rcg-holder canvas').eq(1)
+        cy.get('@Canvas')
             .click({ force: true })
             .then(() => expect(startStub).to.be.calledOnce)
             .then(() => expect(endStub).to.be.calledOnce);
     });
 
     it('fires onSelectChangeUpdate when mousing over a new cell', () => {
-        cy.get('#rcg-holder canvas').eq(1)
+        cy.get('@Canvas')
             .trigger('mousedown', 'center', { buttons: 1, force: true })
             .trigger('mousemove', 'right', { buttons: 1, force: true })
             .then(() => expect(updateStub).to.be.calledOnce);
     });
 
     it('does not fire onSelectChangeUpdate when moving the mouse within the same cell', () => {
-        cy.get('#rcg-holder canvas').eq(1)
+        cy.get('@Canvas')
             .trigger('mousedown', 5, 5, { buttons: 1, force: true })
             .trigger('mousemove', 6, 6, { buttons: 1, force: true })
             .then(() => expect(updateStub).not.to.be.called);
