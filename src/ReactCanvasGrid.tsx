@@ -244,8 +244,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         const canvasSize = this.gridState.canvasSize();
         const gridSize = this.gridState.gridSize();
         const gridOffset = this.gridState.gridOffset();
-        const newX = intBetween(gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
-        const newY = intBetween(gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
+        const newX = canvasPixelIntBetween(gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
+        const newY = canvasPixelIntBetween(gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
 
         if (newX === gridOffset.x && newY === gridOffset.y) {
             // We won't be moving, so return false
@@ -411,8 +411,13 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 }
 
-function intBetween(num: number, min: number, max: number) {
-    return Math.floor(Math.max(Math.min(num, max), min));
+/**
+ * Returns a number bounded by min and max which represents an integer number of *canvas pixels*.
+ * This may be a fractional number of *css pixels*, depending on the devicePixelRatio
+ */
+function canvasPixelIntBetween(num: number, min: number, max: number) {
+    const dpr = window.devicePixelRatio;
+    return Math.floor(Math.max(Math.min(num, max), min) * dpr) / dpr;
 }
 
 function isLeftButton(event: React.MouseEvent<any, any>): boolean {
