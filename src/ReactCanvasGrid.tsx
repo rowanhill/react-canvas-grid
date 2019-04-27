@@ -16,9 +16,9 @@ interface RequiredProps<T> {
     data: Array<DataRow<T>>;
     rowHeight: number;
 
-    onSelectionChangeStart?: (selectRange: SelectRange) => void;
+    onSelectionChangeStart?: (selectRange: SelectRange | null) => void;
     onSelectionChangeUpdate?: (selectRange: SelectRange) => void;
-    onSelectionChangeEnd?: (selectRange: SelectRange) => void;
+    onSelectionChangeEnd?: (selectRange: SelectRange | null) => void;
     onSelectionCleared?: () => void;
 }
 interface DefaultedProps {
@@ -369,19 +369,27 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
     private mouseUpOnGrid = () => {
         const currentCursorState = this.gridState.cursorState();
-        if (!hasSelectionState(currentCursorState)) {
-            return;
-        }
 
         if (this.props.onSelectionChangeEnd) {
-            this.props.onSelectionChangeEnd(currentCursorState.selection.selectedRange);
+            this.props.onSelectionChangeEnd(
+                hasSelectionState(currentCursorState) ?
+                    currentCursorState.selection.selectedRange :
+                    null,
+            );
         }
     }
 
     private startSelection = (gridCoords: Coord) => {
-        const newCursorState = cursorState.startDrag(this.gridState.cursorState(), gridCoords);
+        const isOnFrozenCell = gridCoords.x < this.props.frozenCols || gridCoords.y < this.props.frozenRows;
+        const newCursorState = isOnFrozenCell ?
+            cursorState.createDefault() :
+            cursorState.startDrag(this.gridState.cursorState(), gridCoords);
         if (this.props.onSelectionChangeStart) {
-            this.props.onSelectionChangeStart(newCursorState.selection.selectedRange);
+            this.props.onSelectionChangeStart(
+                hasSelectionState(newCursorState) ?
+                    newCursorState.selection.selectedRange :
+                    null,
+            );
         }
         this.gridState.cursorState(newCursorState);
     }
@@ -391,7 +399,13 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         if (!hasSelectionState(oldCursorState)) {
             return;
         }
-        const newCursorState = cursorState.updateDrag(oldCursorState, gridCoords);
+
+        const truncatedCoords: Coord = {
+            x: Math.max(gridCoords.x, this.props.frozenCols),
+            y: Math.max(gridCoords.y, this.props.frozenRows),
+        };
+
+        const newCursorState = cursorState.updateDrag(oldCursorState, truncatedCoords);
         if (this.props.onSelectionChangeUpdate) {
             const rangeChanged = cursorState.isSelectRangeDifferent(
                 oldCursorState.selection.selectedRange,

@@ -200,11 +200,11 @@ class App extends Component<{}, AppState> {
     );
   }
 
-  private selectionChanged = (selectedRange: SelectRange) => {
+  private selectionChanged = (selectedRange: SelectRange | null) => {
     this.setState({ selectedRange, isDragging: true });
   }
 
-  private selectionFinished = (selectedRange: SelectRange) => {
+  private selectionFinished = (selectedRange: SelectRange | null) => {
     this.setState({ selectedRange, isDragging: false });
   }
 
