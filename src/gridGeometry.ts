@@ -125,6 +125,18 @@ export class GridGeometry {
         }
     }
 
+    /**
+     * Takes an offset in CSS pixels and returns an offset also in CSS pixels, but quantised to
+     * values that produce an integer offset in canvas pixels. This avoids the canvas elements trying
+     * to do any sub-pixel rendering, and thus avoids bluriness in the grid.
+     */
+    public static quantiseGridOffset = (offset: Coord, dpr: number) => {
+        return {
+            x: Math.floor(offset.x * dpr) / dpr,
+            y: Math.floor(offset.y * dpr) / dpr,
+        };
+    }
+
     public static calculateGridOffsetForFocusedColumn = (
         oldOffset: Coord,
         canvasSize: Size,

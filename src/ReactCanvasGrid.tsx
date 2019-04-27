@@ -109,7 +109,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             const canvasSize = this.gridState.canvasSize();
             const truncatedOffset = GridGeometry.truncateGridOffset(this.gridState.gridOffset(), gridSize, canvasSize);
             if (truncatedOffset) {
-                this.gridState.gridOffset(truncatedOffset);
+                this.gridState.gridOffsetRaw(truncatedOffset);
             }
 
             if (this.props.focusedColIndex !== null && this.props.focusedColIndex !== prevProps.focusedColIndex) {
@@ -120,7 +120,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     this.props.focusedColIndex,
                     this.gridState.columnBoundaries(),
                 );
-                this.gridState.gridOffset(focusedOffset);
+                this.gridState.gridOffsetRaw(focusedOffset);
             }
         });
     }
@@ -244,15 +244,15 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         const canvasSize = this.gridState.canvasSize();
         const gridSize = this.gridState.gridSize();
         const gridOffset = this.gridState.gridOffset();
-        const newX = canvasPixelIntBetween(gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
-        const newY = canvasPixelIntBetween(gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
+        const newX = numberBetween(gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
+        const newY = numberBetween(gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
 
         if (newX === gridOffset.x && newY === gridOffset.y) {
             // We won't be moving, so return false
             return false;
         }
 
-        this.gridState.gridOffset({ x: newX, y: newY });
+        this.gridState.gridOffsetRaw({ x: newX, y: newY });
 
         // We did move, so return true
         return true;
@@ -328,9 +328,9 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             values.canvasLen,
         );
         if (this.draggedScrollbar.bar === 'x') {
-            this.gridState.gridOffset({ x: newOffset, y: this.gridState.gridOffset().y });
+            this.gridState.gridOffsetRaw({ x: newOffset, y: this.gridState.gridOffset().y });
         } else {
-            this.gridState.gridOffset({ x: this.gridState.gridOffset().x, y: newOffset });
+            this.gridState.gridOffsetRaw({ x: this.gridState.gridOffset().x, y: newOffset });
         }
 
         return true;
@@ -428,13 +428,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 }
 
-/**
- * Returns a number bounded by min and max which represents an integer number of *canvas pixels*.
- * This may be a fractional number of *css pixels*, depending on the devicePixelRatio
- */
-function canvasPixelIntBetween(num: number, min: number, max: number) {
-    const dpr = window.devicePixelRatio;
-    return Math.floor(Math.max(Math.min(num, max), min) * dpr) / dpr;
+function numberBetween(num: number, min: number, max: number) {
+    return Math.max(Math.min(num, max), min);
 }
 
 function isLeftButton(event: React.MouseEvent<any, any>): boolean {

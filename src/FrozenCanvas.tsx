@@ -14,8 +14,6 @@ export interface FrozenPreviousDrawInfo {
     gridOffset: Coord;
 }
 
-const dpr = window.devicePixelRatio;
-
 export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: FrozenCanvasRenderer<T>|null = null;
@@ -24,8 +22,8 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
         return (
             <canvas
                 ref={this.canvasRef}
-                width={this.props.width * dpr}
-                height={this.props.height * dpr}
+                width={this.props.width * this.props.gridState.dpr()}
+                height={this.props.height * this.props.gridState.dpr()}
                 style={{
                     position: 'absolute',
                     width: `${this.props.width}px`,
@@ -88,7 +86,7 @@ export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
             gridOffset,
         }));
 
-        this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
+        this.renderer = new FrozenCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
 
         consumer([basicProps, posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {

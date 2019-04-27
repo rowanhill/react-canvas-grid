@@ -9,8 +9,6 @@ export interface MainCanvasProps<T> {
     gridState: GridState<T>;
 }
 
-const dpr = window.devicePixelRatio;
-
 export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: MainCanvasRenderer<T>|null = null;
@@ -23,8 +21,8 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
         return (
             <canvas
                 ref={this.canvasRef}
-                width={this.props.width * dpr}
-                height={this.props.height * dpr}
+                width={this.props.width * this.props.gridState.dpr()}
+                height={this.props.height * this.props.gridState.dpr()}
                 style={{
                     position: 'absolute',
                     width: `${this.props.width}px`,
@@ -73,7 +71,7 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             [gridState.gridOffset],
             (gridOffset): MainCanvasRendererPosition => ({ gridOffset }));
 
-        this.renderer = new MainCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
+        this.renderer = new MainCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
 
         consumer([basicProps, posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {

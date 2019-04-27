@@ -16,12 +16,14 @@ export class GridState<T> {
     public frozenCols: ReactiveFn<number>;
 
     // Other inputs
+    public dpr: ReactiveFn<number>;
     public rootSize: ReactiveFn<Size | null>;
-    public gridOffset: ReactiveFn<Coord>;
+    public gridOffsetRaw: ReactiveFn<Coord>; // Based on CSS pixels
     public cursorState: ReactiveFn<CursorState>;
     public hoveredScrollbar: ReactiveFn<'x'|'y'|null>;
 
     // Grid geometry derived properties
+    public gridOffset: ReactiveFn<Coord>; // Quantized to values that result in integer canvas pixel coords
     public columnBoundaries: ReactiveFn<ColumnBoundary[]>;
     public gridSize: ReactiveFn<Size>;
     public canvasSize: ReactiveFn<Size>;
@@ -51,11 +53,13 @@ export class GridState<T> {
         this.frozenRows = activeSource(frozenRows);
         this.frozenCols = activeSource(frozenCols);
 
+        this.dpr = activeSource(window.devicePixelRatio);
         this.rootSize = activeSource<Size|null>(null);
-        this.gridOffset = activeSource({ x: 0, y: 0 });
+        this.gridOffsetRaw = activeSource({ x: 0, y: 0 });
         this.cursorState = activeSource(cursorState.createDefault());
         this.hoveredScrollbar = activeSource<'x'|'y'|null>(null);
 
+        this.gridOffset = transformer([this.gridOffsetRaw, this.dpr], GridGeometry.quantiseGridOffset);
         this.columnBoundaries = transformer([this.columns, this.borderWidth], GridGeometry.calculateColumnBoundaries);
         this.gridSize = transformer(
             [this.data, this.columnBoundaries, this.rowHeight, this.borderWidth],

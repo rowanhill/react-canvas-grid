@@ -15,8 +15,6 @@ export interface HighlightCanvasProps {
     gridState: GridState<any>;
 }
 
-const dpr = window.devicePixelRatio;
-
 export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: HighlightCanvasRenderer|null = null;
@@ -29,8 +27,8 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         return (
             <canvas
                 ref={this.canvasRef}
-                width={this.props.width * dpr}
-                height={this.props.height * dpr}
+                width={this.props.width * this.props.gridState.dpr()}
+                height={this.props.height * this.props.gridState.dpr()}
                 style={{
                     position: 'absolute',
                     width: `${this.props.width}px`,
@@ -108,7 +106,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             [gridState.cursorState],
             (cursorState): HighlightCanvasRendererSelection => ({ cursorState}));
 
-        this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), dpr);
+        this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
         consumer(
             [basicProps, posProps, scrollProps, selectionProps],
             (newBasicProps, newPosProps, newScrollProps, newSelectionProps) => {

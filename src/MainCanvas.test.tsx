@@ -46,7 +46,7 @@ describe('MainCanvas', () => {
         const bc = mount(<MainCanvas {...props} />);
         bc.setProps(props);
 
-        props.gridState.gridOffset({ x: 10, y: 10 });
+        props.gridState.gridOffsetRaw({ x: 10, y: 10 });
 
         expect(mockUpdateProps).toHaveBeenCalled();
     });
