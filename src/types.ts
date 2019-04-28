@@ -20,16 +20,36 @@ interface CellDefCommon<T> {
     renderBackground?: CustomDrawCallback<T>;
     renderText?: CustomDrawCallback<T>;
 }
-interface CellDefWithTextFunction<T> extends CellDefCommon<T> {
+
+interface WithTextFunction<T> {
     getText: (data: T) => string;
 }
-interface CellDefWithTextString<T> extends CellDefCommon<T> {
+interface WithTextString {
     text: string;
 }
-export type CellDef<T> = CellDefWithTextFunction<T> | CellDefWithTextString<T>;
+type TextAccessible<T> = WithTextFunction<T> | WithTextString;
 
-export const cellHasTextFunction = <T> (cell: CellDef<T>): cell is CellDefWithTextFunction<T> => {
-    return !!(cell as CellDefWithTextFunction<T>).getText;
+interface WithSerialisers<T> {
+    editor: {
+        serialise: (data: T) => string;
+        deserialise: (value: string, oldData: T) => T;
+    };
+}
+type Serialisable<T> = WithSerialisers<T> | {};
+
+export type CellDef<T> = CellDefCommon<T> & TextAccessible<T> & Serialisable<T>;
+export type EditableCellDef<T> = CellDef<T> & WithSerialisers<T>;
+
+export const cellHasTextFunction = <T> (cell: CellDef<T>): cell is CellDefCommon<T> & WithTextFunction<T> => {
+    return !!(cell as any).getText;
+};
+
+export const getCellText = <T> (cell: CellDef<T>): string => {
+    return cellHasTextFunction(cell) ? cell.getText(cell.data) : cell.text;
+};
+
+export const cellIsEditable = <T> (cell: CellDef<T>): cell is EditableCellDef<T> => {
+    return !!(cell as EditableCellDef<T>).editor;
 };
 
 export interface DataRow<T> {

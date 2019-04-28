@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { CellDef, ColumnDef, DataRow, ReactCanvasGrid, SelectRange } from 'react-canvas-grid';
+import {
+  CellDataChangeEvent, CellDef, ColumnDef, DataRow, getCellText, ReactCanvasGrid, SelectRange,
+} from 'react-canvas-grid';
 import './App.css';
 
 const numColsLarge = 250;
@@ -78,6 +80,20 @@ function getCustomCellText(data: CustomCellData) {
   }
 }
 
+function serailiseCustomData(data: CustomCellData): string {
+  return (data.shouldReverseText ? '!' : '') + data.text;
+}
+
+function deserialiseCustomData(value: string, oldData: CustomCellData): CustomCellData {
+  const reversed = value.startsWith('!');
+  const text = reversed ? value.slice(1) : value;
+  return {
+    ...oldData,
+    shouldReverseText: reversed,
+    text,
+  };
+}
+
 function createCols(numCols: number) {
   const colDefs: ColumnDef[] = [
     {
@@ -108,12 +124,25 @@ function createData(numCols: number) {
     for (let j = 0; j < numCols; j++) {
       const label = labels[Math.floor(Math.random() * labels.length)];
       const highlight = highlights[Math.floor(Math.random() * highlights.length)];
-      const cell: CustomBgCellDef = {
-        getText: getCustomCellText,
-        data: { bgColour: label.colour, highlight, text: label.text, shouldReverseText: Math.random() < 0.5 },
-        renderBackground: i === 0 ? renderHeaderBackground : renderCellBackground,
-      };
-      row[j.toString()] = cell as CellDef<AllCellDataTypes>;
+      if (i === 0) {
+        const cell: CustomBgCellDef = {
+          getText: getCustomCellText,
+          data: { bgColour: label.colour, highlight, text: label.text, shouldReverseText: Math.random() < 0.5 },
+          renderBackground: renderHeaderBackground,
+        };
+        row[j.toString()] = cell as CellDef<AllCellDataTypes>;
+      } else {
+        const cell: CustomBgCellDef = {
+          getText: getCustomCellText,
+          data: { bgColour: label.colour, highlight, text: label.text, shouldReverseText: Math.random() < 0.5 },
+          renderBackground: renderCellBackground,
+          editor: {
+            serialise: serailiseCustomData,
+            deserialise: deserialiseCustomData,
+          },
+        };
+        row[j.toString()] = cell as CellDef<AllCellDataTypes>;
+      }
     }
     data.push(row);
   }
@@ -144,8 +173,7 @@ class App extends Component<{}, AppState> {
     const colHeaders = this.state.colDefs.map((cd) => {
       const headerRow = this.state.data[0];
       const headerCell = headerRow[cd.fieldName];
-      const data = headerCell.data;
-      const text = (headerCell as any).text || (headerCell as any).getText(data);
+      const text = getCellText(headerCell);
       return text;
     });
     return (
@@ -188,6 +216,7 @@ class App extends Component<{}, AppState> {
                 onSelectionChangeUpdate={this.selectionChanged}
                 onSelectionChangeEnd={this.selectionFinished}
                 onSelectionCleared={this.selectionCleared}
+                onCellDataChanged={this.onCellDataChanged}
                 focusedColIndex={this.state.focusedCol}
               />
             </div>
@@ -251,6 +280,24 @@ class App extends Component<{}, AppState> {
                 text: label.text,
                 shouldReverseText: Math.random() < 0.5,
               },
+            },
+          };
+        } else {
+          return row;
+        }
+      }),
+    });
+  }
+
+  private onCellDataChanged = (event: CellDataChangeEvent<AllCellDataTypes>) => {
+    this.setState({
+      data: this.state.data.map((row, i) => {
+        if (i === event.rowIndex) {
+          return {
+            ...row,
+            [event.fieldName]: {
+              ...row[event.fieldName],
+              data: event.newData,
             },
           };
         } else {

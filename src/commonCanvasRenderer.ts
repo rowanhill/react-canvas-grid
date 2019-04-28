@@ -1,4 +1,4 @@
-import { CellDef, cellHasTextFunction, ColumnDef, CustomDrawCallbackMetadata } from './types';
+import { CellDef, CustomDrawCallbackMetadata, getCellText } from './types';
 
 export const borderColour = 'lightgrey';
 
@@ -60,7 +60,7 @@ export class CommonCanvasRenderer<T> {
         context.fillStyle = 'black';
         context.textBaseline = 'middle';
         const verticalCentre = cellBounds.top + (cellBounds.height / 2);
-        const text = cellHasTextFunction(cell) ? cell.getText(cell.data) : cell.text;
+        const text = getCellText(cell);
         context.fillText(text, cellBounds.left + 2, verticalCentre, cellBounds.width - 4);
     }
 }

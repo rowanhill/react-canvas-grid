@@ -104,6 +104,27 @@ export class GridGeometry {
         );
     }
 
+    public static calculateCellBounds = (
+        colIndex: number,
+        rowIndex: number,
+        rowHeight: number,
+        borderWidth: number,
+        columnBoundaries: ColumnBoundary[],
+        columns: ColumnDef[],
+    ): ClientRect => {
+        const cellLeft = columnBoundaries[colIndex].left;
+        const col = columns[colIndex];
+
+        return {
+            left: cellLeft,
+            top: rowIndex * (rowHeight + borderWidth),
+            right: cellLeft + col.width,
+            bottom: rowIndex * (rowHeight + borderWidth) + rowHeight,
+            width: col.width,
+            height: rowHeight,
+        };
+    }
+
     public static calculateGridOffsetFromFraction = (
         fraction: number,
         gridLength: number,

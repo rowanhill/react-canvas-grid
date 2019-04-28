@@ -1,4 +1,4 @@
-import { batch } from 'instigator';
+import { batch, consumer } from 'instigator';
 import * as React from 'react';
 import { hasSelectionState, SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
@@ -7,9 +7,18 @@ import { GridGeometry } from './gridGeometry';
 import { GridState } from './gridState';
 import { HighlightCanvas } from './HighlightCanvas';
 import { shouldSelectionClear } from './highlightCanvasRenderer';
+import { InlineTextEditor } from './InlineEditor';
 import { MainCanvas } from './MainCanvas';
 import * as ScrollbarGeometry from './scrollbarGeometry';
-import { ColumnDef, Coord, DataRow, Size } from './types';
+import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, Size } from './types';
+
+export interface CellDataChangeEvent<T> {
+    newData: T;
+    cell: EditableCellDef<T>;
+    rowIndex: number;
+    colIndex: number;
+    fieldName: string;
+}
 
 interface RequiredProps<T> {
     columns: ColumnDef[];
@@ -20,6 +29,8 @@ interface RequiredProps<T> {
     onSelectionChangeUpdate?: (selectRange: SelectRange) => void;
     onSelectionChangeEnd?: (selectRange: SelectRange | null) => void;
     onSelectionCleared?: () => void;
+
+    onCellDataChanged?: (event: CellDataChangeEvent<T>) => void;
 }
 interface DefaultedProps {
     cssWidth: string;
@@ -33,11 +44,24 @@ interface DefaultedProps {
 export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<DefaultedProps>;
 export type ReactCanvasGridProps<T> = RequiredProps<T> & DefaultedProps;
 
-interface ReactCanvasGridState {
-    rootSize: Size|null;
+interface EditingCell<T> {
+    cell: EditableCellDef<T>;
+    rowIndex: number;
+    colIndex: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    fieldName: string;
 }
 
-export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps<T>, ReactCanvasGridState> {
+interface ReactCanvasGridState<T> {
+    rootSize: Size|null;
+    gridOffset: Coord;
+    editingCell: EditingCell<T> | null;
+}
+
+export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps<T>, ReactCanvasGridState<T>> {
     public static defaultProps: DefaultedProps = {
         cssWidth: '100%',
         cssHeight: '100%',
@@ -55,9 +79,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
     constructor(props: ReactCanvasGridProps<T>) {
         super(props);
-        this.state = {
-            rootSize: null,
-        };
         this.gridState = new GridState(
             props.columns,
             props.data,
@@ -66,6 +87,11 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             props.frozenRows,
             props.frozenCols,
         );
+        this.state = {
+            rootSize: null,
+            gridOffset: this.gridState.gridOffset(),
+            editingCell: null,
+        };
     }
 
     public componentDidMount() {
@@ -82,6 +108,9 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         this.setState({ rootSize: { width: rootRect.width, height: rootRect.height } }, () => {
             this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
         });
+
+        // Keep the gridState gridOffset and the React state gridOffset in sync
+        consumer([this.gridState.gridOffset], (gridOffset) => this.setState({gridOffset}));
     }
 
     public componentDidUpdate(prevProps: ReactCanvasGridProps<T>) {
@@ -150,10 +179,12 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 onMouseDown={this.onMouseDown}
                 onMouseUp={this.onMouseUp}
                 onMouseMove={this.onMouseMove}
+                onDoubleClick={this.onDoubleClick}
                 style={{
                     position: 'relative',
                     width: this.props.cssWidth,
                     height: this.props.cssHeight,
+                    overflow: 'hidden',
                 }}
             >
                 <MainCanvas<T>
@@ -171,6 +202,18 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     height={canvasSize.height}
                     gridState={this.gridState}
                 />
+                {this.state.editingCell &&
+                    <InlineTextEditor<T>
+                        cell={this.state.editingCell.cell}
+                        left={this.state.editingCell.left}
+                        top={this.state.editingCell.top}
+                        width={this.state.editingCell.width}
+                        height={this.state.editingCell.height}
+                        gridOffset={this.state.gridOffset}
+                        onSubmit={this.stopEditingCell}
+                        onCancel={this.cancelEditingCell}
+                    />
+                }
             </div>
         );
     }
@@ -237,6 +280,11 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         });
     }
 
+    private onDoubleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        const cellCoords = this.calculateGridCellCoords(event);
+        this.startEditingCell(cellCoords);
+    }
+
     private updateOffsetByDelta = (deltaX: number, deltaY: number): boolean => {
         if (!this.state.rootSize) {
             return false;
@@ -281,6 +329,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
     private mouseDownOnGrid = (event: React.MouseEvent<any, any>) => {
         if (!isLeftButton(event)) {
+            return;
+        }
+        if (this.state.editingCell !== null) {
+            // We're editing a cell, so ignore clicks on grid
             return;
         }
 
@@ -340,6 +392,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         if (!isLeftButton(event)) {
             return false;
         }
+        if (this.state.editingCell !== null) {
+            // We're editing a cell, so ignore grid drags
+            return false;
+        }
         if (!hasSelectionState(this.gridState.cursorState())) {
             return false;
         }
@@ -368,6 +424,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private mouseUpOnGrid = () => {
+        if (this.state.editingCell !== null) {
+            // We're editing a cell, so ignore grid clicks
+            return;
+        }
         const currentCursorState = this.gridState.cursorState();
 
         if (this.props.onSelectionChangeEnd) {
@@ -415,6 +475,52 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             }
         }
         this.gridState.cursorState(newCursorState);
+    }
+
+    private startEditingCell = (cellCoords: Coord) => {
+        const cellBounds = GridGeometry.calculateCellBounds(
+            cellCoords.x,
+            cellCoords.y,
+            this.props.rowHeight,
+            this.props.borderWidth,
+            this.gridState.columnBoundaries(),
+            this.props.columns,
+        );
+        const col = this.props.columns[cellCoords.x];
+        const cell = this.props.data[cellCoords.y][col.fieldName];
+        if (!cellIsEditable(cell)) {
+            return;
+        }
+        this.setState({
+            editingCell: {
+                cell,
+                colIndex: cellCoords.x,
+                rowIndex: cellCoords.y,
+                ...cellBounds,
+                fieldName: col.fieldName,
+            },
+        });
+    }
+
+    private cancelEditingCell = () => {
+        this.setState({ editingCell: null });
+    }
+
+    private stopEditingCell = (newData: T) => {
+        if (this.state.editingCell === null) {
+            return;
+        }
+
+        if (this.props.onCellDataChanged) {
+            this.props.onCellDataChanged({
+                cell: this.state.editingCell.cell,
+                colIndex: this.state.editingCell.colIndex,
+                rowIndex: this.state.editingCell.rowIndex,
+                fieldName: this.state.editingCell.fieldName,
+                newData,
+            });
+        }
+        this.setState({ editingCell: null });
     }
 
     private calculateCanvasPixel = (event: React.MouseEvent<any, any>) => {
