@@ -1,4 +1,4 @@
-import { activeSource, ReactiveFn, transformer } from 'instigator';
+import { activeSource, ActiveSource, ReactiveFn, transformer } from 'instigator';
 import { CursorState } from './cursorState';
 import * as cursorState from './cursorState';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
@@ -8,19 +8,19 @@ import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export class GridState<T> {
     // ReactCanvasGrid props
-    public columns: ReactiveFn<ColumnDef[]>;
-    public data: ReactiveFn<Array<DataRow<T>>>;
-    public rowHeight: ReactiveFn<number>;
-    public borderWidth: ReactiveFn<number>;
-    public frozenRows: ReactiveFn<number>;
-    public frozenCols: ReactiveFn<number>;
+    public columns: ActiveSource<ColumnDef[]>;
+    public data: ActiveSource<Array<DataRow<T>>>;
+    public rowHeight: ActiveSource<number>;
+    public borderWidth: ActiveSource<number>;
+    public frozenRows: ActiveSource<number>;
+    public frozenCols: ActiveSource<number>;
 
     // Other inputs
-    public dpr: ReactiveFn<number>;
-    public rootSize: ReactiveFn<Size | null>;
-    public gridOffsetRaw: ReactiveFn<Coord>; // Based on CSS pixels
-    public cursorState: ReactiveFn<CursorState>;
-    public hoveredScrollbar: ReactiveFn<'x'|'y'|null>;
+    public dpr: ActiveSource<number>;
+    public rootSize: ActiveSource<Size | null>;
+    public gridOffsetRaw: ActiveSource<Coord>; // Based on CSS pixels
+    public cursorState: ActiveSource<CursorState>;
+    public hoveredScrollbar: ActiveSource<'x'|'y'|null>;
 
     // Grid geometry derived properties
     public gridOffset: ReactiveFn<Coord>; // Quantized to values that result in integer canvas pixel coords
