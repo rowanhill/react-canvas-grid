@@ -251,5 +251,49 @@ describe('FrozenCanvasRenderer', () => {
 
             expect(renderer.drawCell).toHaveBeenCalledTimes(1);
         });
+
+        it('draws the final row', () => {
+            const props = calcProps({
+                canvasSize: { width: 400, height: 400 },
+                frozenRows: 1,
+                frozenCols: 1,
+                rowHeight: 19,
+                borderWidth: 1,
+                columns: cols(50),
+                data: rows(100),  // final row is 1980 -> 1999
+                dpr,
+            } as NormalisedProps<any>);
+            const posProps: FrozenCanvasRendererPosition = {
+                gridOffset: { x: 100, y: 1608 }, // top of area to draw is 1608 + 390 = 1998
+            };
+            const invalidArea = { top: 390, bottom: 400, left: 0, right: props.frozenColsWidth } as ClientRect;
+            jest.spyOn(renderer, 'drawCell');
+
+            renderer.drawInvalidatedCellsCols(props, posProps, invalidArea);
+
+            expect(renderer.drawCell).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not draw rows beyond the data', () => {
+            const props = calcProps({
+                canvasSize: { width: 400, height: 400 },
+                frozenRows: 1,
+                frozenCols: 1,
+                rowHeight: 19,
+                borderWidth: 1,
+                columns: cols(50),
+                data: rows(100), // final row is 1980 -> 1999
+                dpr,
+            } as NormalisedProps<any>);
+            const posProps: FrozenCanvasRendererPosition = {
+                gridOffset: { x: 100, y: 1609 }, // top of area to draw is 1609 + 390 = 1999
+            };
+            const invalidArea = { top: 390, bottom: 400, left: 0, right: props.frozenColsWidth } as ClientRect;
+            jest.spyOn(renderer, 'drawCell');
+
+            renderer.drawInvalidatedCellsCols(props, posProps, invalidArea);
+
+            expect(renderer.drawCell).not.toHaveBeenCalled();
+        });
     });
 });

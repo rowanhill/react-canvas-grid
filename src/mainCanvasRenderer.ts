@@ -8,12 +8,13 @@ export interface MainCanvasRendererBasics<T> {
     rowHeight: number;
     colBoundaries: Array<{left: number; right: number}>;
     columns: ColumnDef[];
-    gridHeight: number;
+    gridInnerSize: Size;
     borderWidth: number;
 }
 
 export interface MainCanvasRendererPosition {
     gridOffset: Coord;
+    visibleRect: ClientRect;
 }
 
 interface PreviousDrawInfo {
@@ -49,14 +50,6 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         const prevDraw = this.prevDraw;
         const basicProps = this.basicProps;
         const posProps = this.posProps;
-        const visibleRect: ClientRect = {
-            top: posProps.gridOffset.y,
-            bottom: posProps.gridOffset.y + basicProps.canvasSize.height,
-            height: basicProps.canvasSize.height,
-            left: posProps.gridOffset.x,
-            right: posProps.gridOffset.x + basicProps.canvasSize.width,
-            width: basicProps.canvasSize.width,
-        };
         if (prevDraw) {
             // Translate according to difference from previous draw
             const xDiff = (prevDraw.gridOffset.x - posProps.gridOffset.x);
@@ -72,18 +65,18 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
         // Draw cells
         let colIndex = 0;
-        const minRowIndex = Math.floor(visibleRect.top / (basicProps.rowHeight + basicProps.borderWidth));
+        const minRowIndex = Math.floor(posProps.visibleRect.top / (basicProps.rowHeight + basicProps.borderWidth));
         const maxRowIndex = Math.min(
-            Math.ceil(visibleRect.bottom / (basicProps.rowHeight + basicProps.borderWidth)),
-            basicProps.gridHeight / (basicProps.rowHeight + basicProps.borderWidth),
+            Math.ceil(posProps.visibleRect.bottom / (basicProps.rowHeight + basicProps.borderWidth)),
+            basicProps.gridInnerSize.height / (basicProps.rowHeight + basicProps.borderWidth),
         );
         for (const {left: cellLeft, right: cellRight} of basicProps.colBoundaries) {
-            if (cellRight < visibleRect.left) {
+            if (cellRight < posProps.visibleRect.left) {
                 // Cell is off screen to left, so skip this column
                 colIndex++;
                 continue;
             }
-            if (cellLeft > visibleRect.right) {
+            if (cellLeft > posProps.visibleRect.right) {
                 // Cell is off screen to right, so skip this and all future columns
                 break;
             }
@@ -102,10 +95,10 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
                 };
 
                 if (prevDraw &&
-                    Math.max(cellLeft, visibleRect.left) >= prevDraw.rect.left &&
-                    Math.min(cellRight, visibleRect.right) <= prevDraw.rect.right &&
-                    Math.max(cellBounds.top, visibleRect.top) >= prevDraw.rect.top &&
-                    Math.min(cellBounds.bottom, visibleRect.bottom) <= prevDraw.rect.bottom
+                    Math.max(cellLeft, posProps.visibleRect.left) >= prevDraw.rect.left &&
+                    Math.min(cellRight, posProps.visibleRect.right) <= prevDraw.rect.right &&
+                    Math.max(cellBounds.top, posProps.visibleRect.top) >= prevDraw.rect.top &&
+                    Math.min(cellBounds.bottom, posProps.visibleRect.bottom) <= prevDraw.rect.bottom
                 ) {
                     // Visible portion of cell is entirely contained within previously drawn region, so we can skip
                     continue;
@@ -123,10 +116,10 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.prevDraw = {
             gridOffset: posProps.gridOffset,
             rect: {
-                left: Math.max(posProps.gridOffset.x, visibleRect.left),
-                top: Math.max(posProps.gridOffset.y, visibleRect.top),
-                right: Math.min(posProps.gridOffset.x + basicProps.canvasSize.width, visibleRect.right),
-                bottom: Math.min(posProps.gridOffset.y + basicProps.canvasSize.height, visibleRect.bottom),
+                left: Math.max(posProps.gridOffset.x, posProps.visibleRect.left),
+                top: Math.max(posProps.gridOffset.y, posProps.visibleRect.top),
+                right: Math.min(posProps.gridOffset.x + basicProps.canvasSize.width, posProps.visibleRect.right),
+                bottom: Math.min(posProps.gridOffset.y + basicProps.canvasSize.height, posProps.visibleRect.bottom),
             },
         };
     }

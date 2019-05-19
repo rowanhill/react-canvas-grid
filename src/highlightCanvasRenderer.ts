@@ -11,15 +11,19 @@ export interface HighlightCanvasRendererBasics {
     columns: ColumnDef[];
     canvasSize: Size;
     gridSize: Size;
+    gridInnerSize: Size;
     frozenColsWidth: number;
     frozenRowsHeight: number;
     rowHeight: number;
     columnBoundaries: ColumnBoundary[];
     borderWidth: number;
+    horizontalGutterBounds: ClientRect|null;
+    verticalGutterBounds: ClientRect|null;
 }
 
 export interface HighlightCanvasRendererPosition {
     gridOffset: Coord;
+    visibleRect: ClientRect;
 }
 
 export interface HighlightCanvasRendererScrollbar {
@@ -34,6 +38,7 @@ export interface HighlightCanvasRendererSelection {
 
 const defaultPosProps: HighlightCanvasRendererPosition = {
     gridOffset: { x: 0, y: 0 },
+    visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
 };
 
 const defaultScrollbarProps: HighlightCanvasRendererScrollbar = {
@@ -107,6 +112,36 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
 
         // Translate back, to bring our drawn area into the bounds of the canvas element
         context.translate(this.posProps.gridOffset.x, this.posProps.gridOffset.y);
+
+        // Draw scrollbar gutters
+        const vBounds = this.basicProps.verticalGutterBounds;
+        const hBounds = this.basicProps.horizontalGutterBounds;
+        if (vBounds || hBounds) {
+            this.context.fillStyle = '#eee';
+            if (vBounds) {
+                this.context.fillRect(vBounds.left, vBounds.top, vBounds.width, vBounds.height);
+            }
+            if (hBounds) {
+                this.context.fillRect(hBounds.left, hBounds.top, hBounds.width, hBounds.height);
+            }
+
+            this.context.strokeStyle = 'lightgrey';
+            this.context.lineWidth = 1;
+            this.context.beginPath();
+            if (vBounds) {
+                this.context.moveTo(vBounds.left, 0);
+                this.context.lineTo(vBounds.left, vBounds.height - (hBounds ? hBounds.height : 0));
+                this.context.moveTo(vBounds.right, 0);
+                this.context.lineTo(vBounds.right, vBounds.height);
+            }
+            if (hBounds) {
+                this.context.moveTo(0, hBounds.top);
+                this.context.lineTo(hBounds.width - (vBounds ? vBounds.width : 0), hBounds.top);
+                this.context.moveTo(0, hBounds.bottom);
+                this.context.lineTo(hBounds.width, hBounds.bottom);
+            }
+            this.context.stroke();
+        }
 
         // Set up for drawing scrollbars
         context.lineCap = 'round';

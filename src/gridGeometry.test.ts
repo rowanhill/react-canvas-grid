@@ -44,12 +44,44 @@ describe('GridGeomtry', () => {
         });
     });
 
+    describe('calculateGridPlusGutterSize', () => {
+        const gutterWidth = 11;
+
+        it('returns the plain grid size if the root element size is not known', () => {
+            const gridSize = { width: 100, height: 100 };
+            const rootSize = null;
+
+            const size = GridGeometry.calculateGridPlusGutterSize(gridSize, rootSize);
+
+            expect(size).toEqual(gridSize);
+        });
+
+        it('adds (horizontal) space for a vertical gutter if the grid is taller than the root element', () => {
+            const gridSize = { width: 100, height: 1000 };
+            const rootSize = { width: 100, height: 100 };
+
+            const size = GridGeometry.calculateGridPlusGutterSize(gridSize, rootSize);
+
+            expect(size).toEqual({ width: 100 + gutterWidth, height: 1000 });
+        });
+
+        it('adds (vertical) space for a horitontal gutter if the grid is wider than the root element', () => {
+            const gridSize = { width: 1000, height: 100 };
+            const rootSize = { width: 100,  height: 100 };
+
+            const size = GridGeometry.calculateGridPlusGutterSize(gridSize, rootSize);
+
+            expect(size).toEqual({ width: 1000, height: 100 + gutterWidth });
+        });
+    });
+
     describe('calculateGridCellCoords', () => {
         it('maps a click in the top left of the grid to (0,0), when the grid is not scrolled from the origin', () => {
             const colBoundaries = [{left: 0, right: 10}];
             const borderWidth =  1;
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -58,6 +90,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 0, y: 0 });
@@ -68,6 +101,7 @@ describe('GridGeomtry', () => {
             const borderWidth =  1;
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 100, left: 100 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -76,6 +110,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 0, y: 0 });
@@ -87,6 +122,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 15, y: 25 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -95,6 +131,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 1, y: 1 });
@@ -106,6 +143,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -114,6 +152,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 0, y: 0 });
@@ -125,6 +164,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -133,6 +173,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 1, y: 0 });
@@ -144,6 +185,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -152,6 +194,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 1, y: 0 });
@@ -163,6 +206,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -171,6 +215,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 0, y: 0 });
@@ -182,6 +227,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -190,6 +236,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 0, y: 1 });
@@ -201,6 +248,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -209,6 +257,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 0, y: 1 });
@@ -220,6 +269,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -228,6 +278,7 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 1, y: 1 });
@@ -239,6 +290,7 @@ describe('GridGeomtry', () => {
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
             const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
 
             const coords = GridGeometry.calculateGridCellCoords(
@@ -247,6 +299,49 @@ describe('GridGeomtry', () => {
                 borderWidth,
                 rowHeight,
                 gridOffset,
+                maxRow,
+                root);
+
+            expect(coords).toEqual({ x: 1, y: 1 });
+        });
+
+        it('maps a click to below the bottom cell to the bottom cell', () => {
+            const borderWidth =  1;
+            const colBoundaries =
+                GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
+            const rowHeight = 20;
+            const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
+            const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords(
+                { clientX: 20, clientY: maxRow * (rowHeight + borderWidth) + 10 },
+                colBoundaries,
+                borderWidth,
+                rowHeight,
+                gridOffset,
+                maxRow,
+                root);
+
+            expect(coords).toEqual({ x: 1, y: maxRow });
+        });
+
+        it('maps a click to the right of the cells to the rightmost cell', () => {
+            const borderWidth =  1;
+            const colBoundaries =
+                GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
+            const rowHeight = 20;
+            const gridOffset: Coord = { x: 0, y: 0 };
+            const maxRow = 100;
+            const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
+
+            const coords = GridGeometry.calculateGridCellCoords(
+                { clientX: 20000, clientY: 40 },
+                colBoundaries,
+                borderWidth,
+                rowHeight,
+                gridOffset,
+                maxRow,
                 root);
 
             expect(coords).toEqual({ x: 1, y: 1 });
@@ -271,6 +366,7 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual(oldOffset);
@@ -293,6 +389,7 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual(oldOffset);
@@ -316,6 +413,7 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual({ x: (501 - 50), y: 0 });
@@ -338,9 +436,33 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual({ x: 101, y: 0 });
+        });
+
+        it('accounts for the scrollbar when aligning to the right', () => {
+            const colBoundaries: ColumnBoundary[] = [
+                { left: 0, right: 100 },
+                { left: 101, right: 201 },
+                { left: 202, right: 302 },
+            ];
+            const oldOffset: Coord = { x: 50, y: 0 };
+            const canvasSize: Size = { width: 100, height: 400 };
+            const frozenColsWidth = 0;
+            const focusedColIndex = 1;
+
+            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                oldOffset,
+                canvasSize,
+                frozenColsWidth,
+                focusedColIndex,
+                colBoundaries,
+                { width: 10 } as ClientRect,
+            );
+
+            expect(offset).toEqual({ x: 111, y: 0 });
         });
 
         it('returns a minimum x offset of 0, even when trying to bring a frozen col into view', () => {
@@ -361,6 +483,7 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual({ x: 0, y: 0 });
@@ -379,6 +502,7 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual(oldOffset);
@@ -397,6 +521,7 @@ describe('GridGeomtry', () => {
                 frozenColsWidth,
                 focusedColIndex,
                 colBoundaries,
+                null,
             );
 
             expect(offset).toEqual(oldOffset);

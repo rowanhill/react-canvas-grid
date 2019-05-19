@@ -1,4 +1,5 @@
 import * as ScrollbarGeometry from './scrollbarGeometry';
+import { Size } from './types';
 
 describe('ScrollbarGeometry', () => {
     describe('calculateLength', () => {
@@ -96,6 +97,64 @@ describe('ScrollbarGeometry', () => {
                 ScrollbarGeometry.calculateExtent(gridOffset, canvasLength, gridLength, barLength, frozenLength);
 
             expect(position.start).toBe(50 + ScrollbarGeometry.barCapMargin);
+        });
+    });
+
+    describe('getVerticalGutterBounds', () => {
+        it('has the vertical scrollbar in the middle of it, with a small amount of padding', () => {
+            const canvasSize: Size = { width: 100, height: 100 };
+            const gridSize: Size = { width: 100, height: 500 };
+
+            const gutter = ScrollbarGeometry.getVerticalGutterBounds(canvasSize, gridSize);
+            const pos = ScrollbarGeometry.getVerticalScrollbarPos(
+                ScrollbarGeometry.getVerticalScrollbarExtent({x: 0, y: 0}, canvasSize, gridSize, 10, 0),
+                canvasSize,
+                gridSize,
+            );
+
+            // The scrollbar is in the middle of the gutter
+            expect(pos!.transverse).toEqual((gutter!.left + gutter!.right) / 2);
+            // The gutter includes padding of barMarginToEdge on each side
+            expect(pos!.transverse - gutter!.left - ScrollbarGeometry.barWidth / 2)
+                .toEqual(ScrollbarGeometry.barMarginToEdge);
+        });
+
+        it('returns null if the grid is not taller than the canvas', () => {
+            const canvasSize: Size = { width: 100, height: 100 };
+            const gridSize: Size = { width: 100, height: 100 };
+
+            const gutter = ScrollbarGeometry.getVerticalGutterBounds(canvasSize, gridSize);
+
+            expect(gutter).toBeNull();
+        });
+    });
+
+    describe('getHorizontalGutterBounds', () => {
+        it('has the horizontal scrollbar in the middle of it, with a small amount of padding', () => {
+            const canvasSize: Size = { width: 100, height: 100 };
+            const gridSize: Size = { width: 500, height: 100 };
+
+            const gutter = ScrollbarGeometry.getHorizontalGutterBounds(canvasSize, gridSize);
+            const pos = ScrollbarGeometry.getHorizontalScrollbarPos(
+                ScrollbarGeometry.getHorizontalScrollbarExtent({x: 0, y: 0}, canvasSize, gridSize, 10, 0),
+                canvasSize,
+                gridSize,
+            );
+
+            // The scrollbar is in the middle of the gutter
+            expect(pos!.transverse).toEqual((gutter!.top + gutter!.bottom) / 2);
+            // The gutter includes padding of barMarginToEdge on each side
+            expect(pos!.transverse - gutter!.top - ScrollbarGeometry.barWidth / 2)
+                .toEqual(ScrollbarGeometry.barMarginToEdge);
+        });
+
+        it('returns null if the grid is not wider than the canvas', () => {
+            const canvasSize: Size = { width: 100, height: 100 };
+            const gridSize: Size = { width: 100, height: 100 };
+
+            const gutter = ScrollbarGeometry.getHorizontalGutterBounds(canvasSize, gridSize);
+
+            expect(gutter).toBeNull();
         });
     });
 

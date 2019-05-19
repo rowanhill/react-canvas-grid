@@ -24,7 +24,9 @@ export class GridState<T> {
 
     // Grid geometry derived properties
     public gridOffset: ReactiveFn<Coord>; // Quantized to values that result in integer canvas pixel coords
+    public visibleRect: ReactiveFn<ClientRect>;
     public columnBoundaries: ReactiveFn<ColumnBoundary[]>;
+    public gridInnerSize: ReactiveFn<Size>;
     public gridSize: ReactiveFn<Size>;
     public canvasSize: ReactiveFn<Size>;
     public frozenColsWidth: ReactiveFn<number>;
@@ -37,6 +39,8 @@ export class GridState<T> {
     public verticalScrollbarExtent: ReactiveFn<ScrollbarExtent>;
     public horizontalScrollbarPos: ReactiveFn<ScrollbarPosition|null>;
     public verticalScrollbarPos: ReactiveFn<ScrollbarPosition|null>;
+    public horizontalGutterBounds: ReactiveFn<ClientRect|null>;
+    public verticalGutterBounds: ReactiveFn<ClientRect|null>;
 
     constructor(
         columns: ColumnDef[],
@@ -61,10 +65,12 @@ export class GridState<T> {
 
         this.gridOffset = transformer([this.gridOffsetRaw, this.dpr], GridGeometry.quantiseGridOffset);
         this.columnBoundaries = transformer([this.columns, this.borderWidth], GridGeometry.calculateColumnBoundaries);
-        this.gridSize = transformer(
+        this.gridInnerSize = transformer(
             [this.data, this.columnBoundaries, this.rowHeight, this.borderWidth],
             GridGeometry.calculateGridSize);
+        this.gridSize = transformer([this.gridInnerSize, this.rootSize], GridGeometry.calculateGridPlusGutterSize);
         this.canvasSize = transformer([this.gridSize, this.rootSize], GridGeometry.calculateCanvasSize);
+        this.visibleRect = transformer([this.gridOffset, this.canvasSize], GridGeometry.calculateVisibleRect);
         this.frozenColsWidth = transformer(
             [this.columnBoundaries, this.frozenCols, this.borderWidth],
             GridGeometry.calculateFrozenColsWidth);
@@ -74,69 +80,27 @@ export class GridState<T> {
 
         this.horizontalScrollbarLength = transformer(
             [this.canvasSize, this.gridSize, this.frozenColsWidth],
-            this.getHorizontalScrollbarLength);
+            ScrollbarGeometry.getHorizontalScrollbarLength);
         this.verticalScrollbarLength = transformer(
             [this.canvasSize, this.gridSize, this.frozenRowsHeight],
-            this.getVerticalScrollbarLength);
+            ScrollbarGeometry.getVerticalScrollbarLength);
         this.horizontalScrollbarExtent = transformer(
             [this.gridOffset, this.canvasSize, this.gridSize, this.horizontalScrollbarLength, this.frozenColsWidth],
-            this.getHorizontalScrollbarExtent);
+            ScrollbarGeometry.getHorizontalScrollbarExtent);
         this.verticalScrollbarExtent = transformer(
             [this.gridOffset, this.canvasSize, this.gridSize, this.verticalScrollbarLength, this.frozenRowsHeight],
-            this.getVerticalScrollbarExtent);
+            ScrollbarGeometry.getVerticalScrollbarExtent);
         this.horizontalScrollbarPos = transformer(
             [this.horizontalScrollbarExtent, this.canvasSize, this.gridSize],
-            this.getHorizontalScrollbarPos);
+            ScrollbarGeometry.getHorizontalScrollbarPos);
         this.verticalScrollbarPos = transformer(
             [this.verticalScrollbarExtent, this.canvasSize, this.gridSize],
-            this.getVerticalScrollbarPos);
-    }
-
-    private getHorizontalScrollbarLength = (canvasSize: Size, gridSize: Size, frozenColsWidth: number) => {
-        return ScrollbarGeometry.calculateLength(canvasSize.width, gridSize.width, frozenColsWidth);
-    }
-
-    private getVerticalScrollbarLength = (canvasSize: Size, gridSize: Size, frozenRowsHeight: number) => {
-        return ScrollbarGeometry.calculateLength(canvasSize.height, gridSize.height, frozenRowsHeight);
-    }
-
-    private getHorizontalScrollbarExtent = (
-        gridOffset: Coord,
-        canvasSize: Size,
-        gridSize: Size,
-        horizontalBarLength: number,
-        frozenColsWidth: number,
-    ) => {
-        return ScrollbarGeometry
-            .calculateExtent(gridOffset.x, canvasSize.width, gridSize.width, horizontalBarLength, frozenColsWidth);
-    }
-
-    private getVerticalScrollbarExtent = (
-        gridOffset: Coord,
-        canvasSize: Size,
-        gridSize: Size,
-        verticalBarLength: number,
-        frozenRowsHeight: number,
-    ) => {
-        return ScrollbarGeometry
-            .calculateExtent(gridOffset.y, canvasSize.height, gridSize.height, verticalBarLength, frozenRowsHeight);
-    }
-
-    private getHorizontalScrollbarPos = (extent: ScrollbarExtent, canvasSize: Size, gridSize: Size) => {
-        if (gridSize.width > canvasSize.width) {
-            const transverse = ScrollbarGeometry.calculateTransversePosition(canvasSize.height);
-            return { extent, transverse };
-        } else {
-            return null;
-        }
-    }
-
-    private getVerticalScrollbarPos = (extent: ScrollbarExtent, canvasSize: Size, gridSize: Size) => {
-        if (gridSize.height > canvasSize.height) {
-            const transverse = ScrollbarGeometry.calculateTransversePosition(canvasSize.width);
-            return { extent, transverse };
-        } else {
-            return null;
-        }
+            ScrollbarGeometry.getVerticalScrollbarPos);
+        this.horizontalGutterBounds = transformer(
+            [this.canvasSize, this.gridInnerSize],
+            ScrollbarGeometry.getHorizontalGutterBounds);
+        this.verticalGutterBounds = transformer(
+            [this.canvasSize, this.gridInnerSize],
+            ScrollbarGeometry.getVerticalGutterBounds);
     }
 }

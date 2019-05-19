@@ -148,6 +148,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     this.gridState.frozenColsWidth(),
                     this.props.focusedColIndex,
                     this.gridState.columnBoundaries(),
+                    this.gridState.verticalGutterBounds(),
                 );
                 this.gridState.gridOffsetRaw(focusedOffset);
             }
@@ -171,7 +172,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             columnBoundaries,
             this.props.rowHeight,
             this.props.borderWidth);
-        const canvasSize = GridGeometry.calculateCanvasSize(gridSize, this.state.rootSize);
+        const gridPlusGutterSize = GridGeometry.calculateGridPlusGutterSize(gridSize, this.state.rootSize);
+        const canvasSize = GridGeometry.calculateCanvasSize(gridPlusGutterSize, this.state.rootSize);
 
         return (
             <div
@@ -543,6 +545,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.gridState.borderWidth(),
             this.gridState.rowHeight(),
             this.gridState.gridOffset(),
+            this.gridState.data().length - 1,
             this.rootRef.current,
         );
     }

@@ -6,7 +6,7 @@ type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 // Some props can be derived from others, so they are in a sense 'denormalised'. To prevent these
 // getting out of sync in the tests, we calculate the full props from a 'normalised' set of props.
-type NormalisedProps<T> = Omit<Omit<MainCanvasRendererBasics<T>, 'colBoundaries'>, 'gridHeight'>;
+type NormalisedProps<T> = Omit<Omit<MainCanvasRendererBasics<T>, 'colBoundaries'>, 'gridInnerSize'>;
 
 function calcProps<T>(props: NormalisedProps<T>): MainCanvasRendererBasics<T> {
     let curLeft = 0;
@@ -17,8 +17,9 @@ function calcProps<T>(props: NormalisedProps<T>): MainCanvasRendererBasics<T> {
     });
 
     const gridHeight = ((props.rowHeight + props.borderWidth) * props.data.length) - props.borderWidth;
+    const gridWidth = colBoundaries[colBoundaries.length - 1].right;
 
-    return { ...props, colBoundaries, gridHeight };
+    return { ...props, colBoundaries, gridInnerSize: { width: gridWidth, height: gridHeight } };
 }
 
 let colIndex = 0;
@@ -84,6 +85,14 @@ describe('MainCanvasRenderer', () => {
     describe('draw', () => {
         const posProps: MainCanvasRendererPosition = {
             gridOffset: { x: 10, y: 10 },
+            visibleRect: {
+                left: 10,
+                top: 10,
+                width: props.canvasSize.width,
+                height: props.canvasSize.height,
+                right: 10 + props.canvasSize.width,
+                bottom: 10 + props.canvasSize.height,
+            },
         };
 
         function getDrawnCellRects() {
@@ -134,11 +143,18 @@ describe('MainCanvasRenderer', () => {
         });
 
         describe('with previous draw', () => {
-            function getNewPosProps(dx: number, dy: number) {
+            function getNewPosProps(dx: number, dy: number): MainCanvasRendererPosition {
+                const x = posProps.gridOffset.x + dx;
+                const y = posProps.gridOffset.y + dy;
                 return {
-                    gridOffset: {
-                        x: posProps.gridOffset.x + dx,
-                        y: posProps.gridOffset.y + dy,
+                    gridOffset: { x, y },
+                    visibleRect: {
+                        left: x,
+                        top: y,
+                        width: posProps.visibleRect.width,
+                        height: posProps.visibleRect.height,
+                        right: x + posProps.visibleRect.width,
+                        bottom: y + posProps.visibleRect.height,
                     },
                 };
             }

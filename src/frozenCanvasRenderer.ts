@@ -279,7 +279,10 @@ export class FrozenCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         const visibleTop = posProps.gridOffset.y + basicProps.frozenRowsHeight;
         const visibleBottom = posProps.gridOffset.y + basicProps.canvasSize.height;
         const minRowIndex = Math.floor(visibleTop / (basicProps.rowHeight + basicProps.borderWidth));
-        const maxRowIndex = Math.ceil(visibleBottom / (basicProps.rowHeight + basicProps.borderWidth));
+        const maxRowIndex = Math.min(
+            basicProps.data.length,
+            Math.ceil(visibleBottom / (basicProps.rowHeight + basicProps.borderWidth)),
+        );
         for (let colIndex = 0; colIndex < basicProps.frozenCols; colIndex++) {
             const col = basicProps.columns[colIndex];
             for (let rowIndex = minRowIndex; rowIndex < maxRowIndex; rowIndex++) {

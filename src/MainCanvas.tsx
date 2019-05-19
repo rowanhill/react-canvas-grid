@@ -46,7 +46,7 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             gridState.rowHeight,
             gridState.columnBoundaries,
             gridState.columns,
-            gridState.gridSize,
+            gridState.gridInnerSize,
             gridState.borderWidth,
         ],
         (
@@ -55,7 +55,7 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             rowHeight,
             colBoundaries,
             columns,
-            gridSize,
+            gridInnerSize,
             borderWidth,
         ): MainCanvasRendererBasics<T> => ({
             data,
@@ -63,13 +63,13 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             rowHeight,
             colBoundaries,
             columns,
-            gridHeight: gridSize.height,
+            gridInnerSize,
             borderWidth,
         }));
 
         const posProps = transformer(
-            [gridState.gridOffset],
-            (gridOffset): MainCanvasRendererPosition => ({ gridOffset }));
+            [gridState.gridOffset, gridState.visibleRect],
+            (gridOffset, visibleRect): MainCanvasRendererPosition => ({ gridOffset, visibleRect }));
 
         this.renderer = new MainCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
 

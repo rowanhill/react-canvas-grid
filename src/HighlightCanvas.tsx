@@ -51,32 +51,41 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             gridState.columns,
             gridState.canvasSize,
             gridState.gridSize,
+            gridState.gridInnerSize,
             gridState.frozenColsWidth,
             gridState.frozenRowsHeight,
             gridState.rowHeight,
             gridState.columnBoundaries,
             gridState.borderWidth,
+            gridState.horizontalGutterBounds,
+            gridState.verticalGutterBounds,
         ],
         (
             data,
             columns,
             canvasSize,
             gridSize,
+            gridInnerSize,
             frozenColsWidth,
             frozenRowsHeight,
             rowHeight,
             columnBoundaries,
             borderWidth,
+            horizontalGutterBounds,
+            verticalGutterBounds,
         ): HighlightCanvasRendererBasics => ({
             data,
             columns,
             canvasSize,
             gridSize,
+            gridInnerSize,
             frozenColsWidth,
             frozenRowsHeight,
             rowHeight,
             columnBoundaries,
             borderWidth,
+            horizontalGutterBounds,
+            verticalGutterBounds,
         }));
 
         const scrollProps = transformer([
@@ -95,11 +104,14 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
 
         const posProps = transformer([
             gridState.gridOffset,
+            gridState.visibleRect,
         ],
         (
             gridOffset,
+            visibleRect,
         ): HighlightCanvasRendererPosition => ({
             gridOffset,
+            visibleRect,
         }));
 
         const selectionProps = transformer(

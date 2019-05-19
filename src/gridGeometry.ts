@@ -1,3 +1,4 @@
+import { barMarginToEdge, barWidth } from './scrollbarGeometry';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface ColumnBoundary {
@@ -29,7 +30,7 @@ export class GridGeometry {
     }
 
     /**
-     * Calculate the total size of the grid, including borders, etc
+     * Calculate the total size of the grid, including borders, but excluding gutters
      */
     public static calculateGridSize = (
         data: Array<DataRow<any>>,
@@ -45,7 +46,21 @@ export class GridGeometry {
         return { width, height };
     }
 
-    public static calculateCanvasSize = (gridSize: Size, rootSize: Size|null): Size => {
+    /**
+     * Calculates the total size of the grid, including scrollbar gutters
+     */
+    public static calculateGridPlusGutterSize = (gridSize: Size, rootSize: Size|null): Size => {
+        // If we don't know how big the root element is yet, assume no gutters
+        if (rootSize === null) {
+            return gridSize;
+        }
+        return {
+            width: gridSize.width + (gridSize.height > rootSize.height ? barWidth + barMarginToEdge * 2 : 0),
+            height: gridSize.height + (gridSize.width > rootSize.width ? barWidth + barMarginToEdge * 2 : 0),
+        };
+    }
+
+    public static calculateCanvasSize = (gridPlusGutterSize: Size, rootSize: Size|null): Size => {
         // First render is before componentDidMount, so before we have calculated the root element's size.
         // In this case, we just render as 0x0. componentDidMount will then update state,
         // and we'll re-render
@@ -53,8 +68,8 @@ export class GridGeometry {
             return { width: 0, height: 0 };
         }
         return {
-            width: Math.min(rootSize.width, gridSize.width),
-            height: Math.min(rootSize.height, gridSize.height),
+            width: Math.min(rootSize.width, gridPlusGutterSize.width),
+            height: Math.min(rootSize.height, gridPlusGutterSize.height),
         };
     }
 
@@ -90,6 +105,7 @@ export class GridGeometry {
         borderWidth: number,
         rowHeight: number,
         gridOffset: Coord,
+        maxRow: number,
         root: HTMLDivElement,
     ): Coord => {
         return GridGeometry.gridPixelToGridCell(
@@ -101,6 +117,7 @@ export class GridGeometry {
             columnBoundaries,
             borderWidth,
             rowHeight,
+            maxRow,
         );
     }
 
@@ -164,14 +181,16 @@ export class GridGeometry {
         frozenColsWidth: number,
         focusedColIndex: number,
         columnBoundaries: ColumnBoundary[],
+        verticalColumnGutter: ClientRect | null,
     ): Coord => {
         if (focusedColIndex < 0 || focusedColIndex >= columnBoundaries.length) {
             // The focused column index is invalid, so ignore it
             return oldOffset;
         }
+        const gutterWidth = verticalColumnGutter ? verticalColumnGutter.width : 0;
         const focusedBoundaries = columnBoundaries[focusedColIndex];
         const viewLeft = oldOffset.x + frozenColsWidth;
-        const viewRight = oldOffset.x + canvasSize.width;
+        const viewRight = oldOffset.x + canvasSize.width - gutterWidth;
         if (focusedBoundaries.left < viewLeft && focusedBoundaries.right > viewRight) {
             // The focused column is wider that the canvas, but already visible - no change needed
             return oldOffset;
@@ -180,11 +199,25 @@ export class GridGeometry {
             return { x: Math.max(focusedBoundaries.left - frozenColsWidth, 0), y: oldOffset.y };
         } else if (focusedBoundaries.right > viewRight) {
             // The focused column is to the right, so move offset so it's the rightmost column
-            return { x: focusedBoundaries.right - canvasSize.width, y: oldOffset.y };
+            return { x: focusedBoundaries.right - canvasSize.width + gutterWidth, y: oldOffset.y };
         } else {
             // Otherwise, the focused column must be in view, so no change is needed
             return oldOffset;
         }
+    }
+
+    /**
+     * Calculates the area of the grid visible on the canvas
+     */
+    public static calculateVisibleRect = (gridOffset: Coord, canvasSize: Size): ClientRect => {
+        return {
+            top: gridOffset.y,
+            bottom: gridOffset.y + canvasSize.height,
+            height: canvasSize.height,
+            left: gridOffset.x,
+            right: gridOffset.x + canvasSize.width,
+            width: canvasSize.width,
+        };
     }
 
     public static windowPixelToCanvasPixel = ({x, y}: Coord, root: HTMLDivElement): Coord => {
@@ -208,8 +241,10 @@ export class GridGeometry {
         columnBoundaries: ColumnBoundary[],
         borderWidth: number,
         rowHeight: number,
+        maxRow: number,
     ): Coord => {
-        let colIndex = -1;
+        // Start with the rightmost col index; it'll be revised down, unless the coord is to the right of all cols
+        let colIndex = columnBoundaries.length - 1;
         for (let i = 0; i < columnBoundaries.length; i++) {
             if (columnBoundaries[i].right > x) {
                 colIndex = i;
@@ -226,8 +261,9 @@ export class GridGeometry {
             (Yclick + b)/(b + c) <= Ycell
             Ycell >= (Yclick + b)/(b + c)
             Ycell = floor((Yclick + b)/(b + c))
+        It's then truncated to maxRow, in case the coord is beyond the final row
         */
-        const rowIndex = Math.floor((y + borderWidth) / (rowHeight + borderWidth));
+        const rowIndex = Math.min(maxRow, Math.floor((y + borderWidth) / (rowHeight + borderWidth)));
 
         return {
             y: rowIndex,
