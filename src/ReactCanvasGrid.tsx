@@ -199,11 +199,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     height={canvasSize.height}
                     gridState={this.gridState}
                 />
-                <FrozenCanvas
-                    width={canvasSize.width}
-                    height={canvasSize.height}
-                    gridState={this.gridState}
-                />
                 {this.state.editingCell &&
                     <InlineTextEditor<T>
                         cell={this.state.editingCell.cell}
@@ -216,6 +211,11 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                         onCancel={this.cancelEditingCell}
                     />
                 }
+                <FrozenCanvas
+                    width={canvasSize.width}
+                    height={canvasSize.height}
+                    gridState={this.gridState}
+                />
             </div>
         );
     }
