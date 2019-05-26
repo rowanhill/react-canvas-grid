@@ -174,6 +174,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.props.borderWidth);
         const gridPlusGutterSize = GridGeometry.calculateGridPlusGutterSize(gridSize, this.state.rootSize);
         const canvasSize = GridGeometry.calculateCanvasSize(gridPlusGutterSize, this.state.rootSize);
+        const frozenColsWidth =
+            GridGeometry.calculateFrozenColsWidth(columnBoundaries, this.props.frozenCols, this.props.borderWidth);
+        const frozenRowsHeight =
+            GridGeometry.calculateFrozenRowsHeight(this.props.rowHeight, this.props.borderWidth, this.props.frozenRows);
 
         return (
             <div
@@ -214,6 +218,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 <FrozenCanvas
                     width={canvasSize.width}
                     height={canvasSize.height}
+                    frozenColsWidth={frozenColsWidth}
+                    frozenRowsHeight={frozenRowsHeight}
                     gridState={this.gridState}
                 />
             </div>

@@ -1,6 +1,6 @@
 import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
 import { execRaf, mockRaf, resetRaf } from './rafTestHelper';
-import { CellDef, ColumnDef, DataRow } from './types';
+import { CellDef, ColumnDef, DataRow, Size } from './types';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -58,7 +58,7 @@ describe('MainCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new MainCanvasRenderer<null>(mockCanvas, props, dpr);
+        renderer = new MainCanvasRenderer<null>(mockCanvas, canvasSize, props, dpr);
 
         mockRaf();
     });
@@ -69,6 +69,7 @@ describe('MainCanvasRenderer', () => {
     });
 
     const dpr = 2;
+    const canvasSize: Size = { height: 50, width: 50 };
     let mockContext: CanvasRenderingContext2D;
     let mockCanvas: HTMLCanvasElement;
     let renderer: MainCanvasRenderer<null>;
@@ -77,7 +78,6 @@ describe('MainCanvasRenderer', () => {
         borderWidth: 1,
         columns: [col(), col(), col(), col(), col(), col(), col(), col(), col(), col()],
         data: [row(), row(), row(), row(), row(), row(), row(), row(), row(), row()],
-        canvasSize: { height: 50, width: 50 },
         rowHeight: 9,
     };
     const props: MainCanvasRendererBasics<null> = calcProps(normalisedProps);
@@ -88,10 +88,10 @@ describe('MainCanvasRenderer', () => {
             visibleRect: {
                 left: 10,
                 top: 10,
-                width: props.canvasSize.width,
-                height: props.canvasSize.height,
-                right: 10 + props.canvasSize.width,
-                bottom: 10 + props.canvasSize.height,
+                width: canvasSize.width,
+                height: canvasSize.height,
+                right: 10 + canvasSize.width,
+                bottom: 10 + canvasSize.height,
             },
         };
 
@@ -126,7 +126,7 @@ describe('MainCanvasRenderer', () => {
                 };
                 jest.spyOn(renderer, 'drawCell');
 
-                renderer.updateProps(props, shiftedPosProps);
+                renderer.updateProps(canvasSize, props, shiftedPosProps);
                 execRaf();
 
                 expect(renderer.drawCell).toHaveBeenCalledTimes(18);
@@ -163,15 +163,15 @@ describe('MainCanvasRenderer', () => {
                 jest.spyOn(renderer, 'drawNewBorderBackground');
                 jest.spyOn(renderer, 'shiftExistingCanvas');
                 const newProps = getNewPosProps(3, 5);
-                renderer.updateProps(props, posProps);
+                renderer.updateProps(canvasSize, props, posProps);
                 execRaf();
 
-                renderer.updateProps(props, newProps);
+                renderer.updateProps(canvasSize, props, newProps);
                 execRaf();
 
                 expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
                 expect(renderer.drawNewBorderBackground)
-                    .toHaveBeenCalledWith(-3, -5, props.canvasSize.width, props.canvasSize.height);
+                    .toHaveBeenCalledWith(-3, -5, canvasSize.width, canvasSize.height);
             });
 
             it('ignores the old image and redraws everything if basic props change', () => {
@@ -179,10 +179,10 @@ describe('MainCanvasRenderer', () => {
                 jest.spyOn(renderer, 'shiftExistingCanvas');
                 jest.spyOn(renderer, 'drawWholeBorderBackground');
                 const newProps = calcProps({...normalisedProps, borderWidth: 2});
-                renderer.updateProps(props, posProps);
+                renderer.updateProps(canvasSize, props, posProps);
                 execRaf();
 
-                renderer.updateProps(newProps, posProps);
+                renderer.updateProps(canvasSize, newProps, posProps);
                 execRaf();
 
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
@@ -193,11 +193,11 @@ describe('MainCanvasRenderer', () => {
             describe('cell redrawing', () => {
                 it('redraws cells on the bottom when scrolling down', () => {
                     const newProps = getNewPosProps(0, 5);
-                    renderer.updateProps(props, posProps);
+                    renderer.updateProps(canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(props, newProps);
+                    renderer.updateProps(canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
@@ -208,11 +208,11 @@ describe('MainCanvasRenderer', () => {
 
                 it('redraws cells on the top when scrolling up', () => {
                     const newProps = getNewPosProps(0, -5);
-                    renderer.updateProps(props, posProps);
+                    renderer.updateProps(canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(props, newProps);
+                    renderer.updateProps(canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
@@ -223,11 +223,11 @@ describe('MainCanvasRenderer', () => {
 
                 it('redraws cells on the right when scrolling right`', () => {
                     const newProps = getNewPosProps(5, 0);
-                    renderer.updateProps(props, posProps);
+                    renderer.updateProps(canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(props, newProps);
+                    renderer.updateProps(canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
@@ -238,11 +238,11 @@ describe('MainCanvasRenderer', () => {
 
                 it('redraws cells on the left when scrolling left`', () => {
                     const newProps = getNewPosProps(-5, 0);
-                    renderer.updateProps(props, posProps);
+                    renderer.updateProps(canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(props, newProps);
+                    renderer.updateProps(canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
