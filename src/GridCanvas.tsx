@@ -1,7 +1,7 @@
-import { consumer, ReactiveFn, transformer } from 'instigator';
+import { consumer, ReactiveConsumer, ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
 import { GridState } from './gridState';
-import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
+import { MainCanvasRenderer, MainCanvasRendererPosition } from './mainCanvasRenderer';
 
 export interface GridCanvasProps<T> {
     top: number;
@@ -18,6 +18,7 @@ export type ParentCanvasProps<T> = Omit<GridCanvasProps<T>, 'posProps'>;
 export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: MainCanvasRenderer<T>|null = null;
+    private renderCallback: ReactiveConsumer|null = null;
 
     public render() {
         return (
@@ -72,7 +73,7 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
             this.renderer = new MainCanvasRenderer(this.canvasRef.current, canvasSize, basicProps(), gridState.dpr());
         }
 
-        consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {
+        this.renderCallback = consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {
                 const canvasSize = { width: this.props.width, height: this.props.height };
                 this.renderer.updateProps(canvasSize, newBasicProps, newPosProps);
@@ -80,7 +81,11 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
         });
     }
 
-    // TODO: Deregister consumer on component unmount
+    public componentWillUnmount() {
+        if (this.renderCallback) {
+            this.renderCallback.deregister();
+        }
+    }
 
     // TODO: Need to call updateProps on componentDidUpdate?
 }
