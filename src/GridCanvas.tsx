@@ -12,9 +12,6 @@ export interface GridCanvasProps<T> {
     posProps: ReactiveFn<MainCanvasRendererPosition>;
 }
 
-type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-export type ParentCanvasProps<T> = Omit<GridCanvasProps<T>, 'posProps'>;
-
 export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: MainCanvasRenderer<T>|null = null;
