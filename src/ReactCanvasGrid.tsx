@@ -1,6 +1,6 @@
 import { batch, consumer } from 'instigator';
 import * as React from 'react';
-import { hasSelectionState, SelectRange } from './cursorState';
+import { hasSelectionCellState, hasSelectionRowState, hasSelectionState, SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
@@ -346,14 +346,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return;
         }
 
-        if (componentPixelCoord.x < this.gridState.frozenColsWidth() ||
-            componentPixelCoord.y < this.gridState.frozenRowsHeight()
-        ) {
-            if (event.shiftKey) {
-                // Shift-clicking on a header isn't supported (yet), so do nothing
-                return;
-            }
-            this.clearSelection();
+        if (this.leftClickOnFrozenCell(event, componentPixelCoord)) {
             return;
         }
 
@@ -364,6 +357,34 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         } else {
             this.startSelection(gridCoords);
         }
+    }
+
+    private leftClickOnFrozenCell = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord): boolean => {
+        const clickInFrozenCols = componentPixelCoord.x < this.gridState.frozenColsWidth();
+        const clickInFrozenRows = componentPixelCoord.y < this.gridState.frozenRowsHeight();
+        if (!clickInFrozenCols && !clickInFrozenRows) {
+            return false;
+        }
+
+        if (clickInFrozenCols && clickInFrozenRows) {
+            this.selectAll();
+        } else if (clickInFrozenCols) {
+            const coord = this.calculateGridCellCoords({ clientX: 0, clientY: event.clientY });
+            if (event.shiftKey) {
+                this.updateSelectionRow(coord);
+            } else {
+                this.selectRow(coord);
+            }
+        } else if (clickInFrozenRows) {
+            const coord = this.calculateGridCellCoords({ clientX: event.clientX, clientY: 0 });
+            if (event.shiftKey) {
+                this.updateSelectionCol(coord);
+            } else {
+                this.selectCol(coord);
+            }
+        }
+
+        return true;
     }
 
     private mouseDragOnScrollbar = (coord: Coord): boolean => {
@@ -420,8 +441,34 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         if (!hasSelectionState(this.gridState.cursorState())) {
             return false;
         }
+        const componentPixelCoord = this.calculateComponentPixel(event);
+
+        if (this.leftClickDragOnFrozenCell(event, componentPixelCoord)) {
+            return true;
+        }
+
         const gridCoords = this.calculateGridCellCoords(event);
         this.updateSelection(gridCoords);
+        return true;
+    }
+
+    private leftClickDragOnFrozenCell = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord): boolean => {
+        const clickInFrozenCols = componentPixelCoord.x < this.gridState.frozenColsWidth();
+        const clickInFrozenRows = componentPixelCoord.y < this.gridState.frozenRowsHeight();
+        if (!clickInFrozenCols && !clickInFrozenRows) {
+            return false;
+        }
+
+        if (clickInFrozenCols && clickInFrozenRows) {
+            // Can't drag onto corner to select all, so ignore
+        } else if (clickInFrozenCols) {
+            const coord = this.calculateGridCellCoords({ clientX: 0, clientY: event.clientY });
+            this.updateSelectionRow(coord);
+        } else if (clickInFrozenRows) {
+            const coord = this.calculateGridCellCoords({ clientX: event.clientX, clientY: 0 });
+            this.updateSelectionCol(coord);
+        }
+
         return true;
     }
 
@@ -450,15 +497,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return;
         }
 
-        if (componentPixelCoord.x < this.gridState.frozenColsWidth() ||
-            componentPixelCoord.y < this.gridState.frozenRowsHeight()
-        ) {
-            if (event.shiftKey) {
-                // Shift-clicking on a header isn't supported (yet), so do nothing
-                return;
-            }
-        }
-
         const currentCursorState = this.gridState.cursorState();
 
         if (this.props.onSelectionChangeEnd) {
@@ -471,7 +509,32 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private startSelection = (gridCoords: Coord) => {
-        const newCursorState = cursorState.startDrag(this.gridState.cursorState(), gridCoords);
+        const newCursorState = cursorState.startDrag(gridCoords);
+        this.startSelectionWithCursorState(newCursorState);
+    }
+
+    private selectAll = () => {
+        const newCursorState = cursorState.startRangeCorner(
+            { x: this.props.frozenCols, y: this.props.frozenRows },
+            { x: this.props.columns.length - 1, y: this.props.data.length - 1 });
+        this.startSelectionWithCursorState(newCursorState);
+    }
+
+    private selectRow = (coord: Coord) => {
+        const newCursorState = cursorState.startRangeRow(
+            { x: this.props.frozenCols, y: coord.y },
+            { x: this.props.columns.length - 1, y: coord.y });
+        this.startSelectionWithCursorState(newCursorState);
+    }
+
+    private selectCol = (coord: Coord) => {
+        const newCursorState = cursorState.startRangeColumn(
+            { x: coord.x, y: this.props.frozenRows },
+            { x: coord.x, y: this.props.data.length - 1 });
+        this.startSelectionWithCursorState(newCursorState);
+    }
+
+    private startSelectionWithCursorState = (newCursorState: cursorState.CursorStateWithSelection) => {
         if (this.props.onSelectionChangeStart) {
             this.props.onSelectionChangeStart(newCursorState.selection.selectedRange);
         }
@@ -480,7 +543,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
     private updateSelection = (gridCoords: Coord) => {
         const oldCursorState = this.gridState.cursorState();
-        if (!hasSelectionState(oldCursorState)) {
+        if (!hasSelectionCellState(oldCursorState)) {
             return;
         }
 
@@ -490,6 +553,31 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         };
 
         const newCursorState = cursorState.updateDrag(oldCursorState, truncatedCoords);
+        this.updateCursorStateIfDifferent(oldCursorState, newCursorState);
+    }
+
+    private updateSelectionRow = (coord: Coord) => {
+        const oldCursorState = this.gridState.cursorState();
+        if (!hasSelectionRowState(oldCursorState)) {
+            return;
+        }
+        const newCursorState = cursorState.updateRangeRow(oldCursorState, coord);
+        this.updateCursorStateIfDifferent(oldCursorState, newCursorState);
+    }
+
+    private updateSelectionCol = (coord: Coord) => {
+        const oldCursorState = this.gridState.cursorState();
+        if (!cursorState.hasSelectionColumnState(oldCursorState)) {
+            return;
+        }
+        const newCursorState = cursorState.updateRangeColumn(oldCursorState, coord);
+        this.updateCursorStateIfDifferent(oldCursorState, newCursorState);
+    }
+
+    private updateCursorStateIfDifferent = (
+        oldCursorState: cursorState.CursorStateWithSelection,
+        newCursorState: cursorState.CursorStateWithSelection,
+    ) => {
         if (this.props.onSelectionChangeUpdate) {
             const rangeChanged = cursorState.isSelectRangeDifferent(
                 oldCursorState.selection.selectedRange,
@@ -499,13 +587,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             }
         }
         this.gridState.cursorState(newCursorState);
-    }
-
-    private clearSelection = () => {
-        if (this.props.onSelectionChangeStart) {
-            this.props.onSelectionChangeStart(null);
-        }
-        this.gridState.cursorState(cursorState.createDefault());
     }
 
     private startEditingCell = (cellCoords: Coord) => {
@@ -567,7 +648,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         );
     }
 
-    private calculateGridCellCoords = (event: React.MouseEvent<any, any>) => {
+    private calculateGridCellCoords = (event: { clientX: number, clientY: number }) => {
         if (!this.rootRef.current) {
             throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
         }

@@ -104,41 +104,101 @@ describe('ReactCanvasGrid', () => {
             cy.get('#rcg-holder canvas').eq(1).as('Canvas');
         });
 
-        it('fires start and end events with null selection ranges when clicking on a frozen cell', () => {
+        it('selects row when clicking on a cell in a frozen column (i.e. a row header)', () => {
             cy.get('@Canvas')
-                .click(5, 5, { force: true })
-                .then(() => expect(startStub).to.be.calledWith(null))
-                .then(() => expect(endStub).to.be.calledWith(null));
+                .click(10, 50, { force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 2 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 2 } }));
         });
 
-        it('fires start and end events with null ranges when clicking on a frozen cell after scrolling', () => {
+        it('selects multiple rows when dragging from one row header to another', () => {
             cy.get('@Canvas')
-                .trigger('wheel', { deltaX: 800, deltaY: 300 })
-                .click(5, 5, { force: true })
-                .then(() => expect(startStub).to.be.calledWith(null))
-                .then(() => expect(endStub).to.be.calledWith(null));
+                .trigger('mousedown', 10, 53, { buttons: 1, force: true })
+                .trigger('mousemove', 10, 95, { buttons: 1, force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 2 } }))
+                .then(() => expect(updateStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 4 } }));
         });
 
-        it('does not include frozen cells when dragging a selection range', () => {
+        it('selects multiple rows when shift-clicking after previously selecting another row', () => {
             cy.get('@Canvas')
-                .trigger('mousedown', 'center', { buttons: 1, force: true })
-                .trigger('mousemove', 5, 5, { buttons: 1, force: true })
-                .then(() => expect(updateStub).to.have.been.calledWithMatch({ topLeft: { x: 1, y: 1 } }));
+                .trigger('mousedown', 10, 53, { buttons: 1, force: true })
+                .trigger('mouseup', 10, 53, { buttons: 1, force: true })
+                .trigger('mousedown', 10, 95, { shiftKey: true, buttons: 1, force: true })
+                .trigger('mouseup', 10, 95, { shiftKey: true, buttons: 1, force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 2 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 2 } }))
+                .then(() => expect(updateStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 4 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 2 },
+                    bottomRight: { x: 19, y: 4 } }));
         });
 
-        it('fires nothing when shift-clicking a frozen cell', () => {
+        it('selects column when clicking on a cell in a frozen row (i.e. a column header)', () => {
             cy.get('@Canvas')
-                .click({ force: true })
-                .then(() => {
-                    (startStub as any).resetHistory();
-                    (updateStub as any).resetHistory();
-                    (endStub as any).resetHistory();
-                })
-                .trigger('mousedown', 5, 5, { buttons: 1, shiftKey: true, force: true })
-                .trigger('mouseup', 5, 5, { buttons: 1, shiftKey: true, force: true })
-                .then(() => expect(startStub).not.to.have.been.called)
-                .then(() => expect(updateStub).not.to.have.been.called)
-                .then(() => expect(endStub).not.to.have.been.called);
+                .click(120, 10, { force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 2, y: 99 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 2, y: 99 } }));
+        });
+
+        it('selects multiple columns when dragging from one row header to another', () => {
+            cy.get('@Canvas')
+                .trigger('mousedown', 120, 10, { buttons: 1, force: true })
+                .trigger('mousemove', 160, 10, { buttons: 1, force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 2, y: 99 } }))
+                .then(() => expect(updateStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 3, y: 99 } }));
+        });
+
+        it('selects multiple columns when shift-clicking after previously selecting another column', () => {
+            cy.get('@Canvas')
+                .trigger('mousedown', 140, 10, { buttons: 1, force: true })
+                .trigger('mouseup', 140, 10, { buttons: 1, force: true })
+                .trigger('mousedown', 160, 10, { shiftKey: true, buttons: 1, force: true })
+                .trigger('mouseup', 160, 10, { shiftKey: true, buttons: 1, force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 2, y: 99 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 2, y: 99 } }))
+                .then(() => expect(updateStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 3, y: 99 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 2, y: 1 },
+                    bottomRight: { x: 3, y: 99 } }));
+        });
+
+        it('selects all when clicking on a cell in a frozen row and column (i.e. a corner cell)', () => {
+            cy.get('@Canvas')
+                .click(10, 10, { force: true })
+                .then(() => expect(startStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 1 },
+                    bottomRight: { x: 19, y: 99 } }))
+                .then(() => expect(endStub).to.have.been.calledWith({
+                    topLeft: { x: 1, y: 1 },
+                    bottomRight: { x: 19, y: 99 } }));
         });
     });
 });
