@@ -111,11 +111,34 @@ describe('ReactCanvasGrid', () => {
                 .then(() => expect(endStub).to.be.calledWith(null));
         });
 
+        it('fires start and end events with null ranges when clicking on a frozen cell after scrolling', () => {
+            cy.get('@Canvas')
+                .trigger('wheel', { deltaX: 800, deltaY: 300 })
+                .click(5, 5, { force: true })
+                .then(() => expect(startStub).to.be.calledWith(null))
+                .then(() => expect(endStub).to.be.calledWith(null));
+        });
+
         it('does not include frozen cells when dragging a selection range', () => {
             cy.get('@Canvas')
                 .trigger('mousedown', 'center', { buttons: 1, force: true })
                 .trigger('mousemove', 5, 5, { buttons: 1, force: true })
                 .then(() => expect(updateStub).to.have.been.calledWithMatch({ topLeft: { x: 1, y: 1 } }));
+        });
+
+        it('fires nothing when shift-clicking a frozen cell', () => {
+            cy.get('@Canvas')
+                .click({ force: true })
+                .then(() => {
+                    (startStub as any).resetHistory();
+                    (updateStub as any).resetHistory();
+                    (endStub as any).resetHistory();
+                })
+                .trigger('mousedown', 5, 5, { buttons: 1, shiftKey: true, force: true })
+                .trigger('mouseup', 5, 5, { buttons: 1, shiftKey: true, force: true })
+                .then(() => expect(startStub).not.to.have.been.called)
+                .then(() => expect(updateStub).not.to.have.been.called)
+                .then(() => expect(endStub).not.to.have.been.called);
         });
     });
 });
