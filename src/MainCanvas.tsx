@@ -1,83 +1,52 @@
-import { consumer, transformer } from 'instigator';
+import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
+import { FrozenCanvasProps } from './FrozenCanvas';
+import { GridCanvas } from './GridCanvas';
 import { GridState } from './gridState';
-import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
+import { MainCanvasRendererPosition } from './mainCanvasRenderer';
 
 export interface MainCanvasProps<T> {
     width: number;
     height: number;
+    frozenColsWidth: number;
+    frozenRowsHeight: number;
     gridState: GridState<T>;
 }
 
 export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
-    private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
-    private renderer: MainCanvasRenderer<T>|null = null;
+    private readonly posProps: ReactiveFn<MainCanvasRendererPosition>;
 
-    constructor(props: MainCanvasProps<T>) {
+    public constructor(props: FrozenCanvasProps<T>) {
         super(props);
+
+        const mainVisibleRect = transformer(
+            [props.gridState.visibleRect, props.gridState.frozenRowsHeight, props.gridState.frozenColsWidth],
+            (visibleRect, frozenRowsHeight, frozenColsWidth): ClientRect => {
+                return {
+                    ...visibleRect,
+                    top: visibleRect.top + frozenRowsHeight,
+                    left: visibleRect.left + frozenColsWidth,
+                    height: visibleRect.height - frozenRowsHeight,
+                    width: visibleRect.width - frozenColsWidth,
+                };
+            });
+        this.posProps = transformer([mainVisibleRect], (visibleRect): MainCanvasRendererPosition => ({
+            gridOffset: { x: visibleRect.left, y: visibleRect.top },
+            visibleRect,
+        }));
     }
 
     public render() {
+        const props = {
+            ...this.props,
+            top: this.props.frozenRowsHeight,
+            left: this.props.frozenColsWidth,
+            height: this.props.height - this.props.frozenRowsHeight,
+            width: this.props.width - this.props.frozenColsWidth,
+            posProps: this.posProps,
+        };
         return (
-            <canvas
-                ref={this.canvasRef}
-                width={this.props.width * this.props.gridState.dpr()}
-                height={this.props.height * this.props.gridState.dpr()}
-                style={{
-                    position: 'absolute',
-                    width: `${this.props.width}px`,
-                    height: `${this.props.height}px`,
-                    top: 0,
-                    left: 0,
-                }}
-            />
+            <GridCanvas {...props} />
         );
-    }
-
-    public componentDidMount() {
-        if (!this.canvasRef.current) {
-            throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
-        }
-
-        const gridState = this.props.gridState;
-        const basicProps = transformer([
-            gridState.data,
-            gridState.rowHeight,
-            gridState.columnBoundaries,
-            gridState.columns,
-            gridState.gridInnerSize,
-            gridState.borderWidth,
-        ],
-        (
-            data,
-            rowHeight,
-            colBoundaries,
-            columns,
-            gridInnerSize,
-            borderWidth,
-        ): MainCanvasRendererBasics<T> => ({
-            data,
-            rowHeight,
-            colBoundaries,
-            columns,
-            gridInnerSize,
-            borderWidth,
-        }));
-
-        const posProps = transformer(
-            [gridState.gridOffset, gridState.visibleRect],
-            (gridOffset, visibleRect): MainCanvasRendererPosition => ({ gridOffset, visibleRect }));
-
-        {
-            const canvasSize = { width: this.props.width, height: this.props.height };
-            this.renderer = new MainCanvasRenderer(this.canvasRef.current, canvasSize, basicProps(), gridState.dpr());
-        }
-
-        consumer([basicProps, posProps], (newBasicProps, newPosProps) => {
-            if (this.renderer) {
-                const canvasSize = { width: this.props.width, height: this.props.height };
-                this.renderer.updateProps(canvasSize, newBasicProps, newPosProps);
-            }
-        });
     }
 }

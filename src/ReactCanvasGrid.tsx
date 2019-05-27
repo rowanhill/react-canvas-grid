@@ -196,6 +196,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 <MainCanvas<T>
                     width={canvasSize.width}
                     height={canvasSize.height}
+                    frozenColsWidth={frozenColsWidth}
+                    frozenRowsHeight={frozenRowsHeight}
                     gridState={this.gridState}
                 />
                 <HighlightCanvas

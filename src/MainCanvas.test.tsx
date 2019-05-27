@@ -24,6 +24,8 @@ const MockedRenderer = MainCanvasRenderer as jest.Mock<MainCanvasRenderer<null>>
 const props: MainCanvasProps<null> = {
     height: 100,
     width: 100,
+    frozenColsWidth: 0,
+    frozenRowsHeight: 0,
     gridState: new GridState([{width: 40} as any], [], 20, 1, 0, 0),
 };
 
