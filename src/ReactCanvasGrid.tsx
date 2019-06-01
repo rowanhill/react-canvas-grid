@@ -31,6 +31,8 @@ interface RequiredProps<T> {
     onSelectionCleared?: () => void;
 
     onCellDataChanged?: (event: CellDataChangeEvent<T>) => void;
+
+    onKeyPress?: (event: KeyboardEvent) => void;
 }
 interface DefaultedProps {
     cssWidth: string;
@@ -186,11 +188,14 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 onMouseUp={this.onMouseUp}
                 onMouseMove={this.onMouseMove}
                 onDoubleClick={this.onDoubleClick}
+                onKeyPress={this.onKeyPress}
+                tabIndex={1}
                 style={{
                     position: 'relative',
                     width: this.props.cssWidth,
                     height: this.props.cssHeight,
                     overflow: 'hidden',
+                    outline: 'none',
                 }}
             >
                 <MainCanvas<T>
@@ -293,6 +298,17 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     private onDoubleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         const cellCoords = this.calculateGridCellCoords(event);
         this.startEditingCell(cellCoords);
+    }
+
+    private onKeyPress = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (this.props.onKeyPress &&
+            // Check if the root is focused (rather than a child). We use ownerDocument because
+            // otherwise when using `document` in Cypress, we get the test iframe's document.
+            this.rootRef.current && this.rootRef.current.ownerDocument &&
+            this.rootRef.current === this.rootRef.current.ownerDocument.activeElement
+        ) {
+            this.props.onKeyPress(event.nativeEvent);
+        }
     }
 
     private updateOffsetByDelta = (deltaX: number, deltaY: number): boolean => {
@@ -615,7 +631,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private cancelEditingCell = () => {
-        this.setState({ editingCell: null });
+        this.setState({ editingCell: null }, this.focusRoot);
     }
 
     private stopEditingCell = (newData: T) => {
@@ -632,7 +648,13 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 newData,
             });
         }
-        this.setState({ editingCell: null });
+        this.setState({ editingCell: null }, this.focusRoot);
+    }
+
+    private focusRoot = () => {
+        if (this.rootRef.current) {
+            this.rootRef.current.focus({ preventScroll: true });
+        }
     }
 
     /**

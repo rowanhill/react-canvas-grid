@@ -155,6 +155,7 @@ interface AppState {
   selectedRange: SelectRange | null;
   isDragging: boolean;
   focusedCol: number | null;
+  lastKeyPress: string | null;
 }
 
 class App extends Component<{}, AppState> {
@@ -166,6 +167,7 @@ class App extends Component<{}, AppState> {
       selectedRange: null,
       isDragging: false,
       focusedCol: null,
+      lastKeyPress: null,
     };
   }
 
@@ -188,6 +190,7 @@ class App extends Component<{}, AppState> {
               &nbsp;
               {this.state.selectedRange ? JSON.stringify(this.state.selectedRange) : ''}
             </div>
+            <div>{this.state.lastKeyPress}</div>
             <button onClick={this.replaceDataLarge}>Replace data (Large)</button>
             <button onClick={this.replaceDataSmall}>Replace data (Small)</button>
             <button onClick={this.updateCell}>Update cell</button>
@@ -218,6 +221,7 @@ class App extends Component<{}, AppState> {
                 onSelectionCleared={this.selectionCleared}
                 onCellDataChanged={this.onCellDataChanged}
                 focusedColIndex={this.state.focusedCol}
+                onKeyPress={this.onKeyPressed}
               />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
@@ -304,6 +308,12 @@ class App extends Component<{}, AppState> {
           return row;
         }
       }),
+    });
+  }
+
+  private onKeyPressed = (event: KeyboardEvent) => {
+    this.setState({
+      lastKeyPress: event.key,
     });
   }
 }
