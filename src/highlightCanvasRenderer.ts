@@ -64,11 +64,15 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     }
 
     public updateProps(
+        canvas: HTMLCanvasElement,
         basicProps: HighlightCanvasRendererBasics,
         posProps: HighlightCanvasRendererPosition,
         scrollProps: HighlightCanvasRendererScrollbar,
         selectProps: HighlightCanvasRendererSelection,
     ) {
+        if (this.canvas !== canvas) {
+            this.setCanvas(canvas);
+        }
         this.basicProps = basicProps;
         this.posProps = posProps;
         this.scrollProps = scrollProps,

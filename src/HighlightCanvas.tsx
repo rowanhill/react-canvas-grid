@@ -1,4 +1,4 @@
-import { consumer, transformer } from 'instigator';
+import { consumer, ReactiveConsumer, transformer } from 'instigator';
 import * as React from 'react';
 import { GridState } from './gridState';
 import {
@@ -18,6 +18,7 @@ export interface HighlightCanvasProps {
 export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: HighlightCanvasRenderer|null = null;
+    private renderCallback: ReactiveConsumer|null = null;
 
     constructor(props: HighlightCanvasProps) {
         super(props);
@@ -119,12 +120,22 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             (cursorState): HighlightCanvasRendererSelection => ({ cursorState}));
 
         this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
-        consumer(
+        this.renderCallback = consumer(
             [basicProps, posProps, scrollProps, selectionProps],
             (newBasicProps, newPosProps, newScrollProps, newSelectionProps) => {
                 if (this.renderer) {
-                    this.renderer.updateProps(newBasicProps, newPosProps, newScrollProps, newSelectionProps);
+                    if (!this.canvasRef.current) {
+                        throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
+                    }
+                    this.renderer.updateProps(
+                        this.canvasRef.current, newBasicProps, newPosProps, newScrollProps, newSelectionProps);
                 }
             });
+    }
+
+    public componentWillUnmount() {
+        if (this.renderCallback) {
+            this.renderCallback.deregister();
+        }
     }
 }
