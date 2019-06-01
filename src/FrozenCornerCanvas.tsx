@@ -2,10 +2,10 @@ import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
 import { FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
-import { MainCanvasRendererPosition } from './mainCanvasRenderer';
+import { GridCanvasRendererPosition } from './gridCanvasRenderer';
 
 export class FrozenCornerCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
-    private readonly cornerPosProps: ReactiveFn<MainCanvasRendererPosition>;
+    private readonly cornerPosProps: ReactiveFn<GridCanvasRendererPosition>;
 
     public constructor(props: FrozenCanvasProps<T>) {
         super(props);
@@ -21,7 +21,7 @@ export class FrozenCornerCanvas<T> extends React.Component<FrozenCanvasProps<T>,
                     bottom: visibleRect.height,
                 };
             });
-        this.cornerPosProps = transformer([cornerVisibleRect], (visibleRect): MainCanvasRendererPosition => ({
+        this.cornerPosProps = transformer([cornerVisibleRect], (visibleRect): GridCanvasRendererPosition => ({
             gridOffset: { x: visibleRect.left, y: visibleRect.top },
             visibleRect,
         }));

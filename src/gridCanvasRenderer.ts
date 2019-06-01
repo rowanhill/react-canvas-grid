@@ -2,7 +2,7 @@ import shallowEqual from 'shallow-equals';
 import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
 import { Bounds, ColumnDef, Coord, DataRow, Size } from './types';
 
-export interface MainCanvasRendererBasics<T> {
+export interface GridCanvasRendererBasics<T> {
     data: Array<DataRow<T>>;
     rowHeight: number;
     colBoundaries: Array<{left: number; right: number}>;
@@ -11,7 +11,7 @@ export interface MainCanvasRendererBasics<T> {
     borderWidth: number;
 }
 
-export interface MainCanvasRendererPosition {
+export interface GridCanvasRendererPosition {
     gridOffset: Coord;
     visibleRect: ClientRect;
 }
@@ -26,13 +26,13 @@ const defaultPosProps = {
     visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
 };
 
-export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
+export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     private canvasSize: Size;
-    private basicProps: MainCanvasRendererBasics<T>;
-    private posProps: MainCanvasRendererPosition = defaultPosProps;
+    private basicProps: GridCanvasRendererBasics<T>;
+    private posProps: GridCanvasRendererPosition = defaultPosProps;
     private prevDraw: PreviousDrawInfo|null = null;
 
-    constructor(canvas: HTMLCanvasElement, canvasSize: Size, basicProps: MainCanvasRendererBasics<T>, dpr: number) {
+    constructor(canvas: HTMLCanvasElement, canvasSize: Size, basicProps: GridCanvasRendererBasics<T>, dpr: number) {
         super(canvas, dpr, false);
         this.canvasSize = canvasSize;
         this.basicProps = basicProps;
@@ -40,8 +40,8 @@ export class MainCanvasRenderer<T> extends CommonCanvasRenderer<T> {
 
     public updateProps = (
         canvasSize: Size,
-        basicProps: MainCanvasRendererBasics<T>,
-        posProps: MainCanvasRendererPosition,
+        basicProps: GridCanvasRendererBasics<T>,
+        posProps: GridCanvasRendererPosition,
     ) => {
         if (!shallowEqual(this.canvasSize, canvasSize) || !shallowEqual(this.basicProps, basicProps)) {
             this.prevDraw = null;

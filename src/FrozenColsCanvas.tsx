@@ -2,10 +2,10 @@ import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
 import { FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
-import { MainCanvasRendererPosition } from './mainCanvasRenderer';
+import { GridCanvasRendererPosition } from './gridCanvasRenderer';
 
 export class FrozenColsCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
-    private readonly colsPosProps: ReactiveFn<MainCanvasRendererPosition>;
+    private readonly colsPosProps: ReactiveFn<GridCanvasRendererPosition>;
 
     public constructor(props: FrozenCanvasProps<T>) {
         super(props);
@@ -21,7 +21,7 @@ export class FrozenColsCanvas<T> extends React.Component<FrozenCanvasProps<T>, {
                     height: visibleRect.height - frozenRowsHeight,
                 };
             });
-        this.colsPosProps = transformer([colsVisibleRect], (visibleRect): MainCanvasRendererPosition => ({
+        this.colsPosProps = transformer([colsVisibleRect], (visibleRect): GridCanvasRendererPosition => ({
             gridOffset: { x: visibleRect.left, y: visibleRect.top },
             visibleRect,
         }));

@@ -1,4 +1,4 @@
-import { MainCanvasRenderer, MainCanvasRendererBasics, MainCanvasRendererPosition } from './mainCanvasRenderer';
+import { GridCanvasRenderer, GridCanvasRendererBasics, GridCanvasRendererPosition } from './gridCanvasRenderer';
 import { execRaf, mockRaf, resetRaf } from './rafTestHelper';
 import { CellDef, ColumnDef, DataRow, Size } from './types';
 
@@ -6,9 +6,9 @@ type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 // Some props can be derived from others, so they are in a sense 'denormalised'. To prevent these
 // getting out of sync in the tests, we calculate the full props from a 'normalised' set of props.
-type NormalisedProps<T> = Omit<Omit<MainCanvasRendererBasics<T>, 'colBoundaries'>, 'gridInnerSize'>;
+type NormalisedProps<T> = Omit<Omit<GridCanvasRendererBasics<T>, 'colBoundaries'>, 'gridInnerSize'>;
 
-function calcProps<T>(props: NormalisedProps<T>): MainCanvasRendererBasics<T> {
+function calcProps<T>(props: NormalisedProps<T>): GridCanvasRendererBasics<T> {
     let curLeft = 0;
     const colBoundaries = props.columns.map((column) => {
         const boundary = { left: curLeft, right: curLeft + column.width };
@@ -46,7 +46,7 @@ function row(): DataRow<null> {
     return dataRow;
 }
 
-describe('MainCanvasRenderer', () => {
+describe('GridCanvasRenderer', () => {
     beforeEach(() => {
         mockContext = {
             scale: jest.fn(),
@@ -58,7 +58,7 @@ describe('MainCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new MainCanvasRenderer<null>(mockCanvas, canvasSize, props, dpr);
+        renderer = new GridCanvasRenderer<null>(mockCanvas, canvasSize, props, dpr);
 
         mockRaf();
     });
@@ -72,7 +72,7 @@ describe('MainCanvasRenderer', () => {
     const canvasSize: Size = { height: 50, width: 50 };
     let mockContext: CanvasRenderingContext2D;
     let mockCanvas: HTMLCanvasElement;
-    let renderer: MainCanvasRenderer<null>;
+    let renderer: GridCanvasRenderer<null>;
 
     const normalisedProps: NormalisedProps<null> = {
         borderWidth: 1,
@@ -80,10 +80,10 @@ describe('MainCanvasRenderer', () => {
         data: [row(), row(), row(), row(), row(), row(), row(), row(), row(), row()],
         rowHeight: 9,
     };
-    const props: MainCanvasRendererBasics<null> = calcProps(normalisedProps);
+    const props: GridCanvasRendererBasics<null> = calcProps(normalisedProps);
 
     describe('draw', () => {
-        const posProps: MainCanvasRendererPosition = {
+        const posProps: GridCanvasRendererPosition = {
             gridOffset: { x: 10, y: 10 },
             visibleRect: {
                 left: 10,
@@ -143,7 +143,7 @@ describe('MainCanvasRenderer', () => {
         });
 
         describe('with previous draw', () => {
-            function getNewPosProps(dx: number, dy: number): MainCanvasRendererPosition {
+            function getNewPosProps(dx: number, dy: number): GridCanvasRendererPosition {
                 const x = posProps.gridOffset.x + dx;
                 const y = posProps.gridOffset.y + dy;
                 return {

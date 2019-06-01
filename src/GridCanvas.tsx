@@ -1,7 +1,7 @@
 import { consumer, ReactiveConsumer, ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
+import { GridCanvasRenderer, GridCanvasRendererPosition } from './gridCanvasRenderer';
 import { GridState } from './gridState';
-import { MainCanvasRenderer, MainCanvasRendererPosition } from './mainCanvasRenderer';
 
 export interface GridCanvasProps<T> {
     top: number;
@@ -9,12 +9,12 @@ export interface GridCanvasProps<T> {
     width: number;
     height: number;
     gridState: GridState<T>;
-    posProps: ReactiveFn<MainCanvasRendererPosition>;
+    posProps: ReactiveFn<GridCanvasRendererPosition>;
 }
 
 export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
-    private renderer: MainCanvasRenderer<T>|null = null;
+    private renderer: GridCanvasRenderer<T>|null = null;
     private renderCallback: ReactiveConsumer|null = null;
 
     public render() {
@@ -67,7 +67,7 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
         {
             const canvasSize = { width: this.props.width, height: this.props.height };
             // TODO: pass canvas ref in to render function, not constructor
-            this.renderer = new MainCanvasRenderer(this.canvasRef.current, canvasSize, basicProps(), gridState.dpr());
+            this.renderer = new GridCanvasRenderer(this.canvasRef.current, canvasSize, basicProps(), gridState.dpr());
         }
 
         this.renderCallback = consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {

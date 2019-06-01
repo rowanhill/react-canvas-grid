@@ -1,25 +1,25 @@
 import { mount } from 'enzyme';
 import * as React from 'react';
+import { GridCanvasRenderer } from './gridCanvasRenderer';
 import { GridState } from './gridState';
 import { MainCanvas, MainCanvasProps } from './MainCanvas';
-import { MainCanvasRenderer } from './mainCanvasRenderer';
 
 const mockFixScale = jest.fn();
 const mockDraw = jest.fn();
 const mockUpdateProps = jest.fn();
-jest.mock('./mainCanvasRenderer', () => {
+jest.mock('./gridCanvasRenderer', () => {
     return {
-        MainCanvasRenderer: jest.fn().mockImplementation(() => {
+        GridCanvasRenderer: jest.fn().mockImplementation(() => {
             return {
                 fixScale: mockFixScale,
                 draw: mockDraw,
                 updateProps: mockUpdateProps,
-                __dummy__: 'fake MainCanvasRenderer',
+                __dummy__: 'fake GridCanvasRenderer',
             };
         }),
     };
 });
-const MockedRenderer = MainCanvasRenderer as jest.Mock<MainCanvasRenderer<null>>;
+const MockedRenderer = GridCanvasRenderer as jest.Mock<GridCanvasRenderer<null>>;
 
 const props: MainCanvasProps<null> = {
     height: 100,
