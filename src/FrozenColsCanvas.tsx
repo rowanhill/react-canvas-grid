@@ -11,14 +11,16 @@ export class FrozenColsCanvas<T> extends React.Component<FrozenCanvasProps<T>, {
         super(props);
 
         const colsVisibleRect = transformer(
-            [props.gridState.visibleRect, props.gridState.frozenRowsHeight],
-            (visibleRect, frozenRowsHeight): ClientRect => {
+            [props.gridState.visibleRect, props.gridState.frozenRowsHeight, props.gridState.horizontalGutterBounds],
+            (visibleRect, frozenRowsHeight, horizontalGutterBounds): ClientRect => {
+                const scrollGutterHeight = horizontalGutterBounds ? horizontalGutterBounds.height : 0;
                 return {
                     ...visibleRect,
                     left: 0,
                     right: visibleRect.width,
                     top: visibleRect.top + frozenRowsHeight,
-                    height: visibleRect.height - frozenRowsHeight,
+                    bottom: visibleRect.bottom - scrollGutterHeight,
+                    height: visibleRect.height - frozenRowsHeight - scrollGutterHeight,
                 };
             });
         this.colsPosProps = transformer([colsVisibleRect], (visibleRect): GridCanvasRendererPosition => ({
@@ -28,11 +30,13 @@ export class FrozenColsCanvas<T> extends React.Component<FrozenCanvasProps<T>, {
     }
 
     public render() {
+        const horizontalGutterBounds = this.props.gridState.horizontalGutterBounds();
+        const scrollGutterHeight = horizontalGutterBounds ? horizontalGutterBounds.height : 0;
         const props = {
             ...this.props,
             top: this.props.frozenRowsHeight,
             left: 0,
-            height: this.props.height - this.props.frozenRowsHeight,
+            height: this.props.height - this.props.frozenRowsHeight - scrollGutterHeight,
             width: this.props.frozenColsWidth,
             posProps: this.colsPosProps,
         };
