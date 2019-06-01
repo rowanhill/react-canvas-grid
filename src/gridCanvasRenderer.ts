@@ -39,10 +39,14 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     }
 
     public updateProps = (
+        canvas: HTMLCanvasElement,
         canvasSize: Size,
         basicProps: GridCanvasRendererBasics<T>,
         posProps: GridCanvasRendererPosition,
     ) => {
+        if (this.canvas !== canvas) {
+            this.setCanvas(canvas);
+        }
         if (!shallowEqual(this.canvasSize, canvasSize) || !shallowEqual(this.basicProps, basicProps)) {
             this.prevDraw = null;
         }

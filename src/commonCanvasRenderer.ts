@@ -3,20 +3,24 @@ import { CellDef, CustomDrawCallbackMetadata, getCellText } from './types';
 export const borderColour = 'lightgrey';
 
 export class CommonCanvasRenderer<T> {
-    protected readonly canvas: HTMLCanvasElement;
-    protected readonly context: CanvasRenderingContext2D;
+    protected canvas: HTMLCanvasElement;
+    protected context: CanvasRenderingContext2D;
+    protected readonly alpha: boolean;
     protected readonly dpr: number;
 
     private queuedRender: number | null = null;
 
     constructor(canvas: HTMLCanvasElement, dpr: number, alpha: boolean) {
+        this.alpha = alpha;
+        this.dpr = dpr;
+
+        // Below is same as setCanvas, copied here to appease compiler
         this.canvas = canvas;
-        const context = this.canvas.getContext('2d', { alpha });
+        const context = this.canvas.getContext('2d', { alpha: this.alpha });
         if (!context) {
             throw new Error('Could not create canvas contex');
         }
         this.context = context;
-        this.dpr = dpr;
     }
 
     public drawScaled(draw: () => void) {
@@ -42,6 +46,15 @@ export class CommonCanvasRenderer<T> {
 
         renderBackground(this.context, cellBounds, cell, metadata);
         renderText(this.context, cellBounds, cell, metadata);
+    }
+
+    protected setCanvas = (canvas: HTMLCanvasElement) => {
+        this.canvas = canvas;
+        const context = this.canvas.getContext('2d', { alpha: this.alpha });
+        if (!context) {
+            throw new Error('Could not create canvas contex');
+        }
+        this.context = context;
     }
 
     private drawCellBackgroundDefault = (

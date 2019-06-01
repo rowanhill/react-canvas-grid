@@ -126,7 +126,7 @@ describe('GridCanvasRenderer', () => {
                 };
                 jest.spyOn(renderer, 'drawCell');
 
-                renderer.updateProps(canvasSize, props, shiftedPosProps);
+                renderer.updateProps(mockCanvas, canvasSize, props, shiftedPosProps);
                 execRaf();
 
                 expect(renderer.drawCell).toHaveBeenCalledTimes(18);
@@ -163,10 +163,10 @@ describe('GridCanvasRenderer', () => {
                 jest.spyOn(renderer, 'drawNewBorderBackground');
                 jest.spyOn(renderer, 'shiftExistingCanvas');
                 const newProps = getNewPosProps(3, 5);
-                renderer.updateProps(canvasSize, props, posProps);
+                renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                 execRaf();
 
-                renderer.updateProps(canvasSize, props, newProps);
+                renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                 execRaf();
 
                 expect(renderer.shiftExistingCanvas).toHaveBeenCalledWith(-3, -5);
@@ -179,10 +179,10 @@ describe('GridCanvasRenderer', () => {
                 jest.spyOn(renderer, 'shiftExistingCanvas');
                 jest.spyOn(renderer, 'drawWholeBorderBackground');
                 const newProps = calcProps({...normalisedProps, borderWidth: 2});
-                renderer.updateProps(canvasSize, props, posProps);
+                renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                 execRaf();
 
-                renderer.updateProps(canvasSize, newProps, posProps);
+                renderer.updateProps(mockCanvas, canvasSize, newProps, posProps);
                 execRaf();
 
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
@@ -193,11 +193,11 @@ describe('GridCanvasRenderer', () => {
             describe('cell redrawing', () => {
                 it('redraws cells on the bottom when scrolling down', () => {
                     const newProps = getNewPosProps(0, 5);
-                    renderer.updateProps(canvasSize, props, posProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(canvasSize, props, newProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
@@ -208,11 +208,11 @@ describe('GridCanvasRenderer', () => {
 
                 it('redraws cells on the top when scrolling up', () => {
                     const newProps = getNewPosProps(0, -5);
-                    renderer.updateProps(canvasSize, props, posProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(canvasSize, props, newProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(4);
@@ -223,11 +223,11 @@ describe('GridCanvasRenderer', () => {
 
                 it('redraws cells on the right when scrolling right`', () => {
                     const newProps = getNewPosProps(5, 0);
-                    renderer.updateProps(canvasSize, props, posProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(canvasSize, props, newProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
@@ -238,11 +238,11 @@ describe('GridCanvasRenderer', () => {
 
                 it('redraws cells on the left when scrolling left`', () => {
                     const newProps = getNewPosProps(-5, 0);
-                    renderer.updateProps(canvasSize, props, posProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
                     jest.spyOn(renderer, 'drawCell');
 
-                    renderer.updateProps(canvasSize, props, newProps);
+                    renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
                     expect(renderer.drawCell).toHaveBeenCalledTimes(5);
@@ -250,6 +250,27 @@ describe('GridCanvasRenderer', () => {
                         expect(r.left).toBe(0);
                     });
                 });
+            });
+        });
+
+        describe('with a different canvas', () => {
+            it('updates the canvas and context member variables', () => {
+                const mockNewContext = {
+                    scale: jest.fn(),
+                    translate: jest.fn(),
+                    fillRect: jest.fn(),
+                    drawImage: jest.fn(),
+                    fillText: jest.fn(),
+                } as unknown as CanvasRenderingContext2D;
+                const mockNewCanvas = {
+                    getContext: () => mockNewContext,
+                } as unknown as HTMLCanvasElement;
+
+                renderer.updateProps(mockNewCanvas, canvasSize, props, posProps);
+                execRaf();
+
+                expect(mockNewContext.translate).toHaveBeenCalled();
+                expect(mockContext.translate).not.toHaveBeenCalled();
             });
         });
     });

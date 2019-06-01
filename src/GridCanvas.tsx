@@ -66,14 +66,16 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
 
         {
             const canvasSize = { width: this.props.width, height: this.props.height };
-            // TODO: pass canvas ref in to render function, not constructor
             this.renderer = new GridCanvasRenderer(this.canvasRef.current, canvasSize, basicProps(), gridState.dpr());
         }
 
         this.renderCallback = consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {
+                if (!this.canvasRef.current) {
+                    throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
+                }
                 const canvasSize = { width: this.props.width, height: this.props.height };
-                this.renderer.updateProps(canvasSize, newBasicProps, newPosProps);
+                this.renderer.updateProps(this.canvasRef.current, canvasSize, newBasicProps, newPosProps);
             }
         });
     }
