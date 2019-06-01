@@ -1,6 +1,8 @@
 import { batch, consumer } from 'instigator';
 import * as React from 'react';
-import { hasSelectionCellState, hasSelectionRowState, hasSelectionState, SelectRange } from './cursorState';
+import {
+    hasSelectionCellState, hasSelectionFrozenState, hasSelectionRowState, hasSelectionState, SelectRange,
+} from './cursorState';
 import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
@@ -454,12 +456,13 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             // We're editing a cell, so ignore grid drags
             return false;
         }
-        if (!hasSelectionState(this.gridState.cursorState())) {
+        const currentCursorState = this.gridState.cursorState();
+        if (!hasSelectionState(currentCursorState)) {
             return false;
         }
         const componentPixelCoord = this.calculateComponentPixel(event);
 
-        if (this.leftClickDragOnFrozenCell(event, componentPixelCoord)) {
+        if (hasSelectionFrozenState(currentCursorState) && this.leftClickDragOnFrozenCell(event, componentPixelCoord)) {
             return true;
         }
 

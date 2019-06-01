@@ -200,5 +200,20 @@ describe('ReactCanvasGrid', () => {
                     topLeft: { x: 1, y: 1 },
                     bottomRight: { x: 19, y: 99 } }));
         });
+
+        it('selects an enlarged range when dragged over cells "underneath" frozen cells', () => {
+            cy.get('@Canvas')
+                .trigger('wheel', { deltaX: 300, deltaY: 300 })
+                .trigger('mousedown', 'center', { buttons: 1, force: true })
+                .trigger('mousemove', 160, 10, { buttons: 1, force: true })
+                .then(() => expect(updateStub).to.have.been.calledWith({
+                    topLeft: { x: 9, y: 14 },
+                    bottomRight: { x: 10, y: 23 } }));
+            cy.get('@Canvas')
+                .trigger('mousemove', 10, 95, { buttons: 1, force: true })
+                .then(() => expect(updateStub).to.have.been.calledWith({
+                    topLeft: { x: 6, y: 18 },
+                    bottomRight: { x: 10, y: 23 } }));
+        });
     });
 });

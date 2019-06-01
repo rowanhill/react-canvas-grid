@@ -43,6 +43,9 @@ export function hasSelectionRowState(cursorState: CursorState): cursorState is C
 export function hasSelectionColumnState(cursorState: CursorState): cursorState is CursorStateWithColumnSelection {
     return cursorState.selection !== null && cursorState.selection.frozenStartCell.type === 'column';
 }
+export function hasSelectionFrozenState(cursorState: CursorState) {
+    return hasSelectionRowState(cursorState) || hasSelectionColumnState(cursorState);
+}
 
 export function createDefault(): CursorState {
     return {
