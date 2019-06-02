@@ -1,7 +1,12 @@
 import { batch, consumer } from 'instigator';
 import * as React from 'react';
 import {
-    hasSelectionCellState, hasSelectionFrozenState, hasSelectionRowState, hasSelectionState, SelectRange,
+    hasSelectionCellState,
+    hasSelectionColumnState,
+    hasSelectionFrozenState,
+    hasSelectionRowState,
+    hasSelectionState,
+    SelectRange,
 } from './cursorState';
 import * as cursorState from './cursorState';
 import { FrozenCanvas } from './FrozenCanvas';
@@ -78,6 +83,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     private readonly rootRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     private draggedScrollbar: { bar: 'x' | 'y'; origScrollbarStart: number; origClick: number } | null = null;
+    private scrollBySelectionDragTimerId: number | null = null;
 
     private gridState: GridState<T>;
 
@@ -466,6 +472,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return true;
         }
 
+        this.startScrollBySelectionDragIfNeeded(componentPixelCoord);
+
         const gridCoords = this.calculateGridCellCoords(event);
         this.updateSelection(gridCoords);
         return true;
@@ -476,6 +484,13 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         const clickInFrozenRows = componentPixelCoord.y < this.gridState.frozenRowsHeight();
         if (!clickInFrozenCols && !clickInFrozenRows) {
             return false;
+        }
+
+        const currentCursorState = this.gridState.cursorState();
+        if (hasSelectionRowState(currentCursorState)) {
+            this.startScrollBySelectionDragIfNeeded(componentPixelCoord, { suppressX: true });
+        } else if (hasSelectionColumnState(currentCursorState)) {
+            this.startScrollBySelectionDragIfNeeded(componentPixelCoord, { suppressY: true });
         }
 
         if (clickInFrozenCols && clickInFrozenRows) {
@@ -489,6 +504,73 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         }
 
         return true;
+    }
+
+    private clearScrollByDragTimer = () => {
+        if (this.scrollBySelectionDragTimerId) {
+            clearInterval(this.scrollBySelectionDragTimerId);
+            this.scrollBySelectionDragTimerId = null;
+        }
+    }
+
+    private startScrollBySelectionDragIfNeeded = (
+        componentPixelCoord: Coord,
+        options: { suppressX?: boolean; suppressY?: boolean; } = {},
+    ) => {
+        const rootSize = this.gridState.rootSize();
+        if (!rootSize) {
+            return;
+        }
+
+        // Clear any old scroll timer - the mouse pos has changed, so we'll set up a new timer if needed
+        this.clearScrollByDragTimer();
+
+        let deltaX = 0;
+        if (options.suppressX !== true) {
+            if (componentPixelCoord.x < 10) {
+                deltaX = -15;
+            } else if (componentPixelCoord.x < 20) {
+                deltaX = -10;
+            } else if (componentPixelCoord.x < 40) {
+                deltaX = -5;
+            } else if (componentPixelCoord.x < 50) {
+                deltaX = -1;
+            } else if (componentPixelCoord.x > rootSize.width - 10) {
+                deltaX = 15;
+            } else if (componentPixelCoord.x > rootSize.width - 20) {
+                deltaX = 10;
+            } else if (componentPixelCoord.x > rootSize.width - 40) {
+                deltaX = 5;
+            } else if (componentPixelCoord.x > rootSize.width - 50) {
+                deltaX = 1;
+            }
+        }
+
+        let deltaY = 0;
+        if (options.suppressY !== true) {
+            if (componentPixelCoord.y < 10) {
+                deltaY = -15;
+            } else if (componentPixelCoord.y < 20) {
+                deltaY = -10;
+            } else if (componentPixelCoord.y < 40) {
+                deltaY = -5;
+            } else if (componentPixelCoord.y < 50) {
+                deltaY = -1;
+            } else if (componentPixelCoord.y > rootSize.height - 10) {
+                deltaY = 15;
+            } else if (componentPixelCoord.y > rootSize.height - 20) {
+                deltaY = 10;
+            } else if (componentPixelCoord.y > rootSize.height - 40) {
+                deltaY = 5;
+            } else if (componentPixelCoord.y > rootSize.height - 50) {
+                deltaY = 1;
+            }
+        }
+
+        if (deltaX !== 0 || deltaY !== 0) {
+            this.scrollBySelectionDragTimerId = setInterval(this.updateOffsetByDelta, 10, deltaX, deltaY);
+            this.updateOffsetByDelta(deltaX, deltaY);
+        }
     }
 
     private mouseHoverOnScrollbar = (coord: Coord) => {
@@ -511,6 +593,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private mouseUpOnGrid = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord) => {
+        this.clearScrollByDragTimer();
+
         if (this.state.editingCell !== null) {
             // We're editing a cell, so ignore grid clicks
             return;
