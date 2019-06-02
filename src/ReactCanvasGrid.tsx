@@ -1,14 +1,15 @@
 import { batch, consumer } from 'instigator';
 import * as React from 'react';
-import {
-    hasSelectionCellState,
-    hasSelectionColumnState,
-    hasSelectionFrozenState,
-    hasSelectionRowState,
-    hasSelectionState,
-    SelectRange,
-} from './cursorState';
+import { SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
+import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './eventHandlers/gridMouseEvents';
+import {
+    mouseDownOnScrollbar,
+    mouseDragOnScrollbar,
+    mouseHoverOnScrollbar,
+    mouseUpOnScrollbar,
+} from './eventHandlers/scrollbarMouseEvents';
+import { updateOffsetByDelta } from './eventHandlers/scrolling';
 import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
 import { GridState } from './gridState';
@@ -16,7 +17,6 @@ import { HighlightCanvas } from './HighlightCanvas';
 import { shouldSelectionClear } from './highlightCanvasRenderer';
 import { InlineTextEditor } from './InlineEditor';
 import { MainCanvas } from './MainCanvas';
-import * as ScrollbarGeometry from './scrollbarGeometry';
 import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, Size } from './types';
 
 export interface CellDataChangeEvent<T> {
@@ -53,7 +53,7 @@ interface DefaultedProps {
 export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<DefaultedProps>;
 export type ReactCanvasGridProps<T> = RequiredProps<T> & DefaultedProps;
 
-interface EditingCell<T> {
+export interface EditingCell<T> {
     cell: EditableCellDef<T>;
     rowIndex: number;
     colIndex: number;
@@ -81,9 +81,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     };
 
     private readonly rootRef: React.RefObject<HTMLDivElement> = React.createRef();
-
-    private draggedScrollbar: { bar: 'x' | 'y'; origScrollbarStart: number; origClick: number } | null = null;
-    private scrollBySelectionDragTimerId: number | null = null;
 
     private gridState: GridState<T>;
 
@@ -249,7 +246,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             1: 16, // DOM_DELTA_LINE: 16 seems a decent guess. See https://stackoverflow.com/q/20110224
         };
         const scaleFactor = scaleFactors[e.deltaMode || 0];
-        const willUpdate = this.updateOffsetByDelta(e.deltaX * scaleFactor, e.deltaY * scaleFactor);
+        const willUpdate = updateOffsetByDelta(e.deltaX * scaleFactor, e.deltaY * scaleFactor, this.gridState);
 
         if (willUpdate) {
             // The grid is going to move, so we want to prevent any other scrolling from happening
@@ -259,22 +256,22 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
     private onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         const gridSize = this.gridState.gridSize();
-        const coord = this.calculateComponentPixel(event);
+        const coord = GridGeometry.calculateComponentPixel(event, this.rootRef.current);
 
         if (coord.x >= gridSize.width || coord.y >= gridSize.height) {
             // The click happened within the component but outside the grid, so ignore it
             return;
         }
 
-        if (this.mouseDownOnScrollbar(coord)) {
+        if (mouseDownOnScrollbar(coord, this.gridState)) {
             return;
         }
 
-        this.mouseDownOnGrid(event, coord);
+        mouseDownOnGrid(event, coord, this.rootRef, this.props, this.gridState, this.state.editingCell);
     }
 
     private onMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        const coord = this.calculateComponentPixel(event);
+        const coord = GridGeometry.calculateComponentPixel(event, this.rootRef.current);
         const gridSize = this.gridState.gridSize();
 
         if (coord.x >= gridSize.width || coord.y >= gridSize.height) {
@@ -282,29 +279,30 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return;
         }
 
-        if (this.mouseDragOnScrollbar(coord)) {
+        if (mouseDragOnScrollbar(coord, this.gridState)) {
             return;
-        } else if (this.mouseDragOnGrid(event)) {
+        } else if (mouseDragOnGrid(event, this.rootRef, this.props, this.gridState, this.state.editingCell)) {
             return;
         } else {
-            this.mouseHoverOnScrollbar(coord);
+            mouseHoverOnScrollbar(coord, this.gridState);
         }
     }
 
     private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         batch(() => {
-            const coord = this.calculateComponentPixel(event);
-            if (this.mouseUpOnScrollbar()) {
-                this.mouseHoverOnScrollbar(coord);
+            const coord = GridGeometry.calculateComponentPixel(event, this.rootRef.current);
+            if (mouseUpOnScrollbar()) {
+                mouseHoverOnScrollbar(coord, this.gridState);
                 return;
             }
 
-            this.mouseUpOnGrid(event, coord);
+            mouseUpOnGrid(this.props, this.gridState, this.state.editingCell);
         });
     }
 
     private onDoubleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        const cellCoords = this.calculateGridCellCoords(event);
+        const cellCoords =
+            GridGeometry.calculateGridCellCoordsFromGridState(event, this.rootRef.current, this.gridState);
         this.startEditingCell(cellCoords);
     }
 
@@ -317,379 +315,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         ) {
             this.props.onKeyPress(event.nativeEvent);
         }
-    }
-
-    private updateOffsetByDelta = (deltaX: number, deltaY: number): boolean => {
-        if (!this.state.rootSize) {
-            return false;
-        }
-        const canvasSize = this.gridState.canvasSize();
-        const gridSize = this.gridState.gridSize();
-        const gridOffset = this.gridState.gridOffset();
-        const newX = numberBetween(gridOffset.x + deltaX, 0, gridSize.width - canvasSize.width);
-        const newY = numberBetween(gridOffset.y + deltaY, 0, gridSize.height - canvasSize.height);
-
-        if (newX === gridOffset.x && newY === gridOffset.y) {
-            // We won't be moving, so return false
-            return false;
-        }
-
-        this.gridState.gridOffsetRaw({ x: newX, y: newY });
-
-        // We did move, so return true
-        return true;
-    }
-
-    private mouseDownOnScrollbar = (coord: Coord): boolean => {
-        const hitScrollbar = ScrollbarGeometry.getHitScrollBar(
-            coord,
-            this.gridState.horizontalScrollbarPos(),
-            this.gridState.verticalScrollbarPos(),
-        );
-
-        if (hitScrollbar) {
-            this.draggedScrollbar = {
-                bar: hitScrollbar,
-                origScrollbarStart: hitScrollbar === 'x' ?
-                    this.gridState.horizontalScrollbarPos()!.extent.start :
-                    this.gridState.verticalScrollbarPos()!.extent.start,
-                origClick: hitScrollbar === 'x' ? coord.x : coord.y,
-            };
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private mouseDownOnGrid = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord) => {
-        if (!isLeftButton(event)) {
-            return;
-        }
-        if (this.state.editingCell !== null) {
-            // We're editing a cell, so ignore clicks on grid
-            return;
-        }
-
-        if (this.leftClickOnFrozenCell(event, componentPixelCoord)) {
-            return;
-        }
-
-        const gridCoords = this.calculateGridCellCoords(event);
-
-        if (event.shiftKey && hasSelectionState(this.gridState.cursorState())) {
-            this.updateSelection(gridCoords);
-        } else {
-            this.startSelection(gridCoords);
-        }
-    }
-
-    private leftClickOnFrozenCell = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord): boolean => {
-        const clickInFrozenCols = componentPixelCoord.x < this.gridState.frozenColsWidth();
-        const clickInFrozenRows = componentPixelCoord.y < this.gridState.frozenRowsHeight();
-        if (!clickInFrozenCols && !clickInFrozenRows) {
-            return false;
-        }
-
-        if (clickInFrozenCols && clickInFrozenRows) {
-            this.selectAll();
-        } else if (clickInFrozenCols) {
-            const coord = this.calculateGridCellCoords({ clientX: 0, clientY: event.clientY });
-            if (event.shiftKey) {
-                this.updateSelectionRow(coord);
-            } else {
-                this.selectRow(coord);
-            }
-        } else if (clickInFrozenRows) {
-            const coord = this.calculateGridCellCoords({ clientX: event.clientX, clientY: 0 });
-            if (event.shiftKey) {
-                this.updateSelectionCol(coord);
-            } else {
-                this.selectCol(coord);
-            }
-        }
-
-        return true;
-    }
-
-    private mouseDragOnScrollbar = (coord: Coord): boolean => {
-        if (!this.draggedScrollbar) {
-            return false;
-        }
-
-        const values = this.draggedScrollbar.bar === 'x' ?
-            {
-                frozenLen: this.gridState.frozenColsWidth(),
-                canvasLen: this.gridState.canvasSize().width,
-                gridLen: this.gridState.gridSize().width,
-                barLen: this.gridState.horizontalScrollbarLength(),
-                clickCoord: coord.x,
-            } :
-            {
-                frozenLen: this.gridState.frozenRowsHeight(),
-                canvasLen: this.gridState.canvasSize().height,
-                gridLen: this.gridState.gridSize().height,
-                barLen: this.gridState.verticalScrollbarLength(),
-                clickCoord: coord.y,
-            };
-
-        const dragDistance = values.clickCoord - this.draggedScrollbar.origClick;
-        const desiredStart = this.draggedScrollbar.origScrollbarStart + dragDistance;
-        const desiredFraction = ScrollbarGeometry.calculateFractionFromStartPos(
-            desiredStart,
-            values.frozenLen,
-            values.canvasLen,
-            values.barLen,
-        );
-        const newOffset = GridGeometry.calculateGridOffsetFromFraction(
-            desiredFraction,
-            values.gridLen,
-            values.canvasLen,
-        );
-        if (this.draggedScrollbar.bar === 'x') {
-            this.gridState.gridOffsetRaw({ x: newOffset, y: this.gridState.gridOffset().y });
-        } else {
-            this.gridState.gridOffsetRaw({ x: this.gridState.gridOffset().x, y: newOffset });
-        }
-
-        return true;
-    }
-
-    private mouseDragOnGrid = (event: React.MouseEvent<any, any>): boolean => {
-        if (!isLeftButton(event)) {
-            return false;
-        }
-        if (this.state.editingCell !== null) {
-            // We're editing a cell, so ignore grid drags
-            return false;
-        }
-        const currentCursorState = this.gridState.cursorState();
-        if (!hasSelectionState(currentCursorState)) {
-            return false;
-        }
-        const componentPixelCoord = this.calculateComponentPixel(event);
-
-        if (hasSelectionFrozenState(currentCursorState) && this.leftClickDragOnFrozenCell(event, componentPixelCoord)) {
-            return true;
-        }
-
-        this.startScrollBySelectionDragIfNeeded(componentPixelCoord);
-
-        const gridCoords = this.calculateGridCellCoords(event);
-        this.updateSelection(gridCoords);
-        return true;
-    }
-
-    private leftClickDragOnFrozenCell = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord): boolean => {
-        const clickInFrozenCols = componentPixelCoord.x < this.gridState.frozenColsWidth();
-        const clickInFrozenRows = componentPixelCoord.y < this.gridState.frozenRowsHeight();
-        if (!clickInFrozenCols && !clickInFrozenRows) {
-            return false;
-        }
-
-        const currentCursorState = this.gridState.cursorState();
-        if (hasSelectionRowState(currentCursorState)) {
-            this.startScrollBySelectionDragIfNeeded(componentPixelCoord, { suppressX: true });
-        } else if (hasSelectionColumnState(currentCursorState)) {
-            this.startScrollBySelectionDragIfNeeded(componentPixelCoord, { suppressY: true });
-        }
-
-        if (clickInFrozenCols && clickInFrozenRows) {
-            // Can't drag onto corner to select all, so ignore
-        } else if (clickInFrozenCols) {
-            const coord = this.calculateGridCellCoords({ clientX: 0, clientY: event.clientY });
-            this.updateSelectionRow(coord);
-        } else if (clickInFrozenRows) {
-            const coord = this.calculateGridCellCoords({ clientX: event.clientX, clientY: 0 });
-            this.updateSelectionCol(coord);
-        }
-
-        return true;
-    }
-
-    private clearScrollByDragTimer = () => {
-        if (this.scrollBySelectionDragTimerId) {
-            clearInterval(this.scrollBySelectionDragTimerId);
-            this.scrollBySelectionDragTimerId = null;
-        }
-    }
-
-    private startScrollBySelectionDragIfNeeded = (
-        componentPixelCoord: Coord,
-        options: { suppressX?: boolean; suppressY?: boolean; } = {},
-    ) => {
-        const rootSize = this.gridState.rootSize();
-        if (!rootSize) {
-            return;
-        }
-
-        // Clear any old scroll timer - the mouse pos has changed, so we'll set up a new timer if needed
-        this.clearScrollByDragTimer();
-
-        let deltaX = 0;
-        if (options.suppressX !== true) {
-            if (componentPixelCoord.x < 10) {
-                deltaX = -15;
-            } else if (componentPixelCoord.x < 20) {
-                deltaX = -10;
-            } else if (componentPixelCoord.x < 40) {
-                deltaX = -5;
-            } else if (componentPixelCoord.x < 50) {
-                deltaX = -1;
-            } else if (componentPixelCoord.x > rootSize.width - 10) {
-                deltaX = 15;
-            } else if (componentPixelCoord.x > rootSize.width - 20) {
-                deltaX = 10;
-            } else if (componentPixelCoord.x > rootSize.width - 40) {
-                deltaX = 5;
-            } else if (componentPixelCoord.x > rootSize.width - 50) {
-                deltaX = 1;
-            }
-        }
-
-        let deltaY = 0;
-        if (options.suppressY !== true) {
-            if (componentPixelCoord.y < 10) {
-                deltaY = -15;
-            } else if (componentPixelCoord.y < 20) {
-                deltaY = -10;
-            } else if (componentPixelCoord.y < 40) {
-                deltaY = -5;
-            } else if (componentPixelCoord.y < 50) {
-                deltaY = -1;
-            } else if (componentPixelCoord.y > rootSize.height - 10) {
-                deltaY = 15;
-            } else if (componentPixelCoord.y > rootSize.height - 20) {
-                deltaY = 10;
-            } else if (componentPixelCoord.y > rootSize.height - 40) {
-                deltaY = 5;
-            } else if (componentPixelCoord.y > rootSize.height - 50) {
-                deltaY = 1;
-            }
-        }
-
-        if (deltaX !== 0 || deltaY !== 0) {
-            this.scrollBySelectionDragTimerId = setInterval(this.updateOffsetByDelta, 10, deltaX, deltaY);
-            this.updateOffsetByDelta(deltaX, deltaY);
-        }
-    }
-
-    private mouseHoverOnScrollbar = (coord: Coord) => {
-        const hoveredScrollbar = ScrollbarGeometry.getHitScrollBar(
-            coord,
-            this.gridState.horizontalScrollbarPos(),
-            this.gridState.verticalScrollbarPos(),
-        );
-
-        this.gridState.hoveredScrollbar(hoveredScrollbar);
-    }
-
-    private mouseUpOnScrollbar = (): boolean => {
-        if (this.draggedScrollbar) {
-            this.draggedScrollbar = null;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private mouseUpOnGrid = (event: React.MouseEvent<any, any>, componentPixelCoord: Coord) => {
-        this.clearScrollByDragTimer();
-
-        if (this.state.editingCell !== null) {
-            // We're editing a cell, so ignore grid clicks
-            return;
-        }
-
-        const currentCursorState = this.gridState.cursorState();
-
-        if (this.props.onSelectionChangeEnd) {
-            this.props.onSelectionChangeEnd(
-                hasSelectionState(currentCursorState) ?
-                    currentCursorState.selection.selectedRange :
-                    null,
-            );
-        }
-    }
-
-    private startSelection = (gridCoords: Coord) => {
-        const newCursorState = cursorState.startDrag(gridCoords);
-        this.startSelectionWithCursorState(newCursorState);
-    }
-
-    private selectAll = () => {
-        const newCursorState = cursorState.startRangeCorner(
-            { x: this.props.frozenCols, y: this.props.frozenRows },
-            { x: this.props.columns.length - 1, y: this.props.data.length - 1 });
-        this.startSelectionWithCursorState(newCursorState);
-    }
-
-    private selectRow = (coord: Coord) => {
-        const newCursorState = cursorState.startRangeRow(
-            { x: this.props.frozenCols, y: coord.y },
-            { x: this.props.columns.length - 1, y: coord.y });
-        this.startSelectionWithCursorState(newCursorState);
-    }
-
-    private selectCol = (coord: Coord) => {
-        const newCursorState = cursorState.startRangeColumn(
-            { x: coord.x, y: this.props.frozenRows },
-            { x: coord.x, y: this.props.data.length - 1 });
-        this.startSelectionWithCursorState(newCursorState);
-    }
-
-    private startSelectionWithCursorState = (newCursorState: cursorState.CursorStateWithSelection) => {
-        if (this.props.onSelectionChangeStart) {
-            this.props.onSelectionChangeStart(newCursorState.selection.selectedRange);
-        }
-        this.gridState.cursorState(newCursorState);
-    }
-
-    private updateSelection = (gridCoords: Coord) => {
-        const oldCursorState = this.gridState.cursorState();
-        if (!hasSelectionCellState(oldCursorState)) {
-            return;
-        }
-
-        const truncatedCoords: Coord = {
-            x: Math.max(gridCoords.x, this.props.frozenCols),
-            y: Math.max(gridCoords.y, this.props.frozenRows),
-        };
-
-        const newCursorState = cursorState.updateDrag(oldCursorState, truncatedCoords);
-        this.updateCursorStateIfDifferent(oldCursorState, newCursorState);
-    }
-
-    private updateSelectionRow = (coord: Coord) => {
-        const oldCursorState = this.gridState.cursorState();
-        if (!hasSelectionRowState(oldCursorState)) {
-            return;
-        }
-        const newCursorState = cursorState.updateRangeRow(oldCursorState, coord);
-        this.updateCursorStateIfDifferent(oldCursorState, newCursorState);
-    }
-
-    private updateSelectionCol = (coord: Coord) => {
-        const oldCursorState = this.gridState.cursorState();
-        if (!cursorState.hasSelectionColumnState(oldCursorState)) {
-            return;
-        }
-        const newCursorState = cursorState.updateRangeColumn(oldCursorState, coord);
-        this.updateCursorStateIfDifferent(oldCursorState, newCursorState);
-    }
-
-    private updateCursorStateIfDifferent = (
-        oldCursorState: cursorState.CursorStateWithSelection,
-        newCursorState: cursorState.CursorStateWithSelection,
-    ) => {
-        if (this.props.onSelectionChangeUpdate) {
-            const rangeChanged = cursorState.isSelectRangeDifferent(
-                oldCursorState.selection.selectedRange,
-                newCursorState.selection.selectedRange);
-            if (rangeChanged) {
-                this.props.onSelectionChangeUpdate(newCursorState.selection.selectedRange);
-            }
-        }
-        this.gridState.cursorState(newCursorState);
     }
 
     private startEditingCell = (cellCoords: Coord) => {
@@ -743,41 +368,4 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.rootRef.current.focus({ preventScroll: true });
         }
     }
-
-    /**
-     * Calculate the coordinate of the pixel in the component's frame of reference
-     */
-    private calculateComponentPixel = (event: React.MouseEvent<any, any>) => {
-        if (!this.rootRef.current) {
-            throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
-        }
-        return GridGeometry.windowPixelToCanvasPixel(
-            {x: event.clientX, y: event.clientY},
-            this.rootRef.current,
-        );
-    }
-
-    private calculateGridCellCoords = (event: { clientX: number, clientY: number }) => {
-        if (!this.rootRef.current) {
-            throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
-        }
-        return GridGeometry.calculateGridCellCoords(
-            event,
-            this.gridState.columnBoundaries(),
-            this.gridState.borderWidth(),
-            this.gridState.rowHeight(),
-            this.gridState.gridOffset(),
-            this.gridState.data().length - 1,
-            this.rootRef.current,
-        );
-    }
-}
-
-function numberBetween(num: number, min: number, max: number) {
-    return Math.max(Math.min(num, max), min);
-}
-
-function isLeftButton(event: React.MouseEvent<any, any>): boolean {
-    // tslint:disable-next-line: no-bitwise
-    return (event.buttons & 1) === 1;
 }

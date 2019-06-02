@@ -1,3 +1,4 @@
+import { GridState } from './gridState';
 import { barMarginToEdge, barWidth } from './scrollbarGeometry';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
@@ -95,6 +96,22 @@ export class GridGeometry {
         return columnBoundaries[rightmostColIndex].right + borderWidth;
     }
 
+    public static calculateGridCellCoordsFromGridState = <T>(
+        event: { clientX: number, clientY: number },
+        rootRef: HTMLDivElement | null,
+        gridState: GridState<T>,
+    ) => {
+        return GridGeometry.calculateGridCellCoords(
+            event,
+            gridState.columnBoundaries(),
+            gridState.borderWidth(),
+            gridState.rowHeight(),
+            gridState.gridOffset(),
+            gridState.data().length - 1,
+            rootRef,
+        );
+    }
+
     /**
      * Calculate the column & row index (i.e. "grid cell coordinates") that contains a click. The click coordinates
      * are given in the window/viewport's frame of reference.
@@ -106,8 +123,11 @@ export class GridGeometry {
         rowHeight: number,
         gridOffset: Coord,
         maxRow: number,
-        root: HTMLDivElement,
+        root: HTMLDivElement|null,
     ): Coord => {
+        if (!root) {
+            throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
+        }
         return GridGeometry.gridPixelToGridCell(
             GridGeometry.windowPixelToGridPixel(
                 {x: event.clientX, y: event.clientY},
@@ -220,7 +240,17 @@ export class GridGeometry {
         };
     }
 
-    public static windowPixelToCanvasPixel = ({x, y}: Coord, root: HTMLDivElement): Coord => {
+    public static calculateComponentPixel = (
+        event: { clientX: number; clientY: number; },
+        root: HTMLDivElement | null,
+    ): Coord => {
+        return GridGeometry.windowPixelToComponentPixel({x: event.clientX, y: event.clientY }, root);
+    }
+
+    private static windowPixelToComponentPixel = ({x, y}: Coord, root: HTMLDivElement|null): Coord => {
+        if (!root) {
+            throw new Error('Cannot convert window coords to component coords because rootRef is not set');
+        }
         const rootClientRect = root.getBoundingClientRect();
         return {
             x: x - rootClientRect.left,
