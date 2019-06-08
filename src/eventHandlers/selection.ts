@@ -90,3 +90,18 @@ const updateCursorStateIfDifferent = <T>(
     }
     gridState.cursorState(newCursorState);
 };
+
+export const endSelection = <T>(
+    props: ReactCanvasGridProps<T>,
+    gridState: GridState<T>,
+) => {
+    if (props.onSelectionChangeEnd) {
+        const currentCursorState = gridState.cursorState();
+
+        props.onSelectionChangeEnd(
+            cursorState.hasSelectionState(currentCursorState) ?
+                currentCursorState.selection.selectedRange :
+                null,
+        );
+    }
+};
