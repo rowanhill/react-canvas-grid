@@ -6,7 +6,7 @@ import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 import { leftClickDragOnFrozenCell, leftClickOnFrozenCell } from './frozenCellMouseEvents';
 import { isLeftButton } from './mouseEvents';
-import { clearScrollByDragTimer, startScrollBySelectionDragIfNeeded } from './scrolling';
+import { clearScrollByDragTimer, startScrollBySelectionDragIfNeeded } from './scrollingTimer';
 import { endSelection, startSelection, updateSelection } from './selection';
 
 export const mouseDownOnGrid = <T>(

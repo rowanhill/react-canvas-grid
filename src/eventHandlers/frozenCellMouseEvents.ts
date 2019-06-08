@@ -4,7 +4,7 @@ import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
-import { startScrollBySelectionDragIfNeeded } from './scrolling';
+import { startScrollBySelectionDragIfNeeded } from './scrollingTimer';
 import { selectAll, selectCol, selectRow, updateSelectionCol, updateSelectionRow } from './selection';
 
 export const leftClickOnFrozenCell = <T>(

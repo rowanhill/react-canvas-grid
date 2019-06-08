@@ -5,13 +5,13 @@ import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 import { leftClickDragOnFrozenCell, leftClickOnFrozenCell } from './frozenCellMouseEvents';
-import * as scrolling from './scrolling';
+import * as scrollingTimer from './scrollingTimer';
 import * as selection from './selection';
 
 jest.mock('../cursorState');
 jest.mock('../gridGeometry');
 jest.mock('./selection');
-jest.mock('./scrolling');
+jest.mock('./scrollingTimer');
 
 const actualSelection = jest.requireActual('./selection') as typeof selection;
 
@@ -199,7 +199,7 @@ describe('leftClickDragOnFrozenCell', () => {
 
         invokeLeftClickDragOnFrozenCell();
 
-        expect(scrolling.startScrollBySelectionDragIfNeeded)
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded)
             .toHaveBeenCalledWith(expect.anything(), expect.anything(), { suppressY: true });
     });
 
@@ -208,7 +208,7 @@ describe('leftClickDragOnFrozenCell', () => {
 
         invokeLeftClickDragOnFrozenCell();
 
-        expect(scrolling.startScrollBySelectionDragIfNeeded)
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded)
             .toHaveBeenCalledWith(expect.anything(), expect.anything(), { suppressX: true });
     });
 });

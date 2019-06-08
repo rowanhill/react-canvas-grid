@@ -5,14 +5,14 @@ import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 import * as frozenEvents from './frozenCellMouseEvents';
 import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './gridMouseEvents';
-import * as scrolling from './scrolling';
+import * as scrollingTimer from './scrollingTimer';
 import * as selection from './selection';
 
 jest.mock('../cursorState');
 jest.mock('../gridGeometry');
 jest.mock('./frozenCellMouseEvents');
 jest.mock('./selection');
-jest.mock('./scrolling');
+jest.mock('./scrollingTimer');
 
 const actualSelection = jest.requireActual('./selection') as typeof selection;
 
@@ -134,7 +134,7 @@ describe('mouseDragOnGrid', () => {
 
         expect(dragResult).toEqual(false);
         expectNoSelectionsToHaveBeenMade();
-        expect(scrolling.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
     it('does nothing if a cell is being edited', () => {
@@ -144,7 +144,7 @@ describe('mouseDragOnGrid', () => {
 
         expect(dragResult).toEqual(false);
         expectNoSelectionsToHaveBeenMade();
-        expect(scrolling.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
     it('does nothing if there is no existing selection', () => {
@@ -154,7 +154,7 @@ describe('mouseDragOnGrid', () => {
 
         expect(dragResult).toEqual(false);
         expectNoSelectionsToHaveBeenMade();
-        expect(scrolling.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
     it('does nothing (else) if the click is handled by the frozen cell click handler', () => {
@@ -164,7 +164,7 @@ describe('mouseDragOnGrid', () => {
 
         expect(dragResult).toEqual(true);
         expectNoSelectionsToHaveBeenMade();
-        expect(scrolling.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
     it('updates the existing selection and starts scrolling if needed when dragging on the grid', () => {
@@ -172,7 +172,7 @@ describe('mouseDragOnGrid', () => {
 
         expect(dragResult).toEqual(true);
         expect(selection.updateSelection).toHaveBeenCalled();
-        expect(scrolling.startScrollBySelectionDragIfNeeded).toHaveBeenCalled();
+        expect(scrollingTimer.startScrollBySelectionDragIfNeeded).toHaveBeenCalled();
     });
 });
 
@@ -186,7 +186,7 @@ describe('mouseUpOnGrid', () => {
     it('stops any ongoing scrolling-by-dragging', () => {
         mouseUpOnGrid({} as any, {} as any, null);
 
-        expect(scrolling.clearScrollByDragTimer).toHaveBeenCalled();
+        expect(scrollingTimer.clearScrollByDragTimer).toHaveBeenCalled();
     });
 
     it('does nothing if a cell is being edited', () => {
