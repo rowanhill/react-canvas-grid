@@ -210,7 +210,8 @@ describe('ReactCanvasGrid', () => {
                     topLeft: { x: 9, y: 14 },
                     bottomRight: { x: 10, y: 23 } }));
             cy.get('@Canvas')
-                .trigger('mousemove', 10, 95, { buttons: 1, force: true })
+                .trigger('mousemove', 20, 95, { buttons: 1, force: true })
+                .trigger('mouseup', 20, 95, { force: true })
                 .then(() => expect(updateStub).to.have.been.calledWith({
                     topLeft: { x: 6, y: 18 },
                     bottomRight: { x: 10, y: 23 } }));

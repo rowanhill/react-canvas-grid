@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {ReactCanvasGrid} from '../../src/index';
+import {Coord, ReactCanvasGrid} from '../../src/index';
 import { DefaultedReactCanvasGridProps } from '../../src/ReactCanvasGrid';
 import { Holder } from '../components/ScrollingHolder';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
@@ -44,19 +44,25 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
     describe('renders a selection overlay', () => {
         function dragFromCentre(
-            finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight',
+            finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight'|Coord,
             release: boolean = false,
         ) {
-            cy.get('#rcg-holder canvas').eq(1)
-                .trigger('mousedown', 'center', { buttons: 1, force: true })
-                .trigger('mousemove', finalPos, { buttons: 1, force: true });
-            if (release) {
-                cy.get('#rcg-holder canvas').eq(1)
-                    .trigger('mouseup', finalPos, { force: true });
+            const canvas = cy.get('#rcg-holder canvas').eq(1)
+                .trigger('mousedown', 'center', { buttons: 1, force: true });
+            if (typeof finalPos === 'string') {
+                canvas.trigger('mousemove', finalPos, { buttons: 1, force: true });
+                if (release) {
+                    canvas.trigger('mouseup', finalPos, { force: true });
+                }
+            } else {
+                canvas.trigger('mousemove', finalPos.x, finalPos.y, { buttons: 1, force: true });
+                if (release) {
+                    canvas.trigger('mouseup', finalPos.x, finalPos.y, { force: true });
+                }
             }
         }
         function dragFromCentreAndScreenshot(
-            finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight',
+            finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight'|Coord,
             screenshotName: string,
             release: boolean = false,
         ) {
@@ -66,7 +72,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
         }
 
         it('when dragging right', () => {
-            dragFromCentreAndScreenshot('right', 'simple-grid-drag-right');
+            dragFromCentreAndScreenshot({ x: 400, y: 200 }, 'simple-grid-drag-right');
         });
 
         it('when dragging left', () => {
@@ -74,7 +80,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
         });
 
         it('when dragging down', () => {
-            dragFromCentreAndScreenshot('bottom', 'simple-grid-drag-down');
+            dragFromCentreAndScreenshot({ x: 250, y: 345 }, 'simple-grid-drag-down');
         });
 
         it('when dragging up', () => {
@@ -82,15 +88,15 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
         });
 
         it('when dragging diagonally down and right', () => {
-            dragFromCentreAndScreenshot('bottomRight', 'simple-grid-drag-down-and-right');
+            dragFromCentreAndScreenshot({ x: 400, y: 345 }, 'simple-grid-drag-down-and-right');
         });
 
         it('when dragging and releasing', () => {
-            dragFromCentreAndScreenshot('right', 'simple-grid-drag-right-and-release', true);
+            dragFromCentreAndScreenshot({ x: 400, y: 200 }, 'simple-grid-drag-right-and-release', true);
         });
 
         it('when dragging, releasing, and then moving the mouse', () => {
-            dragFromCentre('right', true);
+            dragFromCentre({ x: 400, y: 200 }, true);
             cy.get('#rcg-holder canvas').eq(1)
                 .trigger('mousemove', 'left', { force: true });
             cy.get('#rcg-holder')
