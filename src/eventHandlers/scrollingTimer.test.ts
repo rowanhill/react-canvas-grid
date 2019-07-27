@@ -30,8 +30,9 @@ describe('clearScrollByDragTimer', () => {
 
 describe('scrolling via dragging', () => {
     let gridState: GridState<any>;
+    const noop = () => { /* do nothing */ };
 
-    beforeAll(() => {
+    beforeEach(() => {
         clearScrollByDragTimer();
 
         gridState = {
@@ -48,7 +49,7 @@ describe('scrolling via dragging', () => {
     });
 
     it('is not triggered when dragging somewhere away from the edge', () => {
-        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 200 });
+        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 200 }, noop);
 
         expect(setInterval).not.toHaveBeenCalled();
         expect(scrolling.updateOffsetByDelta).not.toHaveBeenCalled();
@@ -62,10 +63,10 @@ describe('scrolling via dragging', () => {
     ];
     leftParams.forEach(([speedDesc, xPos, xSpeed]) => {
         it(`can scroll left ${speedDesc}`, () => {
-            startScrollBySelectionDragIfNeeded(gridState, { x: xPos, y: 200 });
+            startScrollBySelectionDragIfNeeded(gridState, { x: xPos, y: 200 }, noop);
 
             expect(scrolling.updateOffsetByDelta).toHaveBeenCalledWith(xSpeed, 0, gridState);
-            expect(setInterval).toHaveBeenCalledWith(scrolling.updateOffsetByDelta, 10, xSpeed, 0, gridState);
+            expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10);
         });
     });
 
@@ -77,10 +78,10 @@ describe('scrolling via dragging', () => {
     ];
     rightParams.forEach(([speedDesc, xPos, xSpeed]) => {
         it(`can scroll right ${speedDesc}`, () => {
-            startScrollBySelectionDragIfNeeded(gridState, { x: xPos, y: 200 });
+            startScrollBySelectionDragIfNeeded(gridState, { x: xPos, y: 200 }, noop);
 
             expect(scrolling.updateOffsetByDelta).toHaveBeenCalledWith(xSpeed, 0, gridState);
-            expect(setInterval).toHaveBeenCalledWith(scrolling.updateOffsetByDelta, 10, xSpeed, 0, gridState);
+            expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10);
         });
     });
 
@@ -92,10 +93,10 @@ describe('scrolling via dragging', () => {
     ];
     upParams.forEach(([speedDesc, yPos, ySpeed]) => {
         it(`can scroll up ${speedDesc}`, () => {
-            startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: yPos });
+            startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: yPos }, noop);
 
             expect(scrolling.updateOffsetByDelta).toHaveBeenCalledWith(0, ySpeed, gridState);
-            expect(setInterval).toHaveBeenCalledWith(scrolling.updateOffsetByDelta, 10, 0, ySpeed, gridState);
+            expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10);
         });
     });
 
@@ -107,31 +108,45 @@ describe('scrolling via dragging', () => {
     ];
     downParams.forEach(([speedDesc, yPos, ySpeed]) => {
         it(`can scroll down ${speedDesc}`, () => {
-            startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: yPos });
+            startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: yPos }, noop);
 
             expect(scrolling.updateOffsetByDelta).toHaveBeenCalledWith(0, ySpeed, gridState);
-            expect(setInterval).toHaveBeenCalledWith(scrolling.updateOffsetByDelta, 10, 0, ySpeed, gridState);
+            expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10);
         });
     });
 
+    it('updates the offset and the selection when the interval fires', () => {
+        const updateSelectionMock = jest.fn();
+        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 19 }, updateSelectionMock);
+
+        (scrolling.updateOffsetByDelta as jest.Mock).mockReset();
+
+        const callback = (setInterval as jest.Mock).mock.calls[0][0];
+        callback();
+
+        expect(scrolling.updateOffsetByDelta).toHaveBeenCalledTimes(1);
+        expect(scrolling.updateOffsetByDelta).toHaveBeenCalledWith(0, -10, gridState);
+        expect(updateSelectionMock).toHaveBeenCalled();
+    });
+
     it('clears pending timer when moving again', () => {
-        startScrollBySelectionDragIfNeeded(gridState, { x: 10, y: 10 });
+        startScrollBySelectionDragIfNeeded(gridState, { x: 10, y: 10 }, noop);
         jest.resetAllMocks();
 
-        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 200 });
+        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 200 }, noop);
 
         expect(clearInterval).toHaveBeenCalled();
     });
 
     it('can be configured to ignore horizontal scrolling', () => {
-        startScrollBySelectionDragIfNeeded(gridState, { x: 10, y: 200 }, { suppressX: true });
+        startScrollBySelectionDragIfNeeded(gridState, { x: 10, y: 200 }, noop, { suppressX: true });
 
         expect(setInterval).not.toHaveBeenCalled();
         expect(scrolling.updateOffsetByDelta).not.toHaveBeenCalled();
     });
 
     it('can be configured to ignore vertical scrolling', () => {
-        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 10 }, { suppressY: true });
+        startScrollBySelectionDragIfNeeded(gridState, { x: 200, y: 10 }, noop, { suppressY: true });
 
         expect(setInterval).not.toHaveBeenCalled();
         expect(scrolling.updateOffsetByDelta).not.toHaveBeenCalled();

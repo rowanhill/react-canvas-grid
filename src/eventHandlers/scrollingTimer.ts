@@ -14,6 +14,7 @@ export const clearScrollByDragTimer = () => {
 export const startScrollBySelectionDragIfNeeded = <T>(
     gridState: GridState<T>,
     componentPixelCoord: Coord,
+    updateSelection: () => void,
     options: { suppressX?: boolean; suppressY?: boolean; } = {},
 ) => {
     const rootSize = gridState.rootSize();
@@ -67,7 +68,11 @@ export const startScrollBySelectionDragIfNeeded = <T>(
     }
 
     if (deltaX !== 0 || deltaY !== 0) {
-        scrollBySelectionDragTimerId = setInterval(updateOffsetByDelta, 10, deltaX, deltaY, gridState);
+        const updateOffsetByDeltaAndUpdateSelection = () => {
+            updateOffsetByDelta(deltaX, deltaY, gridState);
+            updateSelection();
+        };
+        scrollBySelectionDragTimerId = setInterval(updateOffsetByDeltaAndUpdateSelection, 10);
         updateOffsetByDelta(deltaX, deltaY, gridState);
     }
 };

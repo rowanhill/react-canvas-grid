@@ -200,7 +200,7 @@ describe('leftClickDragOnFrozenCell', () => {
         invokeLeftClickDragOnFrozenCell();
 
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded)
-            .toHaveBeenCalledWith(expect.anything(), expect.anything(), { suppressY: true });
+            .toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.any(Function), { suppressY: true });
     });
 
     it('starts scrolling vertically if needed, if there is an existing row selection', () => {
@@ -209,6 +209,6 @@ describe('leftClickDragOnFrozenCell', () => {
         invokeLeftClickDragOnFrozenCell();
 
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded)
-            .toHaveBeenCalledWith(expect.anything(), expect.anything(), { suppressX: true });
+            .toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.any(Function), { suppressX: true });
     });
 });

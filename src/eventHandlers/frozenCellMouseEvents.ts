@@ -61,23 +61,35 @@ export const leftClickDragOnFrozenCell = <T>(
         return false;
     }
 
-    if (hasSelectionRowState(currentCursorState)) {
-        startScrollBySelectionDragIfNeeded(gridState, componentPixelCoord, { suppressX: true });
-    } else if (hasSelectionColumnState(currentCursorState)) {
-        startScrollBySelectionDragIfNeeded(gridState, componentPixelCoord, { suppressY: true });
-    }
+    const { clientX, clientY } = event;
+    const recalculateAndUpdateSelection = () => {
+        if (clickInFrozenCols && clickInFrozenRows) {
+            // Can't drag onto corner to select all, so ignore
+        } else if (clickInFrozenCols) {
+            const coord = GridGeometry.calculateGridCellCoordsFromGridState(
+                { clientX: 0, clientY }, rootRef.current, gridState);
+            updateSelectionRow(props, gridState, coord);
+        } else if (clickInFrozenRows) {
+            const coord = GridGeometry.calculateGridCellCoordsFromGridState(
+                { clientX, clientY: 0 }, rootRef.current, gridState);
+            updateSelectionCol(props, gridState, coord);
+        }
+    };
 
-    if (clickInFrozenCols && clickInFrozenRows) {
-        // Can't drag onto corner to select all, so ignore
-    } else if (clickInFrozenCols) {
-        const coord = GridGeometry.calculateGridCellCoordsFromGridState(
-            { clientX: 0, clientY: event.clientY }, rootRef.current, gridState);
-        updateSelectionRow(props, gridState, coord);
-    } else if (clickInFrozenRows) {
-        const coord = GridGeometry.calculateGridCellCoordsFromGridState(
-            { clientX: event.clientX, clientY: 0 }, rootRef.current, gridState);
-        updateSelectionCol(props, gridState, coord);
+    if (hasSelectionRowState(currentCursorState)) {
+        startScrollBySelectionDragIfNeeded(
+            gridState,
+            componentPixelCoord,
+            recalculateAndUpdateSelection,
+            { suppressX: true });
+    } else if (hasSelectionColumnState(currentCursorState)) {
+        startScrollBySelectionDragIfNeeded(
+            gridState,
+            componentPixelCoord,
+            recalculateAndUpdateSelection,
+            { suppressY: true });
     }
+    recalculateAndUpdateSelection();
 
     return true;
 };

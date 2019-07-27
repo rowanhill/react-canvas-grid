@@ -62,10 +62,17 @@ export const mouseDragOnGrid = <T>(
         return true;
     }
 
-    startScrollBySelectionDragIfNeeded(gridState, componentPixelCoord);
+    const { clientX, clientY } = event;
+    const recalculateAndUpdateSelection = () => {
+        const gridCoords = GridGeometry.calculateGridCellCoordsFromGridState(
+            {clientX, clientY},
+            rootRef.current,
+            gridState);
+        updateSelection(props, gridState, gridCoords);
+    };
+    startScrollBySelectionDragIfNeeded(gridState, componentPixelCoord, recalculateAndUpdateSelection);
 
-    const gridCoords = GridGeometry.calculateGridCellCoordsFromGridState(event, rootRef.current, gridState);
-    updateSelection(props, gridState, gridCoords);
+    recalculateAndUpdateSelection();
     return true;
 };
 
