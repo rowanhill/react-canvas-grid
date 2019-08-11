@@ -11,15 +11,8 @@ const renderTextRed = (context: CanvasRenderingContext2D, cellBounds: ClientRect
 };
 
 export const CustomTextGrid = () => {
-    const { columns, rows: data } = createFakeDataAndColumns(100, 20, () => {/* no op */});
-
-    const dataWithRenderer = data.map((row) => {
-        return Object.keys(row).reduce((acc, fieldName) => {
-            const cell = row[fieldName];
-            acc[fieldName] = { ...cell, renderText: renderTextRed };
-            return acc;
-        }, {} as typeof row);
-    });
+    const options = { renderText: renderTextRed };
+    const { columns, rows: data } = createFakeDataAndColumns(100, 20, () => {/* no op */}, options);
 
     return (
         <PaddedPage>
@@ -34,7 +27,7 @@ export const CustomTextGrid = () => {
             <FixedSizeHolder>
                 <ReactCanvasGrid<void>
                     columns={columns}
-                    data={dataWithRenderer}
+                    data={data}
                     rowHeight={20}
                 />
             </FixedSizeHolder>

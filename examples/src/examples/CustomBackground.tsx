@@ -10,15 +10,8 @@ const renderBackgroundLightGreen = (context: CanvasRenderingContext2D, cellBound
 };
 
 export const CustomBackgroundGrid = () => {
-    const { columns, rows: data } = createFakeDataAndColumns(100, 20, () => {/* no op */});
-
-    const dataWithRenderer = data.map((row) => {
-        return Object.keys(row).reduce((acc, fieldName) => {
-            const cell = row[fieldName];
-            acc[fieldName] = { ...cell, renderBackground: renderBackgroundLightGreen };
-            return acc;
-        }, {} as typeof row);
-    });
+    const options = { renderBackground: renderBackgroundLightGreen };
+    const { columns, rows: data } = createFakeDataAndColumns(100, 20, () => {/* no op */}, options);
 
     return (
         <PaddedPage>
@@ -34,7 +27,7 @@ export const CustomBackgroundGrid = () => {
             <FixedSizeHolder>
                 <ReactCanvasGrid<void>
                     columns={columns}
-                    data={dataWithRenderer}
+                    data={data}
                     rowHeight={20}
                 />
             </FixedSizeHolder>
