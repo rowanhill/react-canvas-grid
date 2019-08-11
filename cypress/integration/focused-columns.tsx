@@ -6,46 +6,44 @@ const dataGen = () => null;
 
 describe('ReactCanvasGrid', () => {
     beforeEach(() => {
-        cy.mount(<Holder<null>
-                initialColsNumber={100}
-                initialRowsNumber={20}
-                dataGen={dataGen}
-                />, 'Holder');
+        cy.visit('/#/focused-column');
 
-        cy.get('canvas').eq(0)
-            .invoke('width')
-            .should('be.greaterThan', 0);
+        cy.get('.fixed-size-holder').as('Holder');
+        cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
+        cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
+
+        cy.get('form select').as('FocusedColSelect');
+        cy.get('form input').as('FrozenColsToggle');
+
+        cy.get('Canvas').invoke('width').should('be.greaterThan', 0);
     });
 
     it('scrolls to the right to bring a focused column to the right into view', () => {
-        cy.get('@Holder')
-            .invoke('setState', {
-                focusedColIndex: 30,
-            })
+        cy.get('@FocusedColSelect').select('30');
+
+        cy.get('@Root')
             .matchImageSnapshot('focused-col-to-right');
     });
 
     it('scrolls to the left to bring a focused column to the left into view', () => {
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@Root')
             .trigger('wheel', { deltaX: 800, deltaY: 300 });
-        cy.get('@Holder')
-            .invoke('setState', {
-                focusedColIndex: 2,
-            })
+
+        cy.get('@FocusedColSelect').select('2');
+
+        cy.get('@Root')
             .matchImageSnapshot('focused-col-to-left');
     });
 
     it('accounts for frozen columns when scrolling left to bring a frozen column into view', () => {
-        cy.get('@Holder')
-            .invoke('setState', {
-                frozenCols: 2,
-            });
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@FrozenColsToggle').click();
+
+        cy.get('@Root')
             .trigger('wheel', { deltaX: 800, deltaY: 300 });
-        cy.get('@Holder')
-            .invoke('setState', {
-                focusedColIndex: 5,
-            })
+
+        cy.get('@FocusedColSelect').select('5');
+
+        cy.get('@Root')
             .matchImageSnapshot('focused-col-to-left-with-frozen-cols');
     });
 });

@@ -1,44 +1,25 @@
-import * as React from 'react';
-import {Coord, ReactCanvasGrid} from '../../src/index';
-import { DefaultedReactCanvasGridProps } from '../../src/ReactCanvasGrid';
-import { Holder } from '../components/ScrollingHolder';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
+import { Coord } from '../../src/index';
 
-const getProps = () => {
-    const colsAndRows = createFakeDataAndColumns(100, 20, () => null);
-    const props: DefaultedReactCanvasGridProps<null> = {
-        data: colsAndRows.rows,
-        columns: colsAndRows.columns,
-        borderWidth: 1,
-        rowHeight: 20,
-    };
-    return props;
-};
-
-describe('ReactCanvasGrid in an overflow:scroll parent', () => {
+describe('ReactCanvasGrid in a fixed size parent', () => {
     beforeEach(() => {
-        const props = getProps();
-        cy.mount(<Holder><ReactCanvasGrid<null> {...props} /></Holder>, 'Holder');
+        cy.visit('/#/simple');
+        cy.get('.fixed-size-holder').as('Holder');
+        cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
+        cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
 
-        cy.get('canvas').eq(0)
-            .invoke('width')
-            .should('be.greaterThan', 0);
+        cy.get('Canvas').invoke('width').should('be.greaterThan', 0);
     });
 
     it('renders a selection overlay over clicked cell', () => {
-        cy.get('#rcg-holder')
-            .click();
-
-        cy.get('#rcg-holder')
+        cy.get('@Root')
+            .click()
             .matchImageSnapshot('simple-grid-after-click');
     });
 
     it('scrolls the selection overlay with the grid', () => {
-        cy.get('#rcg-holder')
+        cy.get('@Root')
             .click()
-            .trigger('wheel', { deltaX: 50, deltaY: 50 });
-
-        cy.get('#rcg-holder')
+            .trigger('wheel', { deltaX: 50, deltaY: 50 })
             .matchImageSnapshot('simple-grid-after-click-then-scroll');
     });
 
@@ -47,7 +28,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
             finalPos: 'right'|'left'|'top'|'bottom'|'bottomRight'|Coord,
             release: boolean = false,
         ) {
-            const canvas = cy.get('#rcg-holder canvas').eq(1)
+            const canvas = cy.get('@Canvas')
                 .trigger('mousedown', 'center', { buttons: 1, force: true });
             if (typeof finalPos === 'string') {
                 canvas.trigger('mousemove', finalPos, { buttons: 1, force: true });
@@ -67,7 +48,7 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
             release: boolean = false,
         ) {
             dragFromCentre(finalPos, release);
-            cy.get('#rcg-holder')
+            cy.get('@Root')
                 .matchImageSnapshot(screenshotName);
         }
 
@@ -97,18 +78,16 @@ describe('ReactCanvasGrid in an overflow:scroll parent', () => {
 
         it('when dragging, releasing, and then moving the mouse', () => {
             dragFromCentre({ x: 400, y: 200 }, true);
-            cy.get('#rcg-holder canvas').eq(1)
-                .trigger('mousemove', 'left', { force: true });
-            cy.get('#rcg-holder')
+            cy.get('@Canvas')
+                .trigger('mousemove', 'left', { force: true })
                 .matchImageSnapshot('simple-grid-drag-release-move');
         });
 
         it('when clicking then shift-clicking elsewhere', () => {
-            cy.get('#rcg-holder canvas').eq(1)
+            cy.get('@Root')
                 .click('left', { force: true })
                 .trigger('mousedown', 'center', { force: true, buttons: 1, shiftKey: true })
-                .trigger('mouseup', 'center', { force: true, buttons: 1, shiftKey: true });
-            cy.get('#rcg-holder')
+                .trigger('mouseup', 'center', { force: true, buttons: 1, shiftKey: true })
                 .matchImageSnapshot('selection-highlight-click-shift-click');
         });
     });

@@ -11,4 +11,9 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+  font-size: 0.9em;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  color: rgb(196, 78, 78);
 }

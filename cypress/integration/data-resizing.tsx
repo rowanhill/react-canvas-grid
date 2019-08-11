@@ -1,121 +1,93 @@
-import * as React from 'react';
-import { Holder } from '../components/StatefulHolder';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
-
-const dataGen = () => null;
-
 describe('ReactCanvasGrid with some initial data', () => {
     beforeEach(() => {
-        cy.mount(<Holder<null>
-                initialColsNumber={100}
-                initialRowsNumber={20}
-                dataGen={dataGen}
-                />, 'Holder');
+        cy.visit('/#/dynamic-data');
 
-        cy.get('canvas').eq(0)
-            .invoke('width')
-            .should('be.greaterThan', 0);
+        cy.get('.fixed-size-holder').as('Holder');
+        cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
+        cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
+
+        cy.get('#num-rows').as('NumRowsInput');
+        cy.get('#num-cols').as('NumColsInput');
+        cy.get('#first-col-to-end').as('FirstColToEndButton');
+        cy.get('#modify-top-left').as('ModifyTopLeftButton');
+
+        cy.get('Canvas').invoke('width').should('be.greaterThan', 0);
     });
 
     it('re-renders when the number of columns shrinks', () => {
-        cy.get('@Holder').its('state').then((oldState) => {
-            cy.get('@Holder')
-                .invoke('setState', {
-                    columns: oldState.columns.slice(0, 5),
-                })
-                .matchImageSnapshot('reduce-number-of-columns');
-        });
+        cy.get('@NumColsInput')
+            .type('{selectall}5');
+        cy.wait(100); // Wait for 80ms debounce to trigger
+        cy.get('@Root')
+            .matchImageSnapshot('reduce-number-of-columns');
     });
 
     it('re-renders when the number of columns grows', () => {
-        const colsAndRowsLarge = createFakeDataAndColumns(100, 50, dataGen);
+        cy.get('@NumColsInput')
+            .type('{selectall}50');
+        cy.get('@NumRowsInput')
+            .type('{selectall}100');
+        cy.wait(100); // Wait for 80ms debounce to trigger
 
-        cy.get('@Holder')
-            .invoke('setState', {
-                columns: colsAndRowsLarge.columns,
-                data: colsAndRowsLarge.rows,
-            })
+        cy.get('@Root')
             .matchImageSnapshot('increase-number-of-columns');
     });
 
     it('clears the selection when the number of columns changes', () => {
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@Root')
             .click();
-
-        cy.get('@Holder').its('state').then((oldState) => {
-            cy.get('@Holder')
-                .invoke('setState', {
-                    columns: oldState.columns.slice(0, 5),
-                })
-                .matchImageSnapshot('clear-selection-after-col-num-change');
-        });
+        cy.get('@NumColsInput')
+            .type('{selectall}5');
+        cy.wait(100); // Wait for 80ms debounce to trigger
+        cy.get('@Root')
+            .matchImageSnapshot('clear-selection-after-col-num-change');
     });
 
     it('clears the selection when the columns change order', () => {
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@Root')
             .click();
-
-        cy.get('@Holder').its('state').then((oldState) => {
-            cy.get('@Holder')
-                .invoke('setState', {
-                    columns: [...oldState.columns.slice(1), oldState.columns[0]],
-                })
-                .matchImageSnapshot('clear-selection-when-cols-change');
-        });
+        cy.get('@FirstColToEndButton')
+            .click();
+        cy.get('@Root')
+            .matchImageSnapshot('clear-selection-when-cols-change');
     });
 
     it('clears the selection when the number of rows changes', () => {
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@Root')
             .click();
-
-        cy.get('@Holder').its('state').then((oldState) => {
-            cy.get('@Holder')
-                .invoke('setState', {
-                    data: [oldState.data[oldState.data.length - 1], ...oldState.data],
-                })
-                .matchImageSnapshot('clear-selection-when-num-rows-changes');
-        });
+        cy.get('@NumRowsInput')
+            .type('{selectall}100');
+        cy.wait(100); // Wait for 80ms debounce to trigger
+        cy.get('@Root')
+            .matchImageSnapshot('clear-selection-when-num-rows-changes');
     });
 
     it('does not clear the selection when the data changes but has the same number of rows', () => {
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@Root')
+            .click();
+        cy.get('@ModifyTopLeftButton')
             .click();
 
-        cy.get('@Holder').its('state').then((oldState) => {
-            cy.get('@Holder')
-                .invoke('setState', {
-                    data: [
-                        {
-                            ...oldState.data[0],
-                            'col-0': {
-                                ...oldState.data[0]['col-0'],
-                                getText: () => 'Modified',
-                            },
-                        },
-                        ...oldState.data.slice(1),
-                    ],
-                })
-                .matchImageSnapshot('keep-selection-when-only-data-values-change');
-        });
+        cy.get('@Root')
+            .matchImageSnapshot('keep-selection-when-only-data-values-change');
     });
 
     it('constrains the scroll when the data and/or cols shrink', () => {
-        const colsAndRowsLarge = createFakeDataAndColumns(100, 50, dataGen);
-        cy.get('@Holder')
-            .invoke('setState', {
-                columns: colsAndRowsLarge.columns,
-                data: colsAndRowsLarge.rows,
-            });
+        cy.get('@NumColsInput')
+            .type('{selectall}50');
+        cy.get('@NumRowsInput')
+            .type('{selectall}100');
+        cy.wait(100); // Wait for 80ms debounce to trigger
 
-        cy.get('div#cypress-jsdom > div')
+        cy.get('@Root')
             .trigger('wheel', { deltaX: 800, deltaY: 300 });
 
-        const colsAndRowsSmall = createFakeDataAndColumns(20, 20, dataGen);
-        cy.get('@Holder')
-            .invoke('setState', {
-                columns: colsAndRowsSmall.columns,
-                data: colsAndRowsSmall.rows,
-            })
+        cy.get('@NumColsInput')
+            .type('{selectall}20');
+        cy.get('@NumRowsInput')
+            .type('{selectall}20');
+        cy.wait(100); // Wait for 80ms debounce to trigger
+        cy.get('@Root')
             .matchImageSnapshot('truncate-scroll-when-shrinking-data');
     });
 });

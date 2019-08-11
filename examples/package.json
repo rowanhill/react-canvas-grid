@@ -7,11 +7,15 @@
     "@types/node": "10.12.21",
     "@types/react": "16.8.1",
     "@types/react-dom": "16.0.11",
+    "@types/react-router": "^5.0.3",
+    "@types/react-router-dom": "^4.3.4",
     "react": "^16.7.0",
+    "react-canvas-grid": "file:../.",
     "react-dom": "^16.7.0",
+    "react-router": "^5.0.1",
+    "react-router-dom": "^5.0.1",
     "react-scripts": "2.1.3",
-    "typescript": "3.3.1",
-    "react-canvas-grid": "file:../."
+    "typescript": "3.3.1"
   },
   "scripts": {
     "start": "react-scripts start",

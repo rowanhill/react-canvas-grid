@@ -1,36 +1,16 @@
-import * as React from 'react';
-import { DefaultedReactCanvasGridProps, ReactCanvasGrid } from '../../src/ReactCanvasGrid';
-import { Holder } from '../components/ScrollingHolder';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
-
-const getProps = () => {
-    const colsAndRows = createFakeDataAndColumns(100, 20, () => null);
-    const props: DefaultedReactCanvasGridProps<null> = {
-        data: colsAndRows.rows,
-        columns: colsAndRows.columns,
-        borderWidth: 1,
-        rowHeight: 20,
-        frozenRows: 1,
-        frozenCols: 1,
-    };
-    return props;
-};
-
 describe('ReactCanvasGrid with frozen rows & cells', () => {
     beforeEach(() => {
-        const props = getProps();
-        cy.mount(<Holder><ReactCanvasGrid<null> {...props} /></Holder>, 'Holder');
+        cy.visit('/#/frozen');
+        cy.get('.fixed-size-holder').as('Holder');
+        cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
+        cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
 
-        cy.get('canvas').eq(0)
-            .invoke('width')
-            .should('be.greaterThan', 0);
+        cy.get('Canvas').invoke('width').should('be.greaterThan', 0);
     });
 
     it('keeps the frozen rows and columns shown on the grid (and fixes the top-left cells in place)', () => {
-        cy.get('#rcg-holder')
-            .trigger('wheel', { deltaX: 300, deltaY: 300 });
-
-        cy.get('#rcg-holder')
+        cy.get('@Root')
+            .trigger('wheel', { deltaX: 300, deltaY: 300 })
             .matchImageSnapshot('scrolled-grid-with-frozen-cells');
     });
 });

@@ -1,0 +1,19 @@
+form.controls {
+    display: inline-block;
+    margin-bottom: 1em;
+    padding: 0.2em;
+    background-color: hsl(220, 75%, 90%);
+    border: solid 1px hsl(220, 100%, 40%);
+    border-radius: 2px;
+}
+
+form.controls .inline-controls-group {
+    margin-right: 1em;
+}
+form.controls .inline-controls-group:last-of-type {
+    margin-right: 0;
+}
+
+form.controls input[type="number"] {
+    width: 4em;
+}

@@ -189,6 +189,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         return (
             <div
                 ref={this.rootRef}
+                className="react-canvas-grid"
                 onMouseDown={this.onMouseDown}
                 onMouseUp={this.onMouseUp}
                 onMouseMove={this.onMouseMove}
