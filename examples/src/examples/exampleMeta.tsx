@@ -2,6 +2,7 @@ import * as React from 'react';
 import { CustomBackgroundGrid } from './CustomBackground';
 import { CustomTextGrid } from './CustomText';
 import { DynamicDataGrid } from './DynamicData';
+import { EditableDataGrid } from './Editable';
 import { Everything } from './Everything';
 import { FocusColumnGrid } from './FocusColumn';
 import { FrozenCellsGrid } from './FrozenCells';
@@ -33,6 +34,12 @@ const exampleMeta: ExampleMeta[] = [
         name: 'Simple Grid',
         description: 'A basic grid setup with enough data to need to scroll',
         component: SimpleGrid,
+    },
+    {
+        pathFragment: '/editable',
+        name: 'Editable Data',
+        description: 'A grid with cells backed by data, made editable through a text box',
+        component: EditableDataGrid,
     },
     {
         pathFragment: '/frozen',

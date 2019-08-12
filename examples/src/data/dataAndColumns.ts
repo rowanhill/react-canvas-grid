@@ -6,6 +6,13 @@ export function createFakeDataAndColumns<T>(
     dataGen: (x: number, y: number) => T,
     options: Partial<CellDef<T>> = {},
 ) {
+    return {
+        columns: createFakeColumns(numCols),
+        rows: createFakeData(numRows, numCols, dataGen, options),
+    };
+}
+
+export function createFakeColumns(numCols: number) {
     const cols: ColumnDef[] = [];
     for (let i = 0; i < numCols; i++) {
         cols.push({
@@ -13,7 +20,15 @@ export function createFakeDataAndColumns<T>(
             width: 50,
         });
     }
+    return cols;
+}
 
+export function createFakeData<T>(
+    numRows: number,
+    numCols: number,
+    dataGen: (x: number, y: number) => T,
+    options: Partial<CellDef<T>> = {},
+) {
     const rows: Array<DataRow<T>> = [];
     for (let i = 0; i < numRows; i++) {
         const row: DataRow<T> = {};
@@ -26,9 +41,5 @@ export function createFakeDataAndColumns<T>(
         }
         rows.push(row);
     }
-
-    return {
-        columns: cols,
-        rows,
-    };
+    return rows;
 }
