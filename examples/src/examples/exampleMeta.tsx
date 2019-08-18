@@ -6,6 +6,7 @@ import { EditableDataGrid } from './Editable';
 import { Everything } from './Everything';
 import { FocusColumnGrid } from './FocusColumn';
 import { FrozenCellsGrid } from './FrozenCells';
+import { SelectionEventsGrid } from './SelectionEvents';
 import { SimpleGrid } from './Simple';
 import { SmallGrid } from './SmallGrid';
 
@@ -70,6 +71,12 @@ const exampleMeta: ExampleMeta[] = [
         name: 'Custom Text Renderer',
         description: 'Draw cells with custom text',
         component: CustomTextGrid,
+    },
+    {
+        pathFragment: '/selection-events',
+        name: 'Selection Events',
+        description: 'React to users changing the selected area',
+        component: SelectionEventsGrid,
     },
 ];
 
