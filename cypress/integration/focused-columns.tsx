@@ -1,9 +1,3 @@
-import * as React from 'react';
-import { Holder } from '../components/StatefulHolder';
-import { createFakeDataAndColumns } from '../data/dataAndColumns';
-
-const dataGen = () => null;
-
 describe('ReactCanvasGrid', () => {
     beforeEach(() => {
         cy.visit('/#/focused-column');
