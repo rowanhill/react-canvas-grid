@@ -206,7 +206,10 @@ export class Everything extends Component<{}, EverythingState> {
             <div style={{height: '80px', backgroundColor: 'blue'}}>
               <span>Body header</span>
             </div>
-            <div style={{paddingLeft: '100px', paddingRight: '100px', backgroundColor: 'purple'}}>
+            <div
+              style={{paddingLeft: '100px', paddingRight: '100px', backgroundColor: 'purple'}}
+              onKeyPress={this.onKeyPressed}
+            >
               <ReactCanvasGrid<AllCellDataTypes>
                 cssHeight={'800px'}
                 cssWidth={'800px'}
@@ -221,7 +224,6 @@ export class Everything extends Component<{}, EverythingState> {
                 onSelectionCleared={this.selectionCleared}
                 onCellDataChanged={this.onCellDataChanged}
                 focusedColIndex={this.state.focusedCol}
-                onKeyPress={this.onKeyPressed}
               />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
@@ -311,7 +313,7 @@ export class Everything extends Component<{}, EverythingState> {
     });
   }
 
-  private onKeyPressed = (event: KeyboardEvent) => {
+  private onKeyPressed = (event: React.KeyboardEvent<HTMLDivElement>) => {
     this.setState({
       lastKeyPress: event.key,
     });
