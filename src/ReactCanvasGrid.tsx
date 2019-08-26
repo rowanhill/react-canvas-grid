@@ -38,8 +38,6 @@ interface RequiredProps<T> {
     onSelectionCleared?: () => void;
 
     onCellDataChanged?: (event: CellDataChangeEvent<T>) => void;
-
-    onKeyPress?: (event: KeyboardEvent) => void;
 }
 interface DefaultedProps {
     cssWidth: string;
@@ -194,7 +192,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 onMouseUp={this.onMouseUp}
                 onMouseMove={this.onMouseMove}
                 onDoubleClick={this.onDoubleClick}
-                onKeyPress={this.onKeyPress}
                 tabIndex={1}
                 style={{
                     position: 'relative',
@@ -305,17 +302,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         const cellCoords =
             GridGeometry.calculateGridCellCoordsFromGridState(event, this.rootRef.current, this.gridState);
         this.startEditingCell(cellCoords);
-    }
-
-    private onKeyPress = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (this.props.onKeyPress &&
-            // Check if the root is focused (rather than a child). We use ownerDocument because
-            // otherwise when using `document` in Cypress, we get the test iframe's document.
-            this.rootRef.current && this.rootRef.current.ownerDocument &&
-            this.rootRef.current === this.rootRef.current.ownerDocument.activeElement
-        ) {
-            this.props.onKeyPress(event.nativeEvent);
-        }
     }
 
     private startEditingCell = (cellCoords: Coord) => {
