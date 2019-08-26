@@ -3,6 +3,7 @@ import { CustomBackgroundGrid } from './CustomBackground';
 import { CustomTextGrid } from './CustomText';
 import { DynamicDataGrid } from './DynamicData';
 import { EditableDataGrid } from './Editable';
+import { EditEventsGrid } from './EditEvents';
 import { Everything } from './Everything';
 import { FocusColumnGrid } from './FocusColumn';
 import { FrozenCellsGrid } from './FrozenCells';
@@ -84,6 +85,12 @@ const exampleMeta: ExampleMeta[] = [
         name: 'Keyboard Events',
         description: 'Respond to use of the keyboard when the grid is focused',
         component: KeyboardEventsGrid,
+    },
+    {
+        pathFragment: '/edit-events',
+        name: 'Edit Events',
+        description: 'Respond to users changing the grid\'s data',
+        component: EditEventsGrid,
     },
 ];
 
