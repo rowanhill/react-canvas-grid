@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { ReactCanvasGrid, SelectRange } from 'react-canvas-grid';
+import { EventLog } from '../components/EventLog';
 import { FixedSizeHolder } from '../components/FixedSizeHolder';
 import PaddedPage from '../components/PaddedPage';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
-import './SelectionEvents.css';
 
 interface SelectionEventsState {
     eventLog: string;
@@ -12,14 +12,11 @@ interface SelectionEventsState {
 const { columns, rows: data } = createFakeDataAndColumns(100, 20, () => {/* no op */});
 
 export class SelectionEventsGrid extends React.Component<{}, SelectionEventsState> {
-    private logRef: React.RefObject<HTMLTextAreaElement>;
-
     constructor(props: {}) {
         super(props);
         this.state = {
             eventLog: '',
         };
-        this.logRef = React.createRef();
     }
 
     public render() {
@@ -46,15 +43,9 @@ export class SelectionEventsGrid extends React.Component<{}, SelectionEventsStat
                         onSelectionChangeEnd={this.end}
                     />
                 </FixedSizeHolder>
-                <textarea ref={this.logRef} className="select-event-log" value={this.state.eventLog} readOnly />
+                <EventLog log={this.state.eventLog} />
             </PaddedPage>
         );
-    }
-
-    public componentDidUpdate() {
-        if (this.logRef.current) {
-            this.logRef.current.scrollTop = this.logRef.current.scrollHeight;
-        }
     }
 
     private start = (range: SelectRange | null) => {

@@ -6,6 +6,7 @@ import { EditableDataGrid } from './Editable';
 import { Everything } from './Everything';
 import { FocusColumnGrid } from './FocusColumn';
 import { FrozenCellsGrid } from './FrozenCells';
+import { KeyboardEventsGrid } from './KeyboardEvents';
 import { SelectionEventsGrid } from './SelectionEvents';
 import { SimpleGrid } from './Simple';
 import { SmallGrid } from './SmallGrid';
@@ -75,8 +76,14 @@ const exampleMeta: ExampleMeta[] = [
     {
         pathFragment: '/selection-events',
         name: 'Selection Events',
-        description: 'React to users changing the selected area',
+        description: 'Respond to users changing the selected area',
         component: SelectionEventsGrid,
+    },
+    {
+        pathFragment: '/keyboard-events',
+        name: 'Keyboard Events',
+        description: 'Respond to use of the keyboard when the grid is focused',
+        component: KeyboardEventsGrid,
     },
 ];
 
