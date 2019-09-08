@@ -40,7 +40,6 @@
     "@types/shallow-equals": "^1.0.0",
     "cypress": "^3.1.5",
     "cypress-image-snapshot": "^3.0.0",
-    "cypress-react-unit-test": "github:rowanhill/cypress-react-unit-test",
     "enzyme": "^3.9.0",
     "enzyme-adapter-react-16": "^1.10.0",
     "jest": "^24.1.0",
