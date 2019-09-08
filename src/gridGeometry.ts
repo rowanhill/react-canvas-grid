@@ -240,6 +240,18 @@ export class GridGeometry {
         };
     }
 
+    public static isWindowPixelWithinComponent = (
+        event: { clientX: number; clientY: number; },
+        root: HTMLDivElement | null,
+    ): boolean => {
+        if (!root) {
+            throw new Error('Cannot convert window coords to component coords because rootRef is not set');
+        }
+        const rootClientRect = root.getBoundingClientRect();
+        return event.clientX >= rootClientRect.left && event.clientX <= rootClientRect.right &&
+            event.clientY >= rootClientRect.top && event.clientY <= rootClientRect.bottom;
+    }
+
     public static calculateComponentPixel = (
         event: { clientX: number; clientY: number; },
         root: HTMLDivElement | null,

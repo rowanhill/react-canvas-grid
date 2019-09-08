@@ -106,6 +106,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         const rootRect = this.rootRef.current.getBoundingClientRect();
 
         this.rootRef.current.addEventListener('wheel', this.onWheel);
+        window.addEventListener('mousemove', this.onMouseMove);
+        window.addEventListener('mouseup', this.onMouseUp);
 
         // Set the rootSize, causing a re-render, at which point the canvases will be properly sized.
         // Once the state has been set and everything has re-rendered, we can set the rootSize, causing
@@ -164,6 +166,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         if (this.rootRef.current) {
             this.rootRef.current.removeEventListener('wheel', this.onWheel);
         }
+        window.removeEventListener('mousemove', this.onMouseMove);
+        window.removeEventListener('mouseup', this.onMouseUp);
     }
 
     public render() {
@@ -189,8 +193,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 ref={this.rootRef}
                 className="react-canvas-grid"
                 onMouseDown={this.onMouseDown}
-                onMouseUp={this.onMouseUp}
-                onMouseMove={this.onMouseMove}
                 onDoubleClick={this.onDoubleClick}
                 tabIndex={1}
                 style={{
@@ -268,7 +270,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         mouseDownOnGrid(event, coord, this.rootRef, this.props, this.gridState, this.state.editingCell);
     }
 
-    private onMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    private onMouseMove = (event: MouseEvent) => {
         const coord = GridGeometry.calculateComponentPixel(event, this.rootRef.current);
         const gridSize = this.gridState.gridSize();
 
@@ -286,7 +288,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         }
     }
 
-    private onMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    private onMouseUp = (event: MouseEvent) => {
         batch(() => {
             const coord = GridGeometry.calculateComponentPixel(event, this.rootRef.current);
             if (mouseUpOnScrollbar()) {

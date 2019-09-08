@@ -5,7 +5,7 @@ import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 import { startScrollBySelectionDragIfNeeded } from './scrollingTimer';
-import { selectAll, selectCol, selectRow, updateSelectionCol, updateSelectionRow } from './selection';
+import { selectAll, selectOrUpdateCol, selectOrUpdateRow, updateSelectionCol, updateSelectionRow } from './selection';
 
 export const leftClickOnFrozenCell = <T>(
     event: React.MouseEvent<any, any>,
@@ -25,19 +25,11 @@ export const leftClickOnFrozenCell = <T>(
     } else if (clickInFrozenCols) {
         const coord = GridGeometry.calculateGridCellCoordsFromGridState(
             { clientX: 0, clientY: event.clientY }, rootRef.current, gridState);
-        if (event.shiftKey) {
-            updateSelectionRow(props, gridState, coord);
-        } else {
-            selectRow(props, gridState, coord);
-        }
+        selectOrUpdateRow(event, props, gridState, coord);
     } else if (clickInFrozenRows) {
         const coord = GridGeometry.calculateGridCellCoordsFromGridState(
             { clientX: event.clientX, clientY: 0 }, rootRef.current, gridState);
-        if (event.shiftKey) {
-            updateSelectionCol(props, gridState, coord);
-        } else {
-            selectCol(props, gridState, coord);
-        }
+        selectOrUpdateCol(event, props, gridState, coord);
     }
 
     return true;
@@ -45,7 +37,7 @@ export const leftClickOnFrozenCell = <T>(
 
 export const leftClickDragOnFrozenCell = <T>(
     currentCursorState: CursorState,
-    event: React.MouseEvent<any, any>,
+    event: MouseEvent,
     componentPixelCoord: Coord,
     rootRef: RefObject<HTMLDivElement>,
     props: ReactCanvasGridProps<T>,

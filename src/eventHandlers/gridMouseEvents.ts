@@ -7,7 +7,7 @@ import { Coord } from '../types';
 import { leftClickDragOnFrozenCell, leftClickOnFrozenCell } from './frozenCellMouseEvents';
 import { isLeftButton } from './mouseEvents';
 import { clearScrollByDragTimer, startScrollBySelectionDragIfNeeded } from './scrollingTimer';
-import { endSelection, startSelection, updateSelection } from './selection';
+import { endSelection, startOrUpdateSelection, updateSelection } from './selection';
 
 export const mouseDownOnGrid = <T>(
     event: React.MouseEvent<any, any>,
@@ -31,15 +31,11 @@ export const mouseDownOnGrid = <T>(
 
     const gridCoords = GridGeometry.calculateGridCellCoordsFromGridState(event, rootRef.current, gridState);
 
-    if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelection(props, gridState, gridCoords);
-    } else {
-        startSelection(props, gridState, gridCoords);
-    }
+    startOrUpdateSelection(event, props, gridState, gridCoords);
 };
 
 export const mouseDragOnGrid = <T>(
-    event: React.MouseEvent<any, any>,
+    event: MouseEvent,
     rootRef: RefObject<HTMLDivElement>,
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,

@@ -99,7 +99,7 @@ describe('mouseDownOnGrid', () => {
 
 describe('mouseDragOnGrid', () => {
     interface MouseDragParams<T> {
-        event: React.MouseEvent<any, any>;
+        event: MouseEvent;
         rootRef: React.RefObject<HTMLDivElement>;
         props: ReactCanvasGridProps<T>;
         gridState: GridState<T>;
@@ -108,7 +108,7 @@ describe('mouseDragOnGrid', () => {
 
     const invokeMouseDrag = <T>(params: Partial<MouseDragParams<T>> = {}) => {
         const defaults: MouseDragParams<T> = {
-            event: { buttons: 1, clientX: 0, clientY: 0 } as React.MouseEvent<any, any>,
+            event: { buttons: 1, clientX: 0, clientY: 0 } as MouseEvent,
             rootRef: { current: {
                 getBoundingClientRect: () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }),
             } as HTMLDivElement },
@@ -128,7 +128,7 @@ describe('mouseDragOnGrid', () => {
     });
 
     it('does nothing if it is not a left click', () => {
-        const event: React.MouseEvent<any, any> = { buttons: 0 } as React.MouseEvent<any, any>;
+        const event: MouseEvent = { buttons: 0 } as MouseEvent;
 
         const dragResult = invokeMouseDrag({ event });
 

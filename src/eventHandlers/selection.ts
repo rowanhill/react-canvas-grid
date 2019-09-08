@@ -1,8 +1,47 @@
-import { hasSelectionCellState, hasSelectionRowState } from '../cursorState';
+import { hasSelectionCellState, hasSelectionRowState, hasSelectionState } from '../cursorState';
 import * as cursorState from '../cursorState';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
+
+export const startOrUpdateSelection = <T>(
+    event: MouseEvent | React.MouseEvent<any, any>,
+    props: ReactCanvasGridProps<T>,
+    gridState: GridState<T>,
+    gridCoords: Coord,
+) => {
+    if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
+        updateSelection(props, gridState, gridCoords);
+    } else {
+        startSelection(props, gridState, gridCoords);
+    }
+};
+
+export const selectOrUpdateRow = <T>(
+    event: MouseEvent | React.MouseEvent<any, any>,
+    props: ReactCanvasGridProps<T>,
+    gridState: GridState<T>,
+    gridCoords: Coord,
+) => {
+    if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
+        updateSelectionRow(props, gridState, gridCoords);
+    } else {
+        selectRow(props, gridState, gridCoords);
+    }
+};
+
+export const selectOrUpdateCol = <T>(
+    event: MouseEvent | React.MouseEvent<any, any>,
+    props: ReactCanvasGridProps<T>,
+    gridState: GridState<T>,
+    gridCoords: Coord,
+) => {
+    if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
+        updateSelectionCol(props, gridState, gridCoords);
+    } else {
+        selectCol(props, gridState, gridCoords);
+    }
+};
 
 export const startSelection = <T>(props: ReactCanvasGridProps<T>, gridState: GridState<T>, gridCoords: Coord) => {
     const newCursorState = cursorState.startDrag(gridCoords);
@@ -95,6 +134,9 @@ export const endSelection = <T>(
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
 ) => {
+    if (!hasSelectionState(gridState.cursorState())) {
+        return;
+    }
     if (props.onSelectionChangeEnd) {
         const currentCursorState = gridState.cursorState();
 

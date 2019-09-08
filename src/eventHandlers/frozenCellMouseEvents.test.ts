@@ -113,7 +113,7 @@ describe('leftClickOnFrozenCell', () => {
 describe('leftClickDragOnFrozenCell', () => {
     interface DragParams<T> {
         currentCursorState: CursorState;
-        event: React.MouseEvent<any, any>;
+        event: MouseEvent;
         componentPixelCoord: Coord;
         rootRef: RefObject<HTMLDivElement>;
         props: ReactCanvasGridProps<T>;
@@ -123,7 +123,7 @@ describe('leftClickDragOnFrozenCell', () => {
     const invokeLeftClickDragOnFrozenCell = <T>(params: Partial<DragParams<T>> = {}) => {
         const defaults: DragParams<T> = {
             currentCursorState: { editCursorCell: null, selection: null },
-            event: { buttons: 1, clientX: 0, clientY: 0 } as React.MouseEvent<any, any>,
+            event: { buttons: 1, clientX: 0, clientY: 0 } as MouseEvent,
             componentPixelCoord: { x: 0, y: 0 },
             rootRef: { current: {
                 getBoundingClientRect: () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }),
