@@ -16,7 +16,6 @@ particular goals are:
 There was also originally a goal of making use of browser-native scrolling, although that ultimately wasn't quite tennable. :man_shrugging:
 
 ## TODO :memo:
-* Move mouse event handling to window (i.e. outside component bounds)
 * Middle-click "auto-scrolling"
 * Drag to copy
 * Column dragging (callback to with suggested reordering of ColumnDefs, up to parent to actually re-order & re-render)
