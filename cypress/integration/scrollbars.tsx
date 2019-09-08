@@ -11,6 +11,7 @@ describe('The scrollbars in a grid larger than the canvas', () => {
     it('get darker and larger when hovered', () => {
         cy.get('@Holder')
             .trigger('mousemove', 10, 395)
+            .wait(10) // Small pause to ensure grid repaints before screenshot
             .matchImageSnapshot('scrollbar-hover');
     });
 
@@ -19,6 +20,7 @@ describe('The scrollbars in a grid larger than the canvas', () => {
             .trigger('mousemove', 10, 395)
             .trigger('mousedown', 10, 395, { buttons: 1 })
             .trigger('mousemove', 20, 350, { buttons: 1 })
+            .wait(10) // Small pause to ensure grid repaints before screenshot
             .matchImageSnapshot('scrollbar-drag-off-bar');
     });
 
@@ -28,6 +30,7 @@ describe('The scrollbars in a grid larger than the canvas', () => {
             .trigger('mousedown', 10, 395, { buttons: 1 })
             .trigger('mousemove', 20, 350, { buttons: 1 })
             .trigger('mouseup', 20, 350)
+            .wait(10) // Small pause to ensure grid repaints before screenshot
             .matchImageSnapshot('scrollbar-release-drag-off-bar');
     });
 });
