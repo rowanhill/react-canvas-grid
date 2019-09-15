@@ -5,20 +5,21 @@ import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 
 export const startOrUpdateSelection = <T>(
-    event: MouseEvent | React.MouseEvent<any, any>,
+    event: { shiftKey: boolean },
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
     gridCoords: Coord,
 ) => {
+    const truncatedCoords = truncateCoord(gridCoords, props);
     if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelection(props, gridState, gridCoords);
+        updateSelection(props, gridState, truncatedCoords);
     } else {
-        startSelection(props, gridState, gridCoords);
+        startSelection(props, gridState, truncatedCoords);
     }
 };
 
 export const selectOrUpdateRow = <T>(
-    event: MouseEvent | React.MouseEvent<any, any>,
+    event: { shiftKey: boolean },
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
     gridCoords: Coord,
@@ -31,7 +32,7 @@ export const selectOrUpdateRow = <T>(
 };
 
 export const selectOrUpdateCol = <T>(
-    event: MouseEvent | React.MouseEvent<any, any>,
+    event: { shiftKey: boolean },
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
     gridCoords: Coord,
@@ -44,7 +45,8 @@ export const selectOrUpdateCol = <T>(
 };
 
 export const startSelection = <T>(props: ReactCanvasGridProps<T>, gridState: GridState<T>, gridCoords: Coord) => {
-    const newCursorState = cursorState.startDrag(gridCoords);
+    const truncatedCoords = truncateCoord(gridCoords, props);
+    const newCursorState = cursorState.startDrag(truncatedCoords);
     startSelectionWithCursorState(props, gridState, newCursorState);
 };
 
@@ -86,10 +88,7 @@ export const updateSelection = <T>(props: ReactCanvasGridProps<T>, gridState: Gr
         return;
     }
 
-    const truncatedCoords: Coord = {
-        x: Math.max(gridCoords.x, props.frozenCols),
-        y: Math.max(gridCoords.y, props.frozenRows),
-    };
+    const truncatedCoords = truncateCoord(gridCoords, props);
 
     const newCursorState = cursorState.updateDrag(oldCursorState, truncatedCoords);
     updateCursorStateIfDifferent(props, gridState, oldCursorState, newCursorState);
@@ -143,10 +142,9 @@ export const endSelection = <T>(
     }
 };
 
-        props.onSelectionChangeEnd(
-            cursorState.hasSelectionState(currentCursorState) ?
-                currentCursorState.selection.selectedRange :
-                null,
-        );
-    }
+const truncateCoord = <T>(coord: Coord, props: ReactCanvasGridProps<T>): Coord => {
+    return {
+        x: Math.min(Math.max(coord.x, props.frozenCols), props.columns.length - 1),
+        y: Math.min(Math.max(coord.y, props.frozenRows), props.data.length - 1),
+    };
 };

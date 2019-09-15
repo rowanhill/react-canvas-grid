@@ -1,47 +1,47 @@
 import { Coord } from './types';
 
-export interface CursorState {
-    editCursorCell: Coord|null;
-    selection: SelectionState|null;
+interface EmptyCursorState {
+    editCursorCell: null;
+    selection: null;
+}
+export interface CursorStateWithSelection<T extends SelectionState = SelectionState> {
+    editCursorCell: Coord;
+    selection: T;
 }
 
-interface FrozenStartCellCorner { type: 'corner'; }
-interface FrozenStartCellRow { type: 'row'; rowIndex: number; }
-interface FrozenStartCellColumn { type: 'column'; colIndex: number; }
-interface FrozenStartCellNone { type: 'none'; }
-type FrozenStartCell = FrozenStartCellCorner | FrozenStartCellRow | FrozenStartCellColumn | FrozenStartCellNone;
+export type CursorState<T extends SelectionState = SelectionState> = EmptyCursorState | CursorStateWithSelection<T>;
+
+type RangeSelectionType = 'grid' | 'rows' | 'columns' | 'cells';
 export interface SelectionState {
     selectionStartCell: Coord;
+    selectionEndCell: Coord;
     selectedRange: SelectRange;
-    frozenStartCell: FrozenStartCell;
+    selectionType: RangeSelectionType;
 }
-type SelectionStateCorner = SelectionState & { frozenStartCell: FrozenStartCellCorner; };
-type SelectionStateRow = SelectionState & { frozenStartCell: FrozenStartCellRow; };
-type SelectionStateColumn = SelectionState & { frozenStartCell: FrozenStartCellColumn; };
-type SelectionStateCell = SelectionState & { frozenStartCell: FrozenStartCellNone; };
+export type SelectionStateCorner = SelectionState & { selectionType: 'grid'; };
+export type SelectionStateRow = SelectionState & { selectionType: 'rows'; };
+export type SelectionStateColumn = SelectionState & { selectionType: 'columns'; };
+export type SelectionStateCell = SelectionState & { selectionType: 'cells'; };
 
 export interface SelectRange {
     topLeft: Coord;
     bottomRight: Coord;
 }
 
-export type CursorStateWithSelection = CursorState & { selection: SelectionState };
-export type CursorStateWithCellSelection = CursorState & { selection: SelectionStateCell; };
-export type CursorStateWithCornerSelection = CursorState & { selection: SelectionStateCorner; };
-export type CursorStateWithRowSelection = CursorState & { selection: SelectionStateRow; };
-export type CursorStateWithColumnSelection = CursorState & { selection: SelectionStateColumn; };
-
 export function hasSelectionState(cursorState: CursorState): cursorState is CursorStateWithSelection {
     return cursorState.selection !== null;
 }
-export function hasSelectionCellState(cursorState: CursorState): cursorState is CursorStateWithCellSelection {
-    return cursorState.selection !== null && cursorState.selection.frozenStartCell.type === 'none';
+export function hasSelectionCellState(cursorState: CursorState):
+cursorState is CursorStateWithSelection<SelectionStateCell> {
+    return cursorState.selection !== null && cursorState.selection.selectionType === 'cells';
 }
-export function hasSelectionRowState(cursorState: CursorState): cursorState is CursorStateWithRowSelection {
-    return cursorState.selection !== null && cursorState.selection.frozenStartCell.type === 'row';
+export function hasSelectionRowState(cursorState: CursorState):
+cursorState is CursorStateWithSelection<SelectionStateRow> {
+    return cursorState.selection !== null && cursorState.selection.selectionType === 'rows';
 }
-export function hasSelectionColumnState(cursorState: CursorState): cursorState is CursorStateWithColumnSelection {
-    return cursorState.selection !== null && cursorState.selection.frozenStartCell.type === 'column';
+export function hasSelectionColumnState(cursorState: CursorState):
+cursorState is CursorStateWithSelection<SelectionStateColumn> {
+    return cursorState.selection !== null && cursorState.selection.selectionType === 'columns';
 }
 export function hasSelectionFrozenState(cursorState: CursorState) {
     return hasSelectionRowState(cursorState) || hasSelectionColumnState(cursorState);
@@ -56,7 +56,7 @@ export function createDefault(): CursorState {
 
 export function startDrag(
     gridCoords: Coord,
-    frozenStartCell: FrozenStartCell = { type: 'none' },
+    selectionType: RangeSelectionType = 'cells',
 ): CursorStateWithSelection {
     const selectedRange = {
         topLeft: gridCoords,
@@ -67,7 +67,8 @@ export function startDrag(
         selection: {
             selectedRange,
             selectionStartCell: gridCoords,
-            frozenStartCell,
+            selectionEndCell: gridCoords,
+            selectionType,
         },
     };
 }
@@ -88,37 +89,38 @@ export function updateDrag(cursorState: CursorStateWithSelection, gridCoords: Co
         selection: {
             ...cursorState.selection,
             selectedRange,
+            selectionEndCell: gridCoords,
         },
     };
 }
 
-function startRange(fromCoords: Coord, toCoords: Coord, frozenStart: FrozenStartCell): CursorStateWithSelection {
-    const fromState = startDrag(fromCoords, frozenStart);
+function startRange(fromCoords: Coord, toCoords: Coord, selectionType: RangeSelectionType): CursorStateWithSelection {
+    const fromState = startDrag(fromCoords, selectionType);
     return updateDrag(fromState, toCoords);
 }
 
 export function startRangeCorner(fromCoords: Coord, toCoords: Coord): CursorStateWithSelection {
-    return startRange(fromCoords, toCoords, { type: 'corner' });
+    return startRange(fromCoords, toCoords, 'grid');
 }
 export function startRangeRow(fromCoords: Coord, toCoords: Coord): CursorStateWithSelection {
-    return startRange(fromCoords, toCoords, { type: 'row', rowIndex: fromCoords.y });
+    return startRange(fromCoords, toCoords, 'rows');
 }
 export function startRangeColumn(fromCoords: Coord, toCoords: Coord): CursorStateWithSelection {
-    return startRange(fromCoords, toCoords, { type: 'column', colIndex: fromCoords.x });
+    return startRange(fromCoords, toCoords, 'columns');
 }
 
 export function updateRangeRow(
-    cursorState: CursorStateWithRowSelection,
+    cursorState: CursorStateWithSelection<SelectionStateRow>,
     gridCoords: Coord,
-): CursorStateWithRowSelection {
+): CursorStateWithSelection<SelectionStateRow> {
     const selectedRange = {
         topLeft: {
             x: cursorState.selection.selectedRange.topLeft.x,
-            y: Math.min(cursorState.selection.frozenStartCell.rowIndex, gridCoords.y),
+            y: Math.min(cursorState.selection.selectionStartCell.y, gridCoords.y),
         },
         bottomRight: {
             x: cursorState.selection.selectedRange.bottomRight.x,
-            y: Math.max(cursorState.selection.frozenStartCell.rowIndex, gridCoords.y),
+            y: Math.max(cursorState.selection.selectionStartCell.y, gridCoords.y),
         },
     };
     return {
@@ -131,16 +133,16 @@ export function updateRangeRow(
 }
 
 export function updateRangeColumn(
-    cursorState: CursorStateWithColumnSelection,
+    cursorState: CursorStateWithSelection<SelectionStateColumn>,
     gridCoords: Coord,
-): CursorStateWithColumnSelection {
+): CursorStateWithSelection<SelectionStateColumn> {
     const selectedRange = {
         topLeft: {
-            x: Math.min(cursorState.selection.frozenStartCell.colIndex, gridCoords.x),
+            x: Math.min(cursorState.selection.selectionStartCell.x, gridCoords.x),
             y: cursorState.selection.selectedRange.topLeft.y,
         },
         bottomRight: {
-            x: Math.max(cursorState.selection.frozenStartCell.colIndex, gridCoords.x),
+            x: Math.max(cursorState.selection.selectionStartCell.x, gridCoords.x),
             y: Math.max(cursorState.selection.selectedRange.bottomRight.y),
         },
     };

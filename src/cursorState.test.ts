@@ -1,9 +1,9 @@
 import {
     createDefault,
-    CursorStateWithColumnSelection,
-    CursorStateWithRowSelection,
     CursorStateWithSelection,
     isSelectRangeDifferent,
+    SelectionStateColumn,
+    SelectionStateRow,
     SelectRange,
     startDrag,
     startRangeColumn,
@@ -34,16 +34,15 @@ describe('startDrag', () => {
         expect(state.selection.selectionStartCell).toBe(coord);
         expect(state.selection.selectedRange!.topLeft).toBe(coord);
         expect(state.selection.selectedRange!.bottomRight).toBe(coord);
-        expect(state.selection.frozenStartCell.type).toEqual('none');
+        expect(state.selection.selectionType).toEqual('cells');
     });
 
     it('can be provided with a frozen start cell', () => {
         const coord = { x: 0, y: 5 };
-        const frozenStart = { type: 'row' as 'row', rowIndex: 5 };
 
-        const state = startDrag(coord, frozenStart);
+        const state = startDrag(coord, 'rows');
 
-        expect(state.selection.frozenStartCell).toBe(frozenStart);
+        expect(state.selection.selectionType).toBe('rows');
     });
 });
 
@@ -120,7 +119,7 @@ describe('startRangeCorner', () => {
             topLeft: { x: 1, y: 1 },
             bottomRight: { x: 10, y: 15 },
         });
-        expect(state.selection.frozenStartCell).toEqual({ type: 'corner' });
+        expect(state.selection.selectionType).toEqual('grid');
     });
 });
 
@@ -135,10 +134,7 @@ describe('startRangeRow', () => {
             topLeft: { x: 1, y: 5 },
             bottomRight: { x: 10, y: 5 },
         });
-        expect(state.selection.frozenStartCell).toEqual({
-            type: 'row',
-            rowIndex: 5,
-        });
+        expect(state.selection.selectionType).toEqual('rows');
     });
 });
 
@@ -153,16 +149,13 @@ describe('startRangeColumn', () => {
             topLeft: { x: 10, y: 1 },
             bottomRight: { x: 10, y: 15 },
         });
-        expect(state.selection.frozenStartCell).toEqual({
-            type: 'column',
-            colIndex: 10,
-        });
+        expect(state.selection.selectionType).toEqual('columns');
     });
 });
 
 describe('updateRangeRow', () => {
     it('merges the prior selected range with the new coord below, ignoring the coord\'s column', () => {
-        const oldState = startRangeRow({ x: 1, y: 3 }, { x: 10, y: 3 }) as CursorStateWithRowSelection;
+        const oldState = startRangeRow({ x: 1, y: 3 }, { x: 10, y: 3 }) as CursorStateWithSelection<SelectionStateRow>;
 
         const state = updateRangeRow(oldState, { x: 20, y: 4 });
 
@@ -173,7 +166,7 @@ describe('updateRangeRow', () => {
     });
 
     it('merges the prior selected range with the new coord above, ignoring the coord\'s column', () => {
-        const oldState = startRangeRow({ x: 1, y: 3 }, { x: 10, y: 3 }) as CursorStateWithRowSelection;
+        const oldState = startRangeRow({ x: 1, y: 3 }, { x: 10, y: 3 }) as CursorStateWithSelection<SelectionStateRow>;
 
         const state = updateRangeRow(oldState, { x: 20, y: 2 });
 
@@ -186,7 +179,8 @@ describe('updateRangeRow', () => {
 
 describe('updateRangeColumn', () => {
     it('merges the prior selected range with the new coord to left, ignoring the coord\'s row', () => {
-        const oldState = startRangeColumn({ x: 3, y: 1 }, { x: 3, y: 10 }) as CursorStateWithColumnSelection;
+        const oldState = startRangeColumn({ x: 3, y: 1 }, { x: 3, y: 10 }) as
+            CursorStateWithSelection<SelectionStateColumn>;
 
         const state = updateRangeColumn(oldState, { x: 2, y: 20 });
 
@@ -197,8 +191,8 @@ describe('updateRangeColumn', () => {
     });
 
     it('merges the prior selected range with the new coord to right, ignoring the coord\'s row', () => {
-        const oldState = startRangeColumn({ x: 3, y: 1 }, { x: 3, y: 10 }) as CursorStateWithColumnSelection;
-
+        const oldState = startRangeColumn({ x: 3, y: 1 }, { x: 3, y: 10 }) as
+            CursorStateWithSelection<SelectionStateColumn>;
         const state = updateRangeColumn(oldState, { x: 4, y: 20 });
 
         expect(state.selection.selectedRange).toEqual({

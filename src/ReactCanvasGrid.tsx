@@ -3,6 +3,7 @@ import * as React from 'react';
 import { SelectRange } from './cursorState';
 import * as cursorState from './cursorState';
 import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './eventHandlers/gridMouseEvents';
+import { keyDownOnGrid } from './eventHandlers/keyboardEvents';
 import {
     mouseDownOnScrollbar,
     mouseDragOnScrollbar,
@@ -194,6 +195,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                 className="react-canvas-grid"
                 onMouseDown={this.onMouseDown}
                 onDoubleClick={this.onDoubleClick}
+                onKeyDown={this.onKeyDown}
                 tabIndex={1}
                 style={{
                     position: 'relative',
@@ -304,6 +306,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         const cellCoords =
             GridGeometry.calculateGridCellCoordsFromGridState(event, this.rootRef.current, this.gridState);
         this.startEditingCell(cellCoords);
+    }
+
+    private onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        keyDownOnGrid(event, this.props, this.gridState);
     }
 
     private startEditingCell = (cellCoords: Coord) => {
