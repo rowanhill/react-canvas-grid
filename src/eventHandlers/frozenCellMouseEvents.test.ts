@@ -77,7 +77,7 @@ describe('leftClickOnFrozenCell', () => {
         const result = invokeLeftClickOnFrozenCell({ componentPixelCoord });
 
         expect(result).toEqual(true);
-        expect(selection.selectRow).toHaveBeenCalled();
+        expect(selection.selectOrUpdateRow).toHaveBeenCalled();
     });
 
     it('selects the whole column if the click is on the top, within the frozen rows', () => {
@@ -86,7 +86,7 @@ describe('leftClickOnFrozenCell', () => {
         const result = invokeLeftClickOnFrozenCell({ componentPixelCoord });
 
         expect(result).toEqual(true);
-        expect(selection.selectCol).toHaveBeenCalled();
+        expect(selection.selectOrUpdateCol).toHaveBeenCalled();
     });
 
     it('selects a range of rows when shift-clicking on the left, within the frozen columns', () => {
@@ -96,7 +96,7 @@ describe('leftClickOnFrozenCell', () => {
         const result = invokeLeftClickOnFrozenCell({ componentPixelCoord, event });
 
         expect(result).toEqual(true);
-        expect(selection.updateSelectionRow).toHaveBeenCalled();
+        expect(selection.selectOrUpdateRow).toHaveBeenCalled();
     });
 
     it('selects a range of cols when shift-clicking on the top, within the frozen rows', () => {
@@ -106,7 +106,7 @@ describe('leftClickOnFrozenCell', () => {
         const result = invokeLeftClickOnFrozenCell({ componentPixelCoord, event });
 
         expect(result).toEqual(true);
-        expect(selection.updateSelectionCol).toHaveBeenCalled();
+        expect(selection.selectOrUpdateCol).toHaveBeenCalled();
     });
 });
 

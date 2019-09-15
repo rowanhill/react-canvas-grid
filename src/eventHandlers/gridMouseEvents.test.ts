@@ -80,20 +80,20 @@ describe('mouseDownOnGrid', () => {
     it('starts a selection when left clicking on the grid', () => {
         invokeMouseDown();
 
-        expect(selection.startSelection).toHaveBeenCalled();
+        expect(selection.startOrUpdateSelection).toHaveBeenCalled();
     });
 
     it('starts a selection when shift-clicking on the grid with no prior selection', () => {
         invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
 
-        expect(selection.startSelection).toHaveBeenCalled();
+        expect(selection.startOrUpdateSelection).toHaveBeenCalled();
     });
 
     it('updates the selection when shift-clicking in the grid with a prior selection', () => {
         (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(true);
         invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
 
-        expect(selection.updateSelection).toHaveBeenCalled();
+        expect(selection.startOrUpdateSelection).toHaveBeenCalled();
     });
 });
 

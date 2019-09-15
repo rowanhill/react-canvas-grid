@@ -134,11 +134,14 @@ export const endSelection = <T>(
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
 ) => {
-    if (!hasSelectionState(gridState.cursorState())) {
+    const currentCursorState = gridState.cursorState();
+    if (!hasSelectionState(currentCursorState)) {
         return;
     }
     if (props.onSelectionChangeEnd) {
-        const currentCursorState = gridState.cursorState();
+        props.onSelectionChangeEnd(currentCursorState.selection.selectedRange);
+    }
+};
 
         props.onSelectionChangeEnd(
             cursorState.hasSelectionState(currentCursorState) ?

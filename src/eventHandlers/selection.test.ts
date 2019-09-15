@@ -256,12 +256,12 @@ describe('iselection methods', () => {
             expect(props.onSelectionChangeEnd).toHaveBeenCalledWith(oldCursorState.selection.selectedRange);
         });
 
-        it('calls the props callback with null if there is no existing selection', () => {
+        it('does not call the props callback if there is no existing selection', () => {
             (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(false);
 
             endSelection(props, gridState);
 
-            expect(props.onSelectionChangeEnd).toHaveBeenCalledWith(null);
+            expect(props.onSelectionChangeEnd).not.toHaveBeenCalled();
         });
 
         it('does nothing if the props callback is not provided', () => {
@@ -269,7 +269,7 @@ describe('iselection methods', () => {
 
             endSelection(props, gridState);
 
-            expect(gridState.cursorState).not.toHaveBeenCalled();
+            // Nothing happens - no exceptions, etc
         });
     });
 });
