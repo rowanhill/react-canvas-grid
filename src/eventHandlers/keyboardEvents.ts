@@ -3,6 +3,7 @@ import { hasSelectionState } from '../cursorState';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
+import { scrollToCell } from './scrolling';
 import { startOrUpdateSelection } from './selection';
 
 export const keyDownOnGrid = <T>(
@@ -27,6 +28,7 @@ export const keyDownOnGrid = <T>(
 
         if (newCoord !== undefined) {
             startOrUpdateSelection(event, props, gridState, newCoord);
+            scrollToCell(newCoord, gridState);
         }
     }
 };

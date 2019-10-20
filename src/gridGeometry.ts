@@ -195,34 +195,149 @@ export class GridGeometry {
         };
     }
 
-    public static calculateGridOffsetForFocusedColumn = (
+    public static calculateGridOffsetForTargetColumn = (
         oldOffset: Coord,
         canvasSize: Size,
         frozenColsWidth: number,
-        focusedColIndex: number,
+        targetColIndex: number,
         columnBoundaries: ColumnBoundary[],
-        verticalColumnGutter: ClientRect | null,
+        verticalScrollGutter: ClientRect | null,
     ): Coord => {
-        if (focusedColIndex < 0 || focusedColIndex >= columnBoundaries.length) {
-            // The focused column index is invalid, so ignore it
-            return oldOffset;
+        return {
+            ...oldOffset,
+            x: GridGeometry.calculateGridOffsetXForTargetColumn(
+                oldOffset.x,
+                canvasSize,
+                frozenColsWidth,
+                targetColIndex,
+                columnBoundaries,
+                verticalScrollGutter,
+            ),
+        };
+    }
+
+    public static calculateGridOffsetForTargetRow = (
+        oldOffset: Coord,
+        canvasSize: Size,
+        frozenRowsHeight: number,
+        targetRowIndex: number,
+        rowHeight: number,
+        borderWidth: number,
+        numRows: number,
+        horizontalScrollGutter: ClientRect | null,
+    ): Coord => {
+        return {
+            ...oldOffset,
+            y: GridGeometry.calculateGridOffsetYForTargetRow(
+                oldOffset.y,
+                canvasSize,
+                frozenRowsHeight,
+                targetRowIndex,
+                rowHeight,
+                borderWidth,
+                numRows,
+                horizontalScrollGutter,
+            ),
+        };
+    }
+
+    public static calculateGridOffsetForTargetCell = (
+        oldOffset: Coord,
+        canvasSize: Size,
+        frozenColsWidth: number,
+        frozenRowsHeight: number,
+        targetCell: Coord,
+        columnBoundaries: ColumnBoundary[],
+        rowHeight: number,
+        borderWidth: number,
+        numRows: number,
+        verticalScrollGutter: ClientRect | null,
+        horizontalScrollGutter: ClientRect | null,
+    ): Coord => {
+        return {
+            x: GridGeometry.calculateGridOffsetXForTargetColumn(
+                oldOffset.x,
+                canvasSize,
+                frozenColsWidth,
+                targetCell.x,
+                columnBoundaries,
+                verticalScrollGutter,
+            ),
+            y: GridGeometry.calculateGridOffsetYForTargetRow(
+                oldOffset.y,
+                canvasSize,
+                frozenRowsHeight,
+                targetCell.y,
+                rowHeight,
+                borderWidth,
+                numRows,
+                horizontalScrollGutter,
+            ),
+        };
+    }
+
+    public static calculateGridOffsetXForTargetColumn = (
+        oldX: number,
+        canvasSize: Size,
+        frozenColsWidth: number,
+        targetColIndex: number,
+        columnBoundaries: ColumnBoundary[],
+        verticalScrollGutter: ClientRect | null,
+    ): number => {
+        if (targetColIndex < 0 || targetColIndex >= columnBoundaries.length) {
+            // The target column index is invalid, so ignore it
+            return oldX;
         }
-        const gutterWidth = verticalColumnGutter ? verticalColumnGutter.width : 0;
-        const focusedBoundaries = columnBoundaries[focusedColIndex];
-        const viewLeft = oldOffset.x + frozenColsWidth;
-        const viewRight = oldOffset.x + canvasSize.width - gutterWidth;
-        if (focusedBoundaries.left < viewLeft && focusedBoundaries.right > viewRight) {
-            // The focused column is wider that the canvas, but already visible - no change needed
-            return oldOffset;
-        } else if (focusedBoundaries.left < viewLeft) {
-            // The focused column is to the left, so move offset so it's the leftmost column
-            return { x: Math.max(focusedBoundaries.left - frozenColsWidth, 0), y: oldOffset.y };
-        } else if (focusedBoundaries.right > viewRight) {
-            // The focused column is to the right, so move offset so it's the rightmost column
-            return { x: focusedBoundaries.right - canvasSize.width + gutterWidth, y: oldOffset.y };
+        const gutterWidth = verticalScrollGutter ? verticalScrollGutter.width : 0;
+        const targetBoundaries = columnBoundaries[targetColIndex];
+        const viewLeft = oldX + frozenColsWidth;
+        const viewRight = oldX + canvasSize.width - gutterWidth;
+        if (targetBoundaries.left < viewLeft && targetBoundaries.right > viewRight) {
+            // The target column is wider than the canvas, but already visible - no change needed
+            return oldX;
+        } else if (targetBoundaries.left < viewLeft) {
+            // The target column is to the left, so move offset so it's the leftmost column
+            return Math.max(targetBoundaries.left - frozenColsWidth, 0);
+        } else if (targetBoundaries.right > viewRight) {
+            // The target column is to the right, so move offset so it's the rightmost column
+            return targetBoundaries.right - canvasSize.width + gutterWidth;
         } else {
-            // Otherwise, the focused column must be in view, so no change is needed
-            return oldOffset;
+            // Otherwise, the target column must be in view, so no change is needed
+            return oldX;
+        }
+    }
+
+    public static calculateGridOffsetYForTargetRow = (
+        oldY: number,
+        canvasSize: Size,
+        frozenRowsHeight: number,
+        targetRowIndex: number,
+        rowHeight: number,
+        borderWidth: number,
+        numRows: number,
+        horizontalScrollGutter: ClientRect | null,
+    ): number => {
+        if (targetRowIndex < 0 || targetRowIndex >= (rowHeight + borderWidth) * numRows) {
+            // The target row index is invalid, so ignore it
+            return oldY;
+        }
+        const gutterHeight = horizontalScrollGutter ? horizontalScrollGutter.height : 0;
+        const targetRowTop = (rowHeight + borderWidth) * targetRowIndex;
+        const targetRowBottom = targetRowTop + rowHeight;
+        const viewTop = oldY + frozenRowsHeight;
+        const viewBottom = oldY + canvasSize.height - gutterHeight;
+        if (targetRowTop < viewTop && targetRowBottom > viewBottom) {
+            // The target row is taller than the canvas, but already visible - no change needed
+            return oldY;
+        } else if (targetRowTop < viewTop) {
+            // The target column is upwards, so move offset so it's the topmost row
+            return Math.max(targetRowTop - frozenRowsHeight, 0);
+        } else if (targetRowBottom > viewBottom) {
+            // The target row is downwards, so move offset so it's the bottommost column
+            return targetRowBottom - canvasSize.height + gutterHeight;
+        } else {
+            // Otherwise, the target row must be in view, so no change is needed
+            return oldY;
         }
     }
 

@@ -150,7 +150,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             }
 
             if (this.props.focusedColIndex !== null && this.props.focusedColIndex !== prevProps.focusedColIndex) {
-                const focusedOffset = GridGeometry.calculateGridOffsetForFocusedColumn(
+                const focusedOffset = GridGeometry.calculateGridOffsetForTargetColumn(
                     this.gridState.gridOffset(),
                     canvasSize,
                     this.gridState.frozenColsWidth(),

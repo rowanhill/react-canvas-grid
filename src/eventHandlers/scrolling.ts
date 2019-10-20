@@ -1,4 +1,6 @@
+import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
+import { Coord } from '../types';
 import { numberBetween } from '../utils';
 
 export const updateOffsetByDelta = <T>(
@@ -24,4 +26,25 @@ export const updateOffsetByDelta = <T>(
 
     // We did move, so return true
     return true;
+};
+
+export const scrollToCell = <T>(
+    cellCoord: Coord,
+    gridState: GridState<T>,
+) => {
+    const newOffset = GridGeometry.calculateGridOffsetForTargetCell(
+        gridState.gridOffset(),
+        gridState.canvasSize(),
+        gridState.frozenColsWidth(),
+        gridState.frozenRowsHeight(),
+        cellCoord,
+        gridState.columnBoundaries(),
+        gridState.rowHeight(),
+        gridState.borderWidth(),
+        gridState.data().length,
+        gridState.verticalGutterBounds(),
+        gridState.horizontalGutterBounds(),
+    );
+
+    gridState.gridOffsetRaw(newOffset);
 };
