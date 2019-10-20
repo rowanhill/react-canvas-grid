@@ -128,6 +128,10 @@ export function updateRangeRow(
         selection: {
             ...cursorState.selection,
             selectedRange,
+            selectionEndCell: {
+                ...cursorState.selection.selectionEndCell,
+                y: gridCoords.y,
+            },
         },
     };
 }
@@ -151,6 +155,10 @@ export function updateRangeColumn(
         selection: {
             ...cursorState.selection,
             selectedRange,
+            selectionEndCell: {
+                ...cursorState.selection.selectionEndCell,
+                x: gridCoords.x,
+            },
         },
     };
 }
