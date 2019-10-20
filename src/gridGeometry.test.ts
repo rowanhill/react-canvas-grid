@@ -348,7 +348,7 @@ describe('GridGeomtry', () => {
         });
     });
 
-    describe('calculateGridOffsetForFocusedColumn', () => {
+    describe('calculateGridOffsetForTargetColumn', () => {
         it('returns the old offset if the focused column spans the view', () => {
             const colBoundaries: ColumnBoundary[] = [
                 { left: 0, right: 10 },
@@ -360,7 +360,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 0;
             const focusedColIndex = 1;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -383,7 +383,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 0;
             const focusedColIndex = 1;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -407,7 +407,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 50;
             const focusedColIndex = 2;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -430,7 +430,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 0;
             const focusedColIndex = 1;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -453,7 +453,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 0;
             const focusedColIndex = 1;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -477,7 +477,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 50;
             const focusedColIndex = 0;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -496,7 +496,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 0;
             const focusedColIndex = -1;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
@@ -515,7 +515,7 @@ describe('GridGeomtry', () => {
             const frozenColsWidth = 0;
             const focusedColIndex = 1;
 
-            const offset = GridGeometry.calculateGridOffsetForFocusedColumn(
+            const offset = GridGeometry.calculateGridOffsetForTargetColumn(
                 oldOffset,
                 canvasSize,
                 frozenColsWidth,
