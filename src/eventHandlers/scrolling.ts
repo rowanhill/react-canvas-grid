@@ -48,3 +48,37 @@ export const scrollToCell = <T>(
 
     gridState.gridOffsetRaw(newOffset);
 };
+
+export const scrollToRow = <T>(
+    cellCoord: Coord,
+    gridState: GridState<T>,
+) => {
+    const newOffset = GridGeometry.calculateGridOffsetForTargetRow(
+        gridState.gridOffset(),
+        gridState.canvasSize(),
+        gridState.frozenRowsHeight(),
+        cellCoord.y,
+        gridState.rowHeight(),
+        gridState.borderWidth(),
+        gridState.data().length,
+        gridState.horizontalGutterBounds(),
+    );
+
+    gridState.gridOffsetRaw(newOffset);
+};
+
+export const scrollToColumn = <T>(
+    cellCoord: Coord,
+    gridState: GridState<T>,
+) => {
+    const newOffset = GridGeometry.calculateGridOffsetForTargetColumn(
+        gridState.gridOffset(),
+        gridState.canvasSize(),
+        gridState.frozenColsWidth(),
+        cellCoord.x,
+        gridState.columnBoundaries(),
+        gridState.verticalGutterBounds(),
+    );
+
+    gridState.gridOffsetRaw(newOffset);
+};

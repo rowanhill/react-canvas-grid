@@ -1,10 +1,15 @@
 import * as React from 'react';
-import { hasSelectionState } from '../cursorState';
+import {
+    hasSelectionCellState,
+    hasSelectionColumnState,
+    hasSelectionRowState,
+    hasSelectionState,
+} from '../cursorState';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
-import { scrollToCell } from './scrolling';
-import { startOrUpdateSelection } from './selection';
+import { scrollToCell, scrollToColumn, scrollToRow } from './scrolling';
+import { selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
 
 export const keyDownOnGrid = <T>(
     event: React.KeyboardEvent<any>,
@@ -27,8 +32,16 @@ export const keyDownOnGrid = <T>(
         }
 
         if (newCoord !== undefined) {
-            startOrUpdateSelection(event, props, gridState, newCoord);
-            scrollToCell(newCoord, gridState);
+            if (hasSelectionColumnState(cursor)) {
+                selectOrUpdateCol(event, props, gridState, newCoord);
+                scrollToColumn(newCoord, gridState);
+            } else if (hasSelectionRowState(cursor)) {
+                selectOrUpdateRow(event, props, gridState, newCoord);
+                scrollToRow(newCoord, gridState);
+            } else if (hasSelectionCellState(cursor)) {
+                startOrUpdateSelection(event, props, gridState, newCoord);
+                scrollToCell(newCoord, gridState);
+            }
         }
     }
 };
