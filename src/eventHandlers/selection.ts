@@ -24,10 +24,11 @@ export const selectOrUpdateRow = <T>(
     gridState: GridState<T>,
     gridCoords: Coord,
 ) => {
+    const truncatedCoords = truncateCoord(gridCoords, props);
     if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelectionRow(props, gridState, gridCoords);
+        updateSelectionRow(props, gridState, truncatedCoords);
     } else {
-        selectRow(props, gridState, gridCoords);
+        selectRow(props, gridState, truncatedCoords);
     }
 };
 
@@ -37,10 +38,11 @@ export const selectOrUpdateCol = <T>(
     gridState: GridState<T>,
     gridCoords: Coord,
 ) => {
+    const truncatedCoords = truncateCoord(gridCoords, props);
     if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelectionCol(props, gridState, gridCoords);
+        updateSelectionCol(props, gridState, truncatedCoords);
     } else {
-        selectCol(props, gridState, gridCoords);
+        selectCol(props, gridState, truncatedCoords);
     }
 };
 
