@@ -175,6 +175,15 @@ describe('updateRangeRow', () => {
             bottomRight: { x: 10, y: 3 },
         });
     });
+
+    it('keeps the selection start cell the same, but updates the row of the selection end cell', () => {
+        const oldState = startRangeRow({ x: 1, y: 3 }, { x: 10, y: 3 }) as CursorStateWithSelection<SelectionStateRow>;
+
+        const state = updateRangeRow(oldState, { x: 20, y: 2 });
+
+        expect(state.selection.selectionStartCell).toEqual({ x: 1, y: 3 });
+        expect(state.selection.selectionEndCell).toEqual({ x: 10, y: 2 });
+    });
 });
 
 describe('updateRangeColumn', () => {
@@ -193,12 +202,21 @@ describe('updateRangeColumn', () => {
     it('merges the prior selected range with the new coord to right, ignoring the coord\'s row', () => {
         const oldState = startRangeColumn({ x: 3, y: 1 }, { x: 3, y: 10 }) as
             CursorStateWithSelection<SelectionStateColumn>;
-        const state = updateRangeColumn(oldState, { x: 4, y: 20 });
+        const state = updateRangeColumn(oldState, { x: 4, y: 10 });
 
         expect(state.selection.selectedRange).toEqual({
             topLeft: { x: 3, y: 1 },
             bottomRight: { x: 4, y: 10 },
         });
+    });
+
+    it('keeps the selection start cell the same, but updates the col of the selection end cell', () => {
+        const oldState = startRangeColumn({ x: 3, y: 1 }, { x: 3, y: 10 }) as
+            CursorStateWithSelection<SelectionStateColumn>;
+        const state = updateRangeColumn(oldState, { x: 4, y: 10 });
+
+        expect(state.selection.selectionStartCell).toEqual({ x: 3, y: 1 });
+        expect(state.selection.selectionEndCell).toEqual({ x: 4, y: 10 });
     });
 });
 
