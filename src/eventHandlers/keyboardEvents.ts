@@ -9,7 +9,7 @@ import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 import { scrollToCell, scrollToColumn, scrollToRow } from './scrolling';
-import { selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection, endSelection } from './selection';
+import { endSelection, selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
 
 export const keyDownOnGrid = <T>(
     event: React.KeyboardEvent<any>,
