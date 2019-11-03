@@ -67,8 +67,8 @@ export class SelectionEventsGrid extends React.Component<{}, SelectionEventsStat
         const newRange = range ?
             `(${range.topLeft.x},${range.topLeft.y}) -> (${range.bottomRight.x},${range.bottomRight.y})` :
             'none';
-        this.setState({
-            eventLog: this.state.eventLog + `${paddedType}: ${newRange}\n`,
+        this.setState((prevState) => {
+            return { ...prevState, eventLog: prevState.eventLog + `${paddedType}: ${newRange}\n` };
         });
     }
 }
