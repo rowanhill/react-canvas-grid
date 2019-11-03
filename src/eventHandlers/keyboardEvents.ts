@@ -9,7 +9,7 @@ import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 import { scrollToCell, scrollToColumn, scrollToRow } from './scrolling';
-import { selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
+import { selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection, endSelection } from './selection';
 
 export const keyDownOnGrid = <T>(
     event: React.KeyboardEvent<any>,
@@ -34,6 +34,7 @@ export const keyDownOnGrid = <T>(
 
             selectOrUpdateCol(event, props, gridState, newCoord);
             scrollToColumn(newCoord.x, gridState);
+            endSelection(props, gridState);
         } else if (hasSelectionRowState(cursor)) {
             let newCoord: Coord | undefined;
             if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -48,6 +49,7 @@ export const keyDownOnGrid = <T>(
 
             selectOrUpdateRow(event, props, gridState, newCoord);
             scrollToRow(newCoord.y, gridState);
+            endSelection(props, gridState);
         } else if (hasSelectionCellState(cursor)) {
             let newCoord: Coord | undefined;
             if (event.key === 'ArrowRight') {
@@ -64,6 +66,7 @@ export const keyDownOnGrid = <T>(
 
             startOrUpdateSelection(event, props, gridState, newCoord);
             scrollToCell(newCoord, gridState);
+            endSelection(props, gridState);
         }
     }
 };

@@ -15,7 +15,7 @@ import {
 } from '../cursorState';
 import { keyDownOnGrid } from './keyboardEvents';
 import { scrollToCell, scrollToColumn, scrollToRow } from './scrolling';
-import { selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
+import { endSelection, selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
 
 jest.mock('./scrolling');
 jest.mock('./selection');
@@ -24,6 +24,7 @@ function expectNoSelectionToHaveHappened() {
     expect(selectOrUpdateCol).not.toHaveBeenCalled();
     expect(selectOrUpdateRow).not.toHaveBeenCalled();
     expect(startOrUpdateSelection).not.toHaveBeenCalled();
+    expect(endSelection).not.toHaveBeenCalled();
 }
 
 function expectNoScrollToHaveHappened() {
@@ -76,6 +77,7 @@ describe('keyDownOnGrid', () => {
 
             expect(startOrUpdateSelection).toHaveBeenCalledWith(event, props, gridState, {x, y});
             expect(scrollToCell).toHaveBeenCalledWith({x, y}, gridState);
+            expect(endSelection).toHaveBeenCalledWith(props, gridState);
         });
     });
 
@@ -102,6 +104,7 @@ describe('keyDownOnGrid', () => {
 
             expect(startOrUpdateSelection).toHaveBeenCalledWith(event, props, gridState, {x, y});
             expect(scrollToCell).toHaveBeenCalledWith({x, y}, gridState);
+            expect(endSelection).toHaveBeenCalledWith(props, gridState);
         });
     });
 
@@ -127,6 +130,7 @@ describe('keyDownOnGrid', () => {
 
             expect(selectOrUpdateRow).toHaveBeenCalledWith(event, props, gridState, {x, y});
             expect(scrollToRow).toHaveBeenCalledWith(y, gridState);
+            expect(endSelection).toHaveBeenCalledWith(props, gridState);
         });
     });
 
@@ -153,6 +157,7 @@ describe('keyDownOnGrid', () => {
 
             expect(selectOrUpdateRow).toHaveBeenCalledWith(event, props, gridState, {x, y});
             expect(scrollToRow).toHaveBeenCalledWith(y, gridState);
+            expect(endSelection).toHaveBeenCalledWith(props, gridState);
         });
     });
 
@@ -179,6 +184,7 @@ describe('keyDownOnGrid', () => {
 
             expect(selectOrUpdateCol).toHaveBeenCalledWith(event, props, gridState, {x, y});
             expect(scrollToColumn).toHaveBeenCalledWith(x, gridState);
+            expect(endSelection).toHaveBeenCalledWith(props, gridState);
         });
     });
 
@@ -206,6 +212,7 @@ describe('keyDownOnGrid', () => {
 
             expect(selectOrUpdateCol).toHaveBeenCalledWith(event, props, gridState, {x, y});
             expect(scrollToColumn).toHaveBeenCalledWith(x, gridState);
+            expect(endSelection).toHaveBeenCalledWith(props, gridState);
         });
     });
 
