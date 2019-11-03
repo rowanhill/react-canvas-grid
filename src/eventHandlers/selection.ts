@@ -4,17 +4,21 @@ import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
 
+/*******************************************************************
+ * Start or update methods.
+ * Either creates a new selection, or extends an existing selection
+ *******************************************************************/
+
 export const startOrUpdateSelection = <T>(
     event: { shiftKey: boolean },
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
     gridCoords: Coord,
 ) => {
-    const truncatedCoords = truncateCoord(gridCoords, props);
     if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelection(props, gridState, truncatedCoords);
+        updateSelection(props, gridState, gridCoords);
     } else {
-        startSelection(props, gridState, truncatedCoords);
+        startSelection(props, gridState, gridCoords);
     }
 };
 
@@ -24,11 +28,10 @@ export const selectOrUpdateRow = <T>(
     gridState: GridState<T>,
     gridCoords: Coord,
 ) => {
-    const truncatedCoords = truncateCoord(gridCoords, props);
     if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelectionRow(props, gridState, truncatedCoords);
+        updateSelectionRow(props, gridState, gridCoords);
     } else {
-        selectRow(props, gridState, truncatedCoords);
+        selectRow(props, gridState, gridCoords);
     }
 };
 
@@ -38,13 +41,17 @@ export const selectOrUpdateCol = <T>(
     gridState: GridState<T>,
     gridCoords: Coord,
 ) => {
-    const truncatedCoords = truncateCoord(gridCoords, props);
     if (event.shiftKey && hasSelectionState(gridState.cursorState())) {
-        updateSelectionCol(props, gridState, truncatedCoords);
+        updateSelectionCol(props, gridState, gridCoords);
     } else {
-        selectCol(props, gridState, truncatedCoords);
+        selectCol(props, gridState, gridCoords);
     }
 };
+
+/******************************
+ * Create selection methods
+ * Start a new selection range
+ ******************************/
 
 export const startSelection = <T>(props: ReactCanvasGridProps<T>, gridState: GridState<T>, gridCoords: Coord) => {
     const truncatedCoords = truncateCoord(gridCoords, props);
@@ -60,16 +67,18 @@ export const selectAll = <T>(props: ReactCanvasGridProps<T>, gridState: GridStat
 };
 
 export const selectRow = <T>(props: ReactCanvasGridProps<T>, gridState: GridState<T>, coord: Coord) => {
+    const truncatedCoords = truncateCoord(coord, props);
     const newCursorState = cursorState.startRangeRow(
-        { x: props.frozenCols, y: coord.y },
-        { x: props.columns.length - 1, y: coord.y });
+        { x: props.frozenCols, y: truncatedCoords.y },
+        { x: props.columns.length - 1, y: truncatedCoords.y });
     startSelectionWithCursorState(props, gridState, newCursorState);
 };
 
 export const selectCol = <T>(props: ReactCanvasGridProps<T>, gridState: GridState<T>, coord: Coord) => {
+    const truncatedCoords = truncateCoord(coord, props);
     const newCursorState = cursorState.startRangeColumn(
-        { x: coord.x, y: props.frozenRows },
-        { x: coord.x, y: props.data.length - 1 });
+        { x: truncatedCoords.x, y: props.frozenRows },
+        { x: truncatedCoords.x, y: props.data.length - 1 });
     startSelectionWithCursorState(props, gridState, newCursorState);
 };
 
@@ -83,6 +92,11 @@ const startSelectionWithCursorState = <T>(
     }
     gridState.cursorState(newCursorState);
 };
+
+/**************************************
+ * Extend existing selection methods
+ * Do nothing if no existing selection
+ **************************************/
 
 export const updateSelection = <T>(props: ReactCanvasGridProps<T>, gridState: GridState<T>, gridCoords: Coord) => {
     const oldCursorState = gridState.cursorState();
@@ -101,7 +115,9 @@ export const updateSelectionRow = <T>(props: ReactCanvasGridProps<T>, gridState:
     if (!hasSelectionRowState(oldCursorState)) {
         return;
     }
-    const newCursorState = cursorState.updateRangeRow(oldCursorState, coord);
+
+    const truncatedCoords = truncateCoord(coord, props);
+    const newCursorState = cursorState.updateRangeRow(oldCursorState, truncatedCoords);
     updateCursorStateIfDifferent(props, gridState, oldCursorState, newCursorState);
 };
 
@@ -110,7 +126,9 @@ export const updateSelectionCol = <T>(props: ReactCanvasGridProps<T>, gridState:
     if (!cursorState.hasSelectionColumnState(oldCursorState)) {
         return;
     }
-    const newCursorState = cursorState.updateRangeColumn(oldCursorState, coord);
+
+    const truncatedCoords = truncateCoord(coord, props);
+    const newCursorState = cursorState.updateRangeColumn(oldCursorState, truncatedCoords);
     updateCursorStateIfDifferent(props, gridState, oldCursorState, newCursorState);
 };
 
@@ -131,6 +149,10 @@ const updateCursorStateIfDifferent = <T>(
     gridState.cursorState(newCursorState);
 };
 
+/*****************************
+ * Complete selection methods
+ *****************************/
+
 export const endSelection = <T>(
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
@@ -143,6 +165,10 @@ export const endSelection = <T>(
         props.onSelectionChangeEnd(currentCursorState.selection.selectedRange);
     }
 };
+
+/***************
+ * Util methods
+ ***************/
 
 const truncateCoord = <T>(coord: Coord, props: ReactCanvasGridProps<T>): Coord => {
     return {

@@ -3,12 +3,12 @@ import { CursorStateWithSelection } from '../cursorState';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import {
-    endSelection, selectAll, selectRow, startSelection, updateSelection, updateSelectionCol, updateSelectionRow,
+    endSelection, selectAll, selectRow, startSelection, updateSelection, updateSelectionCol, updateSelectionRow, selectCol,
 } from './selection';
 
 jest.mock('../cursorState');
 
-describe('iselection methods', () => {
+describe('selection methods', () => {
     let props: ReactCanvasGridProps<any>;
     let gridState: GridState<any>;
     let oldCursorState: CursorStateWithSelection;
@@ -50,6 +50,19 @@ describe('iselection methods', () => {
             startSelection(props, gridState, { x: 1, y: 1 });
 
             expect(gridState.cursorState).toHaveBeenCalledWith(newCursorState);
+        });
+
+        it('truncates the coordinates if they would select frozen cells', () => {
+            startSelection(props, gridState, { x: 0, y: 0 });
+
+            expect(cursorState.startDrag).toHaveBeenCalledWith({ x: 1, y: 1 });
+        });
+
+        it('truncates the coordinates if they would extend beyond the grid', () => {
+            startSelection(props, gridState, { x: props.columns.length, y: props.data.length });
+
+            expect(cursorState.startDrag)
+                .toHaveBeenCalledWith({ x: props.columns.length - 1, y: props.data.length - 1});
         });
     });
 
@@ -93,6 +106,24 @@ describe('iselection methods', () => {
 
             expect(gridState.cursorState).toHaveBeenCalledWith(newCursorState);
         });
+
+        it('truncates the coordinates if they would select frozen cells', () => {
+            selectRow(props, gridState, { x: 0, y: 0 });
+
+            expect(cursorState.startRangeRow).toHaveBeenCalledWith(
+                { x: props.frozenCols, y: props.frozenRows },
+                { x: props.columns.length - 1, y: props.frozenRows },
+            );
+        });
+
+        it('truncates the coordinates if they would extend beyond the grid', () => {
+            selectRow(props, gridState, { x: props.columns.length, y: props.data.length });
+
+            expect(cursorState.startRangeRow).toHaveBeenCalledWith(
+                { x: props.frozenCols, y: props.data.length - 1},
+                { x: props.columns.length - 1, y: props.data.length - 1 },
+            );
+        });
     });
 
     describe('selectCol', () => {
@@ -101,7 +132,7 @@ describe('iselection methods', () => {
         });
 
         it('updates the cursor info, calls the props callback, and updates grid state', () => {
-            selectRow(props, gridState, { x: 0, y: 3 });
+            selectCol(props, gridState, { x: 0, y: 3 });
 
             expect(props.onSelectionChangeStart).toHaveBeenCalledWith(newCursorState.selection.selectedRange);
             expect(gridState.cursorState).toHaveBeenCalledWith(newCursorState);
@@ -110,9 +141,27 @@ describe('iselection methods', () => {
         it('does not call the props callback if it is not provided', () => {
             props.onSelectionChangeStart = undefined;
 
-            selectRow(props, gridState, { x: 0, y: 3 });
+            selectCol(props, gridState, { x: 0, y: 3 });
 
             expect(gridState.cursorState).toHaveBeenCalledWith(newCursorState);
+        });
+
+        it('truncates the coordinates if they would select frozen cells', () => {
+            selectCol(props, gridState, { x: 0, y: 0 });
+
+            expect(cursorState.startRangeColumn).toHaveBeenCalledWith(
+                { x: props.frozenCols, y: props.frozenRows },
+                { x: props.frozenCols, y: props.data.length - 1 },
+            );
+        });
+
+        it('truncates the coordinates if they would extend beyond the grid', () => {
+            selectCol(props, gridState, { x: props.columns.length, y: props.data.length });
+
+            expect(cursorState.startRangeColumn).toHaveBeenCalledWith(
+                { x: props.columns.length - 1, y: props.frozenRows },
+                { x: props.columns.length - 1, y: props.data.length - 1 },
+            );
         });
     });
 
@@ -159,7 +208,15 @@ describe('iselection methods', () => {
         it('truncates the coordinates if they would select frozen cells', () => {
             updateSelection(props, gridState, { x: 0, y: 0 });
 
-            expect(cursorState.updateDrag).toHaveBeenCalledWith(oldCursorState, { x: 1, y: 1 });
+            expect(cursorState.updateDrag)
+                .toHaveBeenCalledWith(oldCursorState, { x: props.frozenCols, y: props.frozenRows });
+        });
+
+        it('truncates the coordinates if they would extend beyond the grid', () => {
+            updateSelection(props, gridState, { x: props.columns.length, y: props.data.length });
+
+            expect(cursorState.updateDrag)
+                .toHaveBeenCalledWith(oldCursorState, { x: props.columns.length - 1, y: props.data.length - 1});
         });
     });
 
@@ -202,6 +259,20 @@ describe('iselection methods', () => {
             expect(props.onSelectionChangeUpdate).not.toHaveBeenCalled();
             expect(gridState.cursorState).toHaveBeenCalledWith(newCursorState);
         });
+
+        it('truncates the coordinates if they would select frozen cells', () => {
+            updateSelectionRow(props, gridState, { x: 0, y: 0 });
+
+            expect(cursorState.updateRangeRow)
+                .toHaveBeenCalledWith(oldCursorState, { x: props.frozenCols, y: props.frozenRows });
+        });
+
+        it('truncates the coordinates if they would extend beyond the grid', () => {
+            updateSelectionRow(props, gridState, { x: props.columns.length, y: props.data.length });
+
+            expect(cursorState.updateRangeRow)
+                .toHaveBeenCalledWith(oldCursorState, { x: props.columns.length - 1, y: props.data.length - 1});
+        });
     });
 
     describe('updateSelectionCol', () => {
@@ -242,6 +313,20 @@ describe('iselection methods', () => {
 
             expect(props.onSelectionChangeUpdate).not.toHaveBeenCalled();
             expect(gridState.cursorState).toHaveBeenCalledWith(newCursorState);
+        });
+
+        it('truncates the coordinates if they would select frozen cells', () => {
+            updateSelectionCol(props, gridState, { x: 0, y: 0 });
+
+            expect(cursorState.updateRangeColumn)
+                .toHaveBeenCalledWith(oldCursorState, { x: props.frozenCols, y: props.frozenRows });
+        });
+
+        it('truncates the coordinates if they would extend beyond the grid', () => {
+            updateSelectionCol(props, gridState, { x: props.columns.length, y: props.data.length });
+
+            expect(cursorState.updateRangeColumn)
+                .toHaveBeenCalledWith(oldCursorState, { x: props.columns.length - 1, y: props.data.length - 1});
         });
     });
 
