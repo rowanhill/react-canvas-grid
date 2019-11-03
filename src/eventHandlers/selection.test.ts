@@ -340,12 +340,13 @@ describe('selection methods', () => {
     describe('endSelection', () => {
         beforeEach(() => {
             (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(true);
+            (cursorState.endSelection as jest.Mock).mockReturnValue(newCursorState);
         });
 
         it('calls the props callback if there is an existing selection', () => {
             endSelection(props, gridState);
 
-            expect(props.onSelectionChangeEnd).toHaveBeenCalledWith(oldCursorState.selection.selectedRange);
+            expect(props.onSelectionChangeEnd).toHaveBeenCalledWith(newCursorState.selection.selectedRange);
         });
 
         it('does not call the props callback if there is no existing selection', () => {

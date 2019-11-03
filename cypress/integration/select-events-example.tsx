@@ -292,4 +292,22 @@ update: (1,1) -> (19,2)
                 .should('equal', '');
         });
     });
+
+    describe('dragging outside the grid with prior selection', () => {
+        it('logs nothing additional', () => {
+            cy.get('@Root')
+                .click(60, 50);
+            cy.get('h1')
+                .trigger('mousedown', 0, 0, { buttons: 1, force: true })
+                .trigger('mousemove', 10, 10, { buttons: 1, force: true });
+
+            cy.get('@Log')
+                .invoke('text')
+                .should(
+                    'equal',
+` start: (1,2) -> (1,2)
+   end: (1,2) -> (1,2)
+`);
+        });
+    });
 });

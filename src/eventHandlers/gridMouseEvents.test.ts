@@ -113,7 +113,7 @@ describe('mouseDragOnGrid', () => {
                 getBoundingClientRect: () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }),
             } as HTMLDivElement },
             props: { } as ReactCanvasGridProps<T>,
-            gridState: { cursorState: (() => null) as any } as GridState<T>,
+            gridState: { cursorState: (() => ({ isSelectionInProgress: true })) as any } as GridState<T>,
             editingCell: null,
         };
 
@@ -177,6 +177,22 @@ describe('mouseDragOnGrid', () => {
 });
 
 describe('mouseUpOnGrid', () => {
+    interface MouseUpParams<T> {
+        props: ReactCanvasGridProps<T>;
+        gridState: GridState<T>;
+        editingCell: EditingCell<T> | null;
+    }
+    const invokeMouseDrag = <T>(params: Partial<MouseUpParams<T>> = {}) => {
+        const defaults: MouseUpParams<T> = {
+            props: { } as ReactCanvasGridProps<T>,
+            gridState: { cursorState: (() => ({ isSelectionInProgress: true })) as any } as GridState<T>,
+            editingCell: null,
+        };
+
+        const { props, gridState, editingCell } = { ...defaults, ...params };
+
+        return mouseUpOnGrid(props, gridState, editingCell);
+    };
 
     beforeEach(() => {
         jest.resetAllMocks();
@@ -184,7 +200,7 @@ describe('mouseUpOnGrid', () => {
     });
 
     it('stops any ongoing scrolling-by-dragging', () => {
-        mouseUpOnGrid({} as any, {} as any, null);
+        invokeMouseDrag();
 
         expect(scrollingTimer.clearScrollByDragTimer).toHaveBeenCalled();
     });
@@ -192,13 +208,13 @@ describe('mouseUpOnGrid', () => {
     it('does nothing if a cell is being edited', () => {
         const editingCell = { } as EditingCell<any>;
 
-        mouseUpOnGrid({} as any, {} as any, editingCell);
+        invokeMouseDrag({ editingCell });
 
         expectNoSelectionsToHaveBeenMade();
     });
 
     it('ends the selection', () => {
-        mouseUpOnGrid({} as any, {} as any, null);
+        invokeMouseDrag({ editingCell: null });
 
         expect(selection.endSelection).toBeCalled();
     });

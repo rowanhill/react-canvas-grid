@@ -3,10 +3,12 @@ import { Coord } from './types';
 interface EmptyCursorState {
     editCursorCell: null;
     selection: null;
+    isSelectionInProgress: false;
 }
 export interface CursorStateWithSelection<T extends SelectionState = SelectionState> {
     editCursorCell: Coord;
     selection: T;
+    isSelectionInProgress: boolean;
 }
 
 export type CursorState<T extends SelectionState = SelectionState> = EmptyCursorState | CursorStateWithSelection<T>;
@@ -51,6 +53,7 @@ export function createDefault(): CursorState {
     return {
         editCursorCell: null,
         selection: null,
+        isSelectionInProgress: false,
     };
 }
 
@@ -70,6 +73,7 @@ export function startDrag(
             selectionEndCell: gridCoords,
             selectionType,
         },
+        isSelectionInProgress: true,
     };
 }
 
@@ -91,6 +95,7 @@ export function updateDrag(cursorState: CursorStateWithSelection, gridCoords: Co
             selectedRange,
             selectionEndCell: gridCoords,
         },
+        isSelectionInProgress: true,
     };
 }
 
@@ -133,6 +138,7 @@ export function updateRangeRow(
                 y: gridCoords.y,
             },
         },
+        isSelectionInProgress: true,
     };
 }
 
@@ -160,6 +166,16 @@ export function updateRangeColumn(
                 x: gridCoords.x,
             },
         },
+        isSelectionInProgress: true,
+    };
+}
+
+export function endSelection<T extends SelectionState>(
+    cursorState: CursorStateWithSelection<T>,
+): CursorStateWithSelection<T> {
+    return {
+        ...cursorState,
+        isSelectionInProgress: false,
     };
 }
 

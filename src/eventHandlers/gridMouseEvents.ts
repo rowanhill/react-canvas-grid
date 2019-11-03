@@ -49,7 +49,7 @@ export const mouseDragOnGrid = <T>(
         return false;
     }
     const currentCursorState = gridState.cursorState();
-    if (!hasSelectionState(currentCursorState)) {
+    if (!hasSelectionState(currentCursorState) || !currentCursorState.isSelectionInProgress) {
         return false;
     }
     const componentPixelCoord = GridGeometry.calculateComponentPixel(event, rootRef.current);
@@ -82,6 +82,11 @@ export const mouseUpOnGrid = <T>(
     if (editingCell !== null) {
         // We're editing a cell, so ignore grid clicks
         return;
+    }
+
+    const currentCursorState = gridState.cursorState();
+    if (!hasSelectionState(currentCursorState) || !currentCursorState.isSelectionInProgress) {
+        return false;
     }
 
     endSelection(props, gridState);
