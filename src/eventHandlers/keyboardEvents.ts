@@ -20,28 +20,50 @@ export const keyDownOnGrid = <T>(
     if (hasSelectionState(cursor)) {
         const cursorCell = event.shiftKey ? cursor.selection.selectionEndCell : cursor.editCursorCell;
 
-        let newCoord: Coord | undefined;
-        if (event.key === 'ArrowRight') {
-            newCoord = { x: cursorCell.x + 1, y: cursorCell.y };
-        } else if (event.key === 'ArrowLeft') {
-            newCoord = { x: cursorCell.x - 1, y: cursorCell.y };
-        } else if (event.key === 'ArrowUp') {
-            newCoord = { x: cursorCell.x, y: cursorCell.y - 1 };
-        } else if (event.key === 'ArrowDown') {
-            newCoord = { x: cursorCell.x, y: cursorCell.y + 1 };
-        }
-
-        if (newCoord !== undefined) {
-            if (hasSelectionColumnState(cursor)) {
-                selectOrUpdateCol(event, props, gridState, newCoord);
-                scrollToColumn(newCoord, gridState);
-            } else if (hasSelectionRowState(cursor)) {
-                selectOrUpdateRow(event, props, gridState, newCoord);
-                scrollToRow(newCoord, gridState);
-            } else if (hasSelectionCellState(cursor)) {
-                startOrUpdateSelection(event, props, gridState, newCoord);
-                scrollToCell(newCoord, gridState);
+        if (hasSelectionColumnState(cursor)) {
+            let newCoord: Coord | undefined;
+            if (event.key === 'ArrowRight') {
+                newCoord = { x: cursorCell.x + 1, y: cursorCell.y };
+            } else if (event.key === 'ArrowLeft') {
+                newCoord = { x: cursorCell.x - 1, y: cursorCell.y };
+            } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                newCoord = cursorCell;
+            } else {
+                return;
             }
+
+            selectOrUpdateCol(event, props, gridState, newCoord);
+            scrollToColumn(newCoord.x, gridState);
+        } else if (hasSelectionRowState(cursor)) {
+            let newCoord: Coord | undefined;
+            if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+                newCoord = cursorCell;
+            } else if (event.key === 'ArrowUp') {
+                newCoord = { x: cursorCell.x, y: cursorCell.y - 1 };
+            } else if (event.key === 'ArrowDown') {
+                newCoord = { x: cursorCell.x, y: cursorCell.y + 1 };
+            } else {
+                return;
+            }
+
+            selectOrUpdateRow(event, props, gridState, newCoord);
+            scrollToRow(newCoord.y, gridState);
+        } else if (hasSelectionCellState(cursor)) {
+            let newCoord: Coord | undefined;
+            if (event.key === 'ArrowRight') {
+                newCoord = { x: cursorCell.x + 1, y: cursorCell.y };
+            } else if (event.key === 'ArrowLeft') {
+                newCoord = { x: cursorCell.x - 1, y: cursorCell.y };
+            } else if (event.key === 'ArrowUp') {
+                newCoord = { x: cursorCell.x, y: cursorCell.y - 1 };
+            } else if (event.key === 'ArrowDown') {
+                newCoord = { x: cursorCell.x, y: cursorCell.y + 1 };
+            } else {
+                return;
+            }
+
+            startOrUpdateSelection(event, props, gridState, newCoord);
+            scrollToCell(newCoord, gridState);
         }
     }
 };

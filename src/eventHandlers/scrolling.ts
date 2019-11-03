@@ -50,14 +50,14 @@ export const scrollToCell = <T>(
 };
 
 export const scrollToRow = <T>(
-    cellCoord: Coord,
+    rowIndex: number,
     gridState: GridState<T>,
 ) => {
     const newOffset = GridGeometry.calculateGridOffsetForTargetRow(
         gridState.gridOffset(),
         gridState.canvasSize(),
         gridState.frozenRowsHeight(),
-        cellCoord.y,
+        rowIndex,
         gridState.rowHeight(),
         gridState.borderWidth(),
         gridState.data().length,
@@ -68,14 +68,14 @@ export const scrollToRow = <T>(
 };
 
 export const scrollToColumn = <T>(
-    cellCoord: Coord,
+    colIndex: number,
     gridState: GridState<T>,
 ) => {
     const newOffset = GridGeometry.calculateGridOffsetForTargetColumn(
         gridState.gridOffset(),
         gridState.canvasSize(),
         gridState.frozenColsWidth(),
-        cellCoord.x,
+        colIndex,
         gridState.columnBoundaries(),
         gridState.verticalGutterBounds(),
     );
