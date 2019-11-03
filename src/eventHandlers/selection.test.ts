@@ -3,7 +3,14 @@ import { CursorStateWithSelection } from '../cursorState';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import {
-    endSelection, selectAll, selectRow, startSelection, updateSelection, updateSelectionCol, updateSelectionRow, selectCol,
+    endSelection,
+    selectAll,
+    selectCol,
+    selectRow,
+    startSelection,
+    updateSelection,
+    updateSelectionCol,
+    updateSelectionRow,
 } from './selection';
 
 jest.mock('../cursorState');
