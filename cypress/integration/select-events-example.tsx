@@ -161,18 +161,19 @@ update: (1,1) -> (2,99)
 `);
         });
 
-        it('does not log an update when moving the mouse over non-frozen cells and/or row headers', () => {
+        it('log updates when moving the mouse over non-frozen cells and/or row headers', () => {
             cy.get('@Root')
-                .trigger('mousedown', 60, 10, { buttons: 1, force: true })
-                .trigger('mousemove', 60, 60, { buttons: 1, force: true })
-                .trigger('mousemove', 10, 60, { buttons: 1, force: true })
-                .trigger('mousemove', 10, 10, { buttons: 1, force: true });
+                .trigger('mousedown', 180, 10, { buttons: 1, force: true })
+                .trigger('mousemove', 120, 60, { buttons: 1, force: true })
+                .trigger('mousemove', 10, 60, { buttons: 1, force: true });
 
             cy.get('@Log')
                 .invoke('text')
                 .should(
                     'equal',
-` start: (1,1) -> (1,99)
+` start: (3,1) -> (3,99)
+update: (2,1) -> (3,99)
+update: (1,1) -> (3,99)
 `);
         });
     });
@@ -252,18 +253,19 @@ update: (1,1) -> (19,2)
 `);
         });
 
-        it('does not log an update when moving the mouse over non-frozen cells and/or col headers', () => {
+        it('logs updates when moving the mouse over non-frozen cells and/or col headers', () => {
             cy.get('@Root')
                 .trigger('mousedown', 10, 30, { buttons: 1, force: true })
                 .trigger('mousemove', 60, 60, { buttons: 1, force: true })
-                .trigger('mousemove', 60, 10, { buttons: 1, force: true })
-                .trigger('mousemove', 10, 10, { buttons: 1, force: true });
+                .trigger('mousemove', 60, 10, { buttons: 1, force: true });
 
             cy.get('@Log')
                 .invoke('text')
                 .should(
                     'equal',
 ` start: (1,1) -> (19,1)
+update: (1,1) -> (19,2)
+update: (1,1) -> (19,1)
 `);
         });
     });
