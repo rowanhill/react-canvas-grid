@@ -1,7 +1,5 @@
 import { batch, consumer } from 'instigator';
 import * as React from 'react';
-import { SelectRange } from './cursorState';
-import * as cursorState from './cursorState';
 import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './eventHandlers/gridMouseEvents';
 import { keyDownOnGrid } from './eventHandlers/keyboardEvents';
 import {
@@ -18,6 +16,8 @@ import { HighlightCanvas } from './HighlightCanvas';
 import { shouldSelectionClear } from './highlightCanvasRenderer';
 import { InlineTextEditor } from './InlineEditor';
 import { MainCanvas } from './MainCanvas';
+import { NoSelection } from './selectionState/noSelection';
+import { SelectRange } from './selectionState/selectionState';
 import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, Size } from './types';
 
 export interface CellDataChangeEvent<T> {
@@ -136,7 +136,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
 
             if (shouldSelectionClear(prevProps, this.props)) {
-                this.gridState.cursorState(cursorState.createDefault());
+                this.gridState.selectionState(new NoSelection(false));
                 if (this.props.onSelectionCleared) {
                     this.props.onSelectionCleared();
                 }

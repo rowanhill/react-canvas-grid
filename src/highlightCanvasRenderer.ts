@@ -1,24 +1,19 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
-import { CursorState, SelectionState } from './cursorState';
-import * as cursorState from './cursorState';
 import { ColumnBoundary } from './gridGeometry';
 import * as ScrollGeometry from './scrollbarGeometry';
 import { ScrollbarPosition } from './scrollbarGeometry';
-import { ColumnDef, Coord, DataRow, Size } from './types';
+import { NoSelection } from './selectionState/noSelection';
+import { CellCoordBounds, SelectRange } from './selectionState/selectionState';
+import { AllSelectionStates } from './selectionState/selectionStateFactory';
+import { ColumnDef, Coord, DataRow } from './types';
 
 export interface HighlightCanvasRendererBasics {
-    data: Array<DataRow<any>>;
-    columns: ColumnDef[];
-    canvasSize: Size;
-    gridSize: Size;
-    gridInnerSize: Size;
-    frozenColsWidth: number;
-    frozenRowsHeight: number;
     rowHeight: number;
     columnBoundaries: ColumnBoundary[];
     borderWidth: number;
     horizontalGutterBounds: ClientRect|null;
     verticalGutterBounds: ClientRect|null;
+    cellBounds: CellCoordBounds;
 }
 
 export interface HighlightCanvasRendererPosition {
@@ -33,7 +28,7 @@ export interface HighlightCanvasRendererScrollbar {
 }
 
 export interface HighlightCanvasRendererSelection {
-    cursorState: CursorState;
+    selectionState: AllSelectionStates | NoSelection;
 }
 
 const defaultPosProps: HighlightCanvasRendererPosition = {
@@ -55,7 +50,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     private posProps: HighlightCanvasRendererPosition = defaultPosProps;
     private scrollProps: HighlightCanvasRendererScrollbar = defaultScrollbarProps;
     private selectionProps: HighlightCanvasRendererSelection = {
-        cursorState: cursorState.createDefault(),
+        selectionState: new NoSelection(false),
     };
 
     constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvasRendererBasics, dpr: number) {
@@ -95,21 +90,19 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.strokeStyle = '#2276e4';
 
         // Draw edit cursor cell outline
-        if (this.selectionProps.cursorState.editCursorCell) {
+        const editCursorCell = this.selectionProps.selectionState.getCursorCell(this.basicProps.cellBounds);
+        if (editCursorCell) {
             context.lineWidth = 2;
-            const rect = this.gridCellCoordToGridPixelCoord(this.selectionProps.cursorState.editCursorCell);
+            const rect = this.gridCellCoordToGridPixelCoord(editCursorCell);
             context.strokeRect(rect.left, rect.top, rect.width, rect.height);
             context.lineWidth = 1;
         }
 
         // Draw selected cell highlights
-        if (this.selectionProps.cursorState.selection &&
-            isSelectionMoreThanOneCell(this.selectionProps.cursorState.selection)
-        ) {
-            const tl =
-                this.gridCellCoordToGridPixelCoord(this.selectionProps.cursorState.selection.selectedRange.topLeft);
-            const br =
-                this.gridCellCoordToGridPixelCoord(this.selectionProps.cursorState.selection.selectedRange.bottomRight);
+        const selectionRange = this.selectionProps.selectionState.getSelectionRange(this.basicProps.cellBounds);
+        if (selectionRange && isSelectionMoreThanOneCell(selectionRange)) {
+            const tl = this.gridCellCoordToGridPixelCoord(selectionRange.topLeft);
+            const br = this.gridCellCoordToGridPixelCoord(selectionRange.bottomRight);
             context.fillRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
             context.strokeRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
         }
@@ -195,9 +188,9 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     }
 }
 
-function isSelectionMoreThanOneCell(selection: SelectionState) {
-    const tl = selection.selectedRange.topLeft;
-    const br = selection.selectedRange.bottomRight;
+function isSelectionMoreThanOneCell(selection: SelectRange) {
+    const tl = selection.topLeft;
+    const br = selection.bottomRight;
     return tl.x !== br.x || tl.y !== br.y;
 }
 

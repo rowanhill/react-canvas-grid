@@ -1,6 +1,4 @@
-import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
-import { Coord } from '../types';
 import { numberBetween } from '../utils';
 
 export const updateOffsetByDelta = <T>(
@@ -26,59 +24,4 @@ export const updateOffsetByDelta = <T>(
 
     // We did move, so return true
     return true;
-};
-
-export const scrollToCell = <T>(
-    cellCoord: Coord,
-    gridState: GridState<T>,
-) => {
-    const newOffset = GridGeometry.calculateGridOffsetForTargetCell(
-        gridState.gridOffset(),
-        gridState.canvasSize(),
-        gridState.frozenColsWidth(),
-        gridState.frozenRowsHeight(),
-        cellCoord,
-        gridState.columnBoundaries(),
-        gridState.rowHeight(),
-        gridState.borderWidth(),
-        gridState.data().length,
-        gridState.verticalGutterBounds(),
-        gridState.horizontalGutterBounds(),
-    );
-
-    gridState.gridOffsetRaw(newOffset);
-};
-
-export const scrollToRow = <T>(
-    rowIndex: number,
-    gridState: GridState<T>,
-) => {
-    const newOffset = GridGeometry.calculateGridOffsetForTargetRow(
-        gridState.gridOffset(),
-        gridState.canvasSize(),
-        gridState.frozenRowsHeight(),
-        rowIndex,
-        gridState.rowHeight(),
-        gridState.borderWidth(),
-        gridState.data().length,
-        gridState.horizontalGutterBounds(),
-    );
-
-    gridState.gridOffsetRaw(newOffset);
-};
-
-export const scrollToColumn = <T>(
-    colIndex: number,
-    gridState: GridState<T>,
-) => {
-    const newOffset = GridGeometry.calculateGridOffsetForTargetColumn(
-        gridState.gridOffset(),
-        gridState.canvasSize(),
-        gridState.frozenColsWidth(),
-        colIndex,
-        gridState.columnBoundaries(),
-        gridState.verticalGutterBounds(),
-    );
-
-    gridState.gridOffsetRaw(newOffset);
 };

@@ -1,9 +1,10 @@
 import { activeSource, ActiveSource, ReactiveFn, transformer } from 'instigator';
-import { CursorState } from './cursorState';
-import * as cursorState from './cursorState';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
 import * as ScrollbarGeometry from './scrollbarGeometry';
 import { ScrollbarExtent, ScrollbarPosition } from './scrollbarGeometry';
+import { NoSelection } from './selectionState/noSelection';
+import { CellCoordBounds } from './selectionState/selectionState';
+import { AllSelectionStates } from './selectionState/selectionStateFactory';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export class GridState<T> {
@@ -19,7 +20,7 @@ export class GridState<T> {
     public dpr: ActiveSource<number>;
     public rootSize: ActiveSource<Size | null>;
     public gridOffsetRaw: ActiveSource<Coord>; // Based on CSS pixels
-    public cursorState: ActiveSource<CursorState>;
+    public selectionState: ActiveSource<AllSelectionStates | NoSelection>;
     public hoveredScrollbar: ActiveSource<'x'|'y'|null>;
 
     // Grid geometry derived properties
@@ -28,6 +29,7 @@ export class GridState<T> {
     public columnBoundaries: ReactiveFn<ColumnBoundary[]>;
     public gridInnerSize: ReactiveFn<Size>;
     public gridSize: ReactiveFn<Size>;
+    public cellBounds: ReactiveFn<CellCoordBounds>;
     public canvasSize: ReactiveFn<Size>;
     public frozenColsWidth: ReactiveFn<number>;
     public frozenRowsHeight: ReactiveFn<number>;
@@ -60,7 +62,9 @@ export class GridState<T> {
         this.dpr = activeSource(window.devicePixelRatio);
         this.rootSize = activeSource<Size|null>(null);
         this.gridOffsetRaw = activeSource({ x: 0, y: 0 });
-        this.cursorState = activeSource(cursorState.createDefault());
+        this.selectionState = activeSource(
+            new NoSelection(false) as AllSelectionStates|NoSelection,
+        );
         this.hoveredScrollbar = activeSource<'x'|'y'|null>(null);
 
         this.gridOffset = transformer([this.gridOffsetRaw, this.dpr], GridGeometry.quantiseGridOffset);
@@ -69,6 +73,12 @@ export class GridState<T> {
             [this.data, this.columnBoundaries, this.rowHeight, this.borderWidth],
             GridGeometry.calculateGridSize);
         this.gridSize = transformer([this.gridInnerSize, this.rootSize], GridGeometry.calculateGridPlusGutterSize);
+        this.cellBounds = transformer([this.data, this.columns, this.frozenRows, this.frozenCols], (d, c, fr, fc) => ({
+            numCols: c.length,
+            numRows: d.length,
+            frozenCols: fc,
+            frozenRows: fr,
+        }));
         this.canvasSize = transformer([this.gridSize, this.rootSize], GridGeometry.calculateCanvasSize);
         this.visibleRect = transformer([this.gridOffset, this.canvasSize], GridGeometry.calculateVisibleRect);
         this.frozenColsWidth = transformer(

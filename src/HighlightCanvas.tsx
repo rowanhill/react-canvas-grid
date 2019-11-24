@@ -48,45 +48,27 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
 
         const gridState = this.props.gridState;
         const basicProps = transformer([
-            gridState.data,
-            gridState.columns,
-            gridState.canvasSize,
-            gridState.gridSize,
-            gridState.gridInnerSize,
-            gridState.frozenColsWidth,
-            gridState.frozenRowsHeight,
             gridState.rowHeight,
             gridState.columnBoundaries,
             gridState.borderWidth,
             gridState.horizontalGutterBounds,
             gridState.verticalGutterBounds,
+            gridState.cellBounds,
         ],
         (
-            data,
-            columns,
-            canvasSize,
-            gridSize,
-            gridInnerSize,
-            frozenColsWidth,
-            frozenRowsHeight,
             rowHeight,
             columnBoundaries,
             borderWidth,
             horizontalGutterBounds,
             verticalGutterBounds,
+            cellBounds,
         ): HighlightCanvasRendererBasics => ({
-            data,
-            columns,
-            canvasSize,
-            gridSize,
-            gridInnerSize,
-            frozenColsWidth,
-            frozenRowsHeight,
             rowHeight,
             columnBoundaries,
             borderWidth,
             horizontalGutterBounds,
             verticalGutterBounds,
+            cellBounds,
         }));
 
         const scrollProps = transformer([
@@ -116,8 +98,8 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         }));
 
         const selectionProps = transformer(
-            [gridState.cursorState],
-            (cursorState): HighlightCanvasRendererSelection => ({ cursorState}));
+            [gridState.selectionState],
+            (selectionState): HighlightCanvasRendererSelection => ({ selectionState}));
 
         this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
         this.renderCallback = consumer(

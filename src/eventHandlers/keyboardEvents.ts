@@ -1,72 +1,65 @@
 import * as React from 'react';
-import {
-    hasSelectionCellState,
-    hasSelectionColumnState,
-    hasSelectionRowState,
-    hasSelectionState,
-} from '../cursorState';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
-import { Coord } from '../types';
-import { scrollToCell, scrollToColumn, scrollToRow } from './scrolling';
-import { endSelection, selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
+import { NoSelection } from '../selectionState/noSelection';
+import { CellCoordBounds } from '../selectionState/selectionState';
+import { AllSelectionStates } from '../selectionState/selectionStateFactory';
+
+interface ShiftNoShiftActions {
+    shift: (cellBounds: CellCoordBounds) => AllSelectionStates | NoSelection;
+    noShift: (cellBounds: CellCoordBounds) => AllSelectionStates | NoSelection;
+}
+interface StateArrowActions {
+    [arrowKey: string]: ShiftNoShiftActions;
+}
 
 export const keyDownOnGrid = <T>(
     event: React.KeyboardEvent<any>,
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
 ) => {
-    const cursor = gridState.cursorState();
-    if (hasSelectionState(cursor)) {
-        const cursorCell = event.shiftKey ? cursor.selection.selectionEndCell : cursor.editCursorCell;
+    const selectionState = gridState.selectionState();
 
-        if (hasSelectionColumnState(cursor)) {
-            let newCoord: Coord | undefined;
-            if (event.key === 'ArrowRight') {
-                newCoord = { x: cursorCell.x + 1, y: cursorCell.y };
-            } else if (event.key === 'ArrowLeft') {
-                newCoord = { x: cursorCell.x - 1, y: cursorCell.y };
-            } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                newCoord = cursorCell;
-            } else {
-                return;
-            }
+    // Find the appropriate method to call on the selection state
+    const actions: StateArrowActions = {
+        ArrowRight : { shift: selectionState.shiftArrowRight, noShift: selectionState.arrowRight },
+        ArrowLeft : { shift: selectionState.shiftArrowLeft, noShift: selectionState.arrowLeft },
+        ArrowUp : { shift: selectionState.shiftArrowUp, noShift: selectionState.arrowUp },
+        ArrowDown : { shift: selectionState.shiftArrowDown, noShift: selectionState.arrowDown },
+    };
+    const selectionArrowActions = actions[event.key];
+    if (!selectionArrowActions) {
+        return;
+    }
+    const selectionArrowAction = selectionArrowActions[event.shiftKey ? 'shift' : 'noShift'];
 
-            selectOrUpdateCol(event, props, gridState, newCoord);
-            scrollToColumn(newCoord.x, gridState);
-            endSelection(props, gridState);
-        } else if (hasSelectionRowState(cursor)) {
-            let newCoord: Coord | undefined;
-            if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
-                newCoord = cursorCell;
-            } else if (event.key === 'ArrowUp') {
-                newCoord = { x: cursorCell.x, y: cursorCell.y - 1 };
-            } else if (event.key === 'ArrowDown') {
-                newCoord = { x: cursorCell.x, y: cursorCell.y + 1 };
-            } else {
-                return;
-            }
+    // Create the new state
+    const newSelState = selectionArrowAction({
+        frozenCols: gridState.frozenCols(),
+        frozenRows: gridState.frozenRows(),
+        numCols: gridState.columns().length,
+        numRows: gridState.data().length,
+    });
 
-            selectOrUpdateRow(event, props, gridState, newCoord);
-            scrollToRow(newCoord.y, gridState);
-            endSelection(props, gridState);
-        } else if (hasSelectionCellState(cursor)) {
-            let newCoord: Coord | undefined;
-            if (event.key === 'ArrowRight') {
-                newCoord = { x: cursorCell.x + 1, y: cursorCell.y };
-            } else if (event.key === 'ArrowLeft') {
-                newCoord = { x: cursorCell.x - 1, y: cursorCell.y };
-            } else if (event.key === 'ArrowUp') {
-                newCoord = { x: cursorCell.x, y: cursorCell.y - 1 };
-            } else if (event.key === 'ArrowDown') {
-                newCoord = { x: cursorCell.x, y: cursorCell.y + 1 };
-            } else {
-                return;
-            }
+    const selectionRange = newSelState.getSelectionRange(gridState.cellBounds());
+    const newOffset = newSelState.getFocusGridOffset(gridState);
 
-            startOrUpdateSelection(event, props, gridState, newCoord);
-            scrollToCell(newCoord, gridState);
-            endSelection(props, gridState);
+    if (newSelState !== selectionState && selectionRange !== null && newOffset !== null) {
+        // Start / update prop callback
+        const onStartOrUpdate = event.shiftKey ? props.onSelectionChangeUpdate : props.onSelectionChangeStart;
+        if (onStartOrUpdate) {
+            onStartOrUpdate(selectionRange);
         }
+
+        // Scroll
+        gridState.gridOffsetRaw(newOffset);
+
+        // End prop callback
+        if (props.onSelectionChangeEnd) {
+            props.onSelectionChangeEnd(selectionRange);
+        }
+
+        // Update selection state
+        gridState.selectionState(newSelState);
     }
 };
