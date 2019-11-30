@@ -3,8 +3,8 @@ import { ColumnBoundary, GridGeometry } from './gridGeometry';
 import * as ScrollbarGeometry from './scrollbarGeometry';
 import { ScrollbarExtent, ScrollbarPosition } from './scrollbarGeometry';
 import { NoSelection } from './selectionState/noSelection';
-import { CellCoordBounds } from './selectionState/selectionState';
 import { AllSelectionStates } from './selectionState/selectionStateFactory';
+import { CellCoordBounds } from './selectionState/selectionTypes';
 import { ColumnDef, Coord, DataRow, Size } from './types';
 
 export class GridState<T> {
@@ -20,7 +20,7 @@ export class GridState<T> {
     public dpr: ActiveSource<number>;
     public rootSize: ActiveSource<Size | null>;
     public gridOffsetRaw: ActiveSource<Coord>; // Based on CSS pixels
-    public selectionState: ActiveSource<AllSelectionStates | NoSelection>;
+    public selectionState: ActiveSource<AllSelectionStates>;
     public hoveredScrollbar: ActiveSource<'x'|'y'|null>;
 
     // Grid geometry derived properties
@@ -63,7 +63,7 @@ export class GridState<T> {
         this.rootSize = activeSource<Size|null>(null);
         this.gridOffsetRaw = activeSource({ x: 0, y: 0 });
         this.selectionState = activeSource(
-            new NoSelection(false) as AllSelectionStates|NoSelection,
+            new NoSelection(false) as AllSelectionStates,
         );
         this.hoveredScrollbar = activeSource<'x'|'y'|null>(null);
 

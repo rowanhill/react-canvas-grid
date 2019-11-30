@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
-import { NoSelection } from '../selectionState/noSelection';
-import { CellCoordBounds } from '../selectionState/selectionState';
 import { AllSelectionStates } from '../selectionState/selectionStateFactory';
+import { CellCoordBounds } from '../selectionState/selectionTypes';
 
 interface ShiftNoShiftActions {
-    shift: (cellBounds: CellCoordBounds) => AllSelectionStates | NoSelection;
-    noShift: (cellBounds: CellCoordBounds) => AllSelectionStates | NoSelection;
+    shift: (cellBounds: CellCoordBounds) => AllSelectionStates;
+    noShift: (cellBounds: CellCoordBounds) => AllSelectionStates;
 }
 interface StateArrowActions {
     [arrowKey: string]: ShiftNoShiftActions;
@@ -33,15 +32,12 @@ export const keyDownOnGrid = <T>(
     }
     const selectionArrowAction = selectionArrowActions[event.shiftKey ? 'shift' : 'noShift'];
 
-    // Create the new state
-    const newSelState = selectionArrowAction({
-        frozenCols: gridState.frozenCols(),
-        frozenRows: gridState.frozenRows(),
-        numCols: gridState.columns().length,
-        numRows: gridState.data().length,
-    });
+    const cellBounds = gridState.cellBounds();
 
-    const selectionRange = newSelState.getSelectionRange(gridState.cellBounds());
+    // Create the new state
+    const newSelState = selectionArrowAction(cellBounds);
+
+    const selectionRange = newSelState.getSelectionRange(cellBounds);
     const newOffset = newSelState.getFocusGridOffset(gridState);
 
     if (newSelState !== selectionState && selectionRange !== null && newOffset !== null) {

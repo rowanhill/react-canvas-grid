@@ -1,25 +1,45 @@
 import * as React from 'react';
-import * as cursorState from '../cursorState';
 import { GridState } from '../gridState';
 import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
+import { CellsSelection } from '../selectionState/cellsSelection';
+import { NoSelection } from '../selectionState/noSelection';
+import { AllSelectionStates } from '../selectionState/selectionStateFactory';
 import { Coord } from '../types';
-import * as frozenEvents from './frozenCellMouseEvents';
 import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './gridMouseEvents';
+import { getMouseCellCoordAndRegion } from './mouseCellAndRegionCalc';
 import * as scrollingTimer from './scrollingTimer';
-import * as selection from './selection';
 
-jest.mock('../cursorState');
 jest.mock('../gridGeometry');
-jest.mock('./frozenCellMouseEvents');
-jest.mock('./selection');
 jest.mock('./scrollingTimer');
+jest.mock('./mouseCellAndRegionCalc.ts');
 
-const actualSelection = jest.requireActual('./selection') as typeof selection;
+const expectNoSelectionsToHaveBeenMade = (selectionState: AllSelectionStates) => {
+    expect(selectionState.mouseDown).not.toHaveBeenCalled();
+    expect(selectionState.mouseMove).not.toHaveBeenCalled();
+    expect(selectionState.mouseUp).not.toHaveBeenCalled();
+};
 
-const expectNoSelectionsToHaveBeenMade = () => {
-    for (const selectFn of Object.keys(actualSelection) as Array<keyof typeof actualSelection>) {
-        expect(selection[selectFn]).not.toHaveBeenCalled();
-    }
+const createDummyCellState = (isSelectionInProgress = true) => {
+    const coord: Coord = { x: 1, y: 1 };
+    return new CellsSelection(coord, coord, coord, isSelectionInProgress, coord);
+};
+
+const createSpiedOnCellSelectionState = (isSelectionInProgress = true) => {
+    const state = createDummyCellState(isSelectionInProgress);
+    jest.spyOn(state, 'mouseDown');
+    jest.spyOn(state, 'shiftMouseDown');
+    jest.spyOn(state, 'mouseMove');
+    jest.spyOn(state, 'mouseUp');
+    return state;
+};
+
+const createSpiedOnNoSelectionState = () => {
+    const state = new NoSelection(false);
+    jest.spyOn(state, 'mouseDown');
+    jest.spyOn(state, 'shiftMouseDown');
+    jest.spyOn(state, 'mouseMove');
+    jest.spyOn(state, 'mouseUp');
+    return state;
 };
 
 describe('mouseDownOnGrid', () => {
@@ -32,6 +52,8 @@ describe('mouseDownOnGrid', () => {
         editingCell: EditingCell<T> | null;
     }
 
+    let initialState: AllSelectionStates;
+
     const invokeMouseDown = <T>(params: Partial<MouseDownParams<T>> = {}) => {
         const defaults: MouseDownParams<T> = {
             event: { buttons: 1, clientX: 0, clientY: 0 } as React.MouseEvent<any, any>,
@@ -39,61 +61,108 @@ describe('mouseDownOnGrid', () => {
             rootRef: { current: {
                 getBoundingClientRect: () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }),
             } as HTMLDivElement },
-            props: { } as ReactCanvasGridProps<T>,
-            gridState: { cursorState: (() => null) as any } as GridState<T>,
+            props: {
+                onSelectionChangeStart: jest.fn() as any,
+                onSelectionChangeUpdate: jest.fn() as any,
+            } as ReactCanvasGridProps<T>,
+            gridState: {
+                selectionState: jest.fn().mockReturnValue(initialState) as any,
+                cellBounds: jest.fn() as any,
+            } as GridState<T>,
             editingCell: null,
         };
 
-        const { event, componentPixelCoord, rootRef, props, gridState, editingCell } = { ...defaults, ...params };
+        const merged = { ...defaults, ...params };
+        const { event, componentPixelCoord, rootRef, props, gridState, editingCell } = merged;
 
         mouseDownOnGrid(event, componentPixelCoord, rootRef, props, gridState, editingCell);
+
+        return merged;
     };
 
     beforeEach(() => {
         jest.resetAllMocks();
+
+        initialState = createSpiedOnNoSelectionState();
+
+        (getMouseCellCoordAndRegion as jest.Mock).mockReturnValue({
+            truncatedCoord: { x: 0, y: 0 },
+            region: 'cells',
+        });
     });
 
     it('does nothing if it is not a left click', () => {
         const event: React.MouseEvent<any, any> = { buttons: 0 } as React.MouseEvent<any, any>;
 
-        invokeMouseDown({ event });
+        const params = invokeMouseDown({ event });
 
-        expectNoSelectionsToHaveBeenMade();
+        expectNoSelectionsToHaveBeenMade(params.gridState.selectionState());
     });
 
     it('does nothing if a cell is being edited', () => {
         const editingCell: EditingCell<any> = { } as EditingCell<any>;
 
-        invokeMouseDown({ editingCell });
+        const params = invokeMouseDown({ editingCell });
 
-        expectNoSelectionsToHaveBeenMade();
+        expectNoSelectionsToHaveBeenMade(params.gridState.selectionState());
     });
 
-    it('does nothing if the click is handled by the frozen cell click handler', () => {
-        (frozenEvents.leftClickOnFrozenCell as jest.Mock).mockReturnValue(true);
+    it('updates the selection when left clicking on the grid', () => {
+        const newState = createDummyCellState();
+        jest.spyOn(initialState, 'mouseDown').mockReturnValue(newState);
 
-        invokeMouseDown();
+        const params = invokeMouseDown();
 
-        expectNoSelectionsToHaveBeenMade();
+        expect(params.gridState.selectionState as unknown as jest.Mock).toHaveBeenCalledWith(newState);
     });
 
-    it('starts a selection when left clicking on the grid', () => {
-        invokeMouseDown();
+    it('updates the selection when shift left clicking on the grid', () => {
+        const newState = createDummyCellState();
+        jest.spyOn(initialState, 'shiftMouseDown').mockReturnValue(newState);
 
-        expect(selection.startOrUpdateSelection).toHaveBeenCalled();
+        const params = invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
+
+        expect(params.gridState.selectionState as unknown as jest.Mock).toHaveBeenCalledWith(newState);
     });
 
-    it('starts a selection when shift-clicking on the grid with no prior selection', () => {
-        invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
+    it('does not update the selection if clicking does not change the selection', () => {
+        jest.spyOn(initialState, 'mouseDown').mockReturnValue(initialState as any);
 
-        expect(selection.startOrUpdateSelection).toHaveBeenCalled();
+        const params = invokeMouseDown();
+
+        expect(params.gridState.selectionState as unknown as jest.Mock)
+            .not.toHaveBeenCalledWith(expect.objectContaining({}));
     });
 
-    it('updates the selection when shift-clicking in the grid with a prior selection', () => {
-        (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(true);
-        invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
+    it('calls the selection started callback when left clicking on the grid', () => {
+        const newState = createDummyCellState();
+        jest.spyOn(initialState, 'mouseDown').mockReturnValue(newState);
 
-        expect(selection.startOrUpdateSelection).toHaveBeenCalled();
+        const params = invokeMouseDown();
+
+        expect(params.props.onSelectionChangeStart as unknown as jest.Mock)
+            .toHaveBeenCalledWith(newState.getSelectionRange());
+    });
+
+    it('calls the selection started callback when shift clicking with no prior selection', () => {
+        const newState = createDummyCellState();
+        jest.spyOn(initialState, 'shiftMouseDown').mockReturnValue(newState);
+
+        const params = invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
+
+        expect(params.props.onSelectionChangeStart as unknown as jest.Mock)
+            .toHaveBeenCalledWith(newState.getSelectionRange());
+    });
+
+    it('calls the selection updated callback when shift clicking with prior selection', () => {
+        initialState = createDummyCellState();
+        const newState = createDummyCellState();
+        jest.spyOn(initialState, 'shiftMouseDown').mockReturnValue(newState);
+
+        const params = invokeMouseDown({ event: { buttons: 1, shiftKey: true } as React.MouseEvent<any, any> });
+
+        expect(params.props.onSelectionChangeUpdate as unknown as jest.Mock)
+            .toHaveBeenCalledWith(newState.getSelectionRange());
     });
 });
 
@@ -106,73 +175,121 @@ describe('mouseDragOnGrid', () => {
         editingCell: EditingCell<T> | null;
     }
 
+    let initialState: AllSelectionStates;
+
     const invokeMouseDrag = <T>(params: Partial<MouseDragParams<T>> = {}) => {
         const defaults: MouseDragParams<T> = {
             event: { buttons: 1, clientX: 0, clientY: 0 } as MouseEvent,
             rootRef: { current: {
                 getBoundingClientRect: () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }),
             } as HTMLDivElement },
-            props: { } as ReactCanvasGridProps<T>,
-            gridState: { cursorState: (() => ({ isSelectionInProgress: true })) as any } as GridState<T>,
+            props: {
+                onSelectionChangeUpdate: jest.fn() as any,
+            } as ReactCanvasGridProps<T>,
+            gridState: {
+                cellBounds: jest.fn() as any,
+                selectionState: jest.fn().mockReturnValue(initialState) as any,
+            } as GridState<T>,
             editingCell: null,
         };
 
-        const { event, rootRef, props, gridState, editingCell } = { ...defaults, ...params };
+        const merged = { ...defaults, ...params };
+        const { event, rootRef, props, gridState, editingCell } = merged;
 
-        return mouseDragOnGrid(event, rootRef, props, gridState, editingCell);
+        const dragResult = mouseDragOnGrid(event, rootRef, props, gridState, editingCell);
+
+        return { dragResult, params: merged };
     };
 
     beforeEach(() => {
         jest.resetAllMocks();
-        (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(true);
+
+        initialState = createSpiedOnNoSelectionState();
+
+        (getMouseCellCoordAndRegion as jest.Mock).mockReturnValue({
+            truncatedCoord: { x: 0, y: 0 },
+            region: 'cells',
+        });
     });
 
     it('does nothing if it is not a left click', () => {
+        initialState = createSpiedOnCellSelectionState();
         const event: MouseEvent = { buttons: 0 } as MouseEvent;
 
-        const dragResult = invokeMouseDrag({ event });
+        const { dragResult, params } = invokeMouseDrag({ event });
 
         expect(dragResult).toEqual(false);
-        expectNoSelectionsToHaveBeenMade();
+        expectNoSelectionsToHaveBeenMade(params.gridState.selectionState());
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
     it('does nothing if a cell is being edited', () => {
+        initialState = createSpiedOnCellSelectionState();
         const editingCell: EditingCell<any> = { } as EditingCell<any>;
 
-        const dragResult = invokeMouseDrag({ editingCell });
+        const { dragResult, params } = invokeMouseDrag({ editingCell });
 
         expect(dragResult).toEqual(false);
-        expectNoSelectionsToHaveBeenMade();
+        expectNoSelectionsToHaveBeenMade(params.gridState.selectionState());
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
     it('does nothing if there is no existing selection', () => {
-        (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(false);
-
-        const dragResult = invokeMouseDrag();
+        const { dragResult, params } = invokeMouseDrag();
 
         expect(dragResult).toEqual(false);
-        expectNoSelectionsToHaveBeenMade();
+        expectNoSelectionsToHaveBeenMade(params.gridState.selectionState());
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
-    it('does nothing (else) if the click is handled by the frozen cell click handler', () => {
-        (frozenEvents.leftClickDragOnFrozenCell as jest.Mock).mockReturnValue(true);
+    it('does nothing if there is no in-progress selection', () => {
+        initialState = createSpiedOnCellSelectionState(false);
 
-        const dragResult = invokeMouseDrag();
+        const { dragResult, params } = invokeMouseDrag();
 
-        expect(dragResult).toEqual(true);
-        expectNoSelectionsToHaveBeenMade();
+        expect(dragResult).toEqual(false);
+        expectNoSelectionsToHaveBeenMade(params.gridState.selectionState());
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded).not.toHaveBeenCalled();
     });
 
-    it('updates the existing selection and starts scrolling if needed when dragging on the grid', () => {
-        const dragResult = invokeMouseDrag();
+    it('updates the existing selection, calls the selection updated callback,' +
+    ' and starts scrolling if needed when dragging on the grid', () => {
+        initialState = createSpiedOnCellSelectionState();
+        const newState = createDummyCellState();
+        jest.spyOn(initialState, 'mouseMove').mockReturnValue(newState);
+
+        const { dragResult, params } = invokeMouseDrag();
 
         expect(dragResult).toEqual(true);
-        expect(selection.updateSelection).toHaveBeenCalled();
+        expect(params.gridState.selectionState as unknown as jest.Mock).toHaveBeenCalledWith(newState);
+        expect(params.props.onSelectionChangeUpdate).toHaveBeenCalledWith(newState.getSelectionRange());
         expect(scrollingTimer.startScrollBySelectionDragIfNeeded).toHaveBeenCalled();
+    });
+
+    it('does not update the selection or call the selection updated callback if the selection didn\'t change', () => {
+        initialState = createSpiedOnCellSelectionState();
+        jest.spyOn(initialState, 'mouseMove').mockReturnValue(initialState);
+
+        const { dragResult, params } = invokeMouseDrag();
+
+        expect(dragResult).toEqual(true);
+        expect(params.gridState.selectionState as unknown as jest.Mock)
+            .not.toHaveBeenCalledWith(expect.objectContaining({}));
+        expect(params.props.onSelectionChangeUpdate).not.toHaveBeenCalled();
+    });
+
+    it('does not update the selection or call the selection updated callback if the selection range is null', () => {
+        initialState = createSpiedOnCellSelectionState();
+        const newState = createSpiedOnCellSelectionState();
+        jest.spyOn(newState, 'getSelectionRange').mockReturnValue(null as any);
+        jest.spyOn(initialState, 'mouseMove').mockReturnValue(newState);
+
+        const { dragResult, params } = invokeMouseDrag();
+
+        expect(dragResult).toEqual(true);
+        expect(params.gridState.selectionState as unknown as jest.Mock)
+            .not.toHaveBeenCalledWith(expect.objectContaining({}));
+        expect(params.props.onSelectionChangeUpdate).not.toHaveBeenCalled();
     });
 });
 
@@ -182,25 +299,37 @@ describe('mouseUpOnGrid', () => {
         gridState: GridState<T>;
         editingCell: EditingCell<T> | null;
     }
-    const invokeMouseDrag = <T>(params: Partial<MouseUpParams<T>> = {}) => {
+
+    let initialState: AllSelectionStates;
+
+    const invokeMouseUp = <T>(params: Partial<MouseUpParams<T>> = {}) => {
         const defaults: MouseUpParams<T> = {
-            props: { } as ReactCanvasGridProps<T>,
-            gridState: { cursorState: (() => ({ isSelectionInProgress: true })) as any } as GridState<T>,
+            props: {
+                onSelectionChangeEnd: jest.fn() as any,
+            } as ReactCanvasGridProps<T>,
+            gridState: {
+                cellBounds: jest.fn() as any,
+                selectionState: jest.fn().mockReturnValue(initialState) as any,
+            } as GridState<T>,
             editingCell: null,
         };
 
-        const { props, gridState, editingCell } = { ...defaults, ...params };
+        const merged = { ...defaults, ...params };
+        const { props, gridState, editingCell } = merged;
 
-        return mouseUpOnGrid(props, gridState, editingCell);
+        mouseUpOnGrid(props, gridState, editingCell);
+
+        return { params: merged };
     };
 
     beforeEach(() => {
         jest.resetAllMocks();
-        (cursorState.hasSelectionState as any as jest.Mock).mockReturnValue(true);
+
+        initialState = createSpiedOnCellSelectionState();
     });
 
     it('stops any ongoing scrolling-by-dragging', () => {
-        invokeMouseDrag();
+        invokeMouseUp();
 
         expect(scrollingTimer.clearScrollByDragTimer).toHaveBeenCalled();
     });
@@ -208,14 +337,44 @@ describe('mouseUpOnGrid', () => {
     it('does nothing if a cell is being edited', () => {
         const editingCell = { } as EditingCell<any>;
 
-        invokeMouseDrag({ editingCell });
+        const { params } = invokeMouseUp({ editingCell });
 
-        expectNoSelectionsToHaveBeenMade();
+        expect(params.gridState.selectionState as unknown as jest.Mock)
+            .not.toHaveBeenCalledWith(expect.objectContaining({}));
+        expect(params.props.onSelectionChangeEnd).not.toHaveBeenCalled();
+        expectNoSelectionsToHaveBeenMade(initialState);
+    });
+
+    it('does nothing if there is no prior selection', () => {
+        initialState = createSpiedOnNoSelectionState();
+
+        const { params } = invokeMouseUp({ editingCell: null });
+
+        expect(params.gridState.selectionState as unknown as jest.Mock)
+            .not.toHaveBeenCalledWith(expect.objectContaining({}));
+        expect(params.props.onSelectionChangeEnd).not.toHaveBeenCalled();
+        expectNoSelectionsToHaveBeenMade(initialState);
+    });
+
+    it('does not update the selection or call the selection updated callback if the selection didn\'t change', () => {
+        initialState = createSpiedOnCellSelectionState();
+        jest.spyOn(initialState, 'mouseUp').mockReturnValue(initialState);
+
+        const { params } = invokeMouseUp({ editingCell: null });
+
+        expect(params.gridState.selectionState as unknown as jest.Mock)
+            .not.toHaveBeenCalledWith(expect.objectContaining({}));
+        expect(params.props.onSelectionChangeEnd).not.toHaveBeenCalled();
     });
 
     it('ends the selection', () => {
-        invokeMouseDrag({ editingCell: null });
+        const newState = createSpiedOnCellSelectionState();
+        jest.spyOn(initialState, 'mouseUp').mockReturnValue(newState);
 
-        expect(selection.endSelection).toBeCalled();
+        const { params } = invokeMouseUp({ editingCell: null });
+
+        expect(params.gridState.selectionState as unknown as jest.Mock).toHaveBeenCalledWith(newState);
+        expect(params.props.onSelectionChangeEnd).toHaveBeenCalledWith(newState.getSelectionRange());
+        expect(initialState.mouseUp).toHaveBeenCalled();
     });
 });

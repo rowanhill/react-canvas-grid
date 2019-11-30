@@ -17,7 +17,7 @@ import { shouldSelectionClear } from './highlightCanvasRenderer';
 import { InlineTextEditor } from './InlineEditor';
 import { MainCanvas } from './MainCanvas';
 import { NoSelection } from './selectionState/noSelection';
-import { SelectRange } from './selectionState/selectionState';
+import { SelectRange } from './selectionState/selectionTypes';
 import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, Size } from './types';
 
 export interface CellDataChangeEvent<T> {

@@ -2,12 +2,13 @@ import { Coord } from '../types';
 import { AllGridSelection } from './allGridSelection';
 import { CellsSelection } from './cellsSelection';
 import { ColsSelection } from './colsSelection';
+import { NoSelection } from './noSelection';
 import { RowsSelection } from './rowsSelection';
-import { ClickMeta } from './selectionState';
+import { ClickMeta } from './selectionTypes';
 
-export type AllSelectionStates = CellsSelection | RowsSelection | ColsSelection | AllGridSelection;
+export type AllSelectionStates = CellsSelection | RowsSelection | ColsSelection | AllGridSelection | NoSelection;
 
-export const mouseDown = (cell: Coord, meta: ClickMeta) => {
+export const createSelectionStateForMouseDown = (cell: Coord, meta: ClickMeta) => {
     switch (meta.region) {
         case 'cells':
             return new CellsSelection(cell, cell, cell, true, cell);

@@ -1,248 +1,141 @@
-import {
-    createDefault,
-    CursorStateWithSelection,
-    SelectionStateCell,
-    SelectionStateColumn,
-    SelectionStateCorner,
-    SelectionStateRow,
-    startDrag,
-    startRangeColumn,
-    startRangeCorner,
-    startRangeRow,
-    updateDrag,
-    updateRangeColumn,
-    updateRangeRow,
-} from '../cursorState';
+import { GridState } from '../gridState';
+import { ReactCanvasGridProps } from '../ReactCanvasGrid';
+import { NoSelection } from '../selectionState/noSelection';
+import { AllSelectionStates } from '../selectionState/selectionStateFactory';
 import { keyDownOnGrid } from './keyboardEvents';
-import { scrollToCell, scrollToColumn, scrollToRow } from './scrolling';
-import { endSelection, selectOrUpdateCol, selectOrUpdateRow, startOrUpdateSelection } from './selection';
-
-jest.mock('./scrolling');
-jest.mock('./selection');
-
-function expectNoSelectionToHaveHappened() {
-    expect(selectOrUpdateCol).not.toHaveBeenCalled();
-    expect(selectOrUpdateRow).not.toHaveBeenCalled();
-    expect(startOrUpdateSelection).not.toHaveBeenCalled();
-    expect(endSelection).not.toHaveBeenCalled();
-}
-
-function expectNoScrollToHaveHappened() {
-    expect(scrollToRow).not.toHaveBeenCalled();
-    expect(scrollToColumn).not.toHaveBeenCalled();
-    expect(scrollToCell).not.toHaveBeenCalled();
-}
 
 beforeEach(() => {
     jest.clearAllMocks();
 });
 
+function createEvent(key: string, shiftKey: boolean = false): React.KeyboardEvent<any> {
+    return { key, shiftKey } as React.KeyboardEvent<any>;
+}
+
+function expectNoUpdateToSelectionState(gridState: GridState<any>) {
+    expect(gridState.selectionState).not.toHaveBeenCalledWith(expect.objectContaining({}));
+}
+
+function expectNoUpdateToGridOffset(gridState: GridState<any>) {
+    expect(gridState.gridOffsetRaw).not.toHaveBeenCalled();
+}
+
+function expectNoCallToAnyOnSelectionCallback(props: ReactCanvasGridProps<any>) {
+    expect(props.onSelectionChangeStart).not.toHaveBeenCalled();
+    expect(props.onSelectionChangeUpdate).not.toHaveBeenCalled();
+    expect(props.onSelectionChangeEnd).not.toHaveBeenCalled();
+}
+
+function expectNothingToHaveHappened(gridState: GridState<any>, props: ReactCanvasGridProps<any>) {
+    expectNoUpdateToSelectionState(gridState);
+    expectNoUpdateToGridOffset(gridState);
+    expectNoCallToAnyOnSelectionCallback(props);
+}
+
 describe('keyDownOnGrid', () => {
-    describe.each`
-        cursorType | cursor
-        ${'no selection'} | ${createDefault()}
-        ${'simple cell selection'} | ${startDrag({ x: 5, y: 5 })}
-        ${'row selection'} | ${startRangeRow({ x: 0, y: 5 }, { x: 10, y: 5 })}
-        ${'col selection'} | ${startRangeColumn({ x: 5, y: 0 }, { x: 5, y: 10 })}
-        ${'corner selection'} | ${startRangeColumn({ x: 0, y: 0 }, { x: 10, y: 10 })}
-    `('with $cursorType', ({ cursor }) => {
-        it('does nothing if a key other than an arrow key is pressed', () => {
-            const event = { shiftKey: false, key: 'a' } as React.KeyboardEvent<any>;
+    let initialSelection: AllSelectionStates;
+    let newSelection: AllSelectionStates;
+    let gridState: GridState<any>;
+    let props: ReactCanvasGridProps<any>;
 
-            keyDownOnGrid(event, {} as any, { cursorState: () => cursor } as any);
+    beforeEach(() => {
+        initialSelection = new NoSelection(false);
+        jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(initialSelection);
 
-            expectNoSelectionToHaveHappened();
-        });
+        newSelection = new NoSelection(false);
+        jest.spyOn(newSelection, 'getSelectionRange').mockReturnValue('dummy selection range' as any);
+        jest.spyOn(newSelection, 'getFocusGridOffset').mockReturnValue('dummy new grid offset' as any);
+
+        gridState = {
+            cellBounds: (() => 'dummy cell bounds') as any,
+            selectionState: jest.fn().mockReturnValue(initialSelection) as any,
+            gridOffsetRaw: jest.fn() as any,
+        } as GridState<any>;
+
+        props = {
+            onSelectionChangeStart: jest.fn() as any,
+            onSelectionChangeUpdate: jest.fn() as any,
+            onSelectionChangeEnd: jest.fn() as any,
+        } as ReactCanvasGridProps<any>;
     });
 
-    describe('with simple cell selection at 5,5', () => {
-        let cellCursor: CursorStateWithSelection<SelectionStateCell>;
+    it('does nothing if a key other than an arrow key is pressed', () => {
+        const event = createEvent('a');
 
-        beforeEach(() => {
-            cellCursor = startDrag({ x: 5, y: 5 }) as CursorStateWithSelection<SelectionStateCell>;
-        });
+        keyDownOnGrid(event, props, gridState);
 
-        it.each`
-            key             | x    | y
-            ${'ArrowRight'} | ${6} | ${5}
-            ${'ArrowLeft'}  | ${4} | ${5}
-            ${'ArrowUp'}    | ${5} | ${4}
-            ${'ArrowDown'}  | ${5} | ${6}
-        `('updates the edit cursor cell and scrolls to it on $key', ({ key, x, y }) => {
-            const event = { shiftKey: false, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => cellCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expect(startOrUpdateSelection).toHaveBeenCalledWith(event, props, gridState, {x, y});
-            expect(scrollToCell).toHaveBeenCalledWith({x, y}, gridState);
-            expect(endSelection).toHaveBeenCalledWith(props, gridState);
-        });
+        expectNothingToHaveHappened(gridState, props);
     });
 
-    describe('with cell selection between 4,4 and 5,5', () => {
-        let cellCursor: CursorStateWithSelection<SelectionStateCell>;
+    it('does nothing if the key press results in the same seleciton state', () => {
+        const event = createEvent('ArrowUp');
 
-        beforeEach(() => {
-            cellCursor = startDrag({ x: 4, y: 4 }) as CursorStateWithSelection<SelectionStateCell>;
-            cellCursor = updateDrag(cellCursor, { x: 5, y: 5 }) as CursorStateWithSelection<SelectionStateCell>;
-        });
+        keyDownOnGrid(event, props, gridState);
 
-        it.each`
-            key             | x    | y
-            ${'ArrowRight'} | ${6} | ${5}
-            ${'ArrowLeft'}  | ${4} | ${5}
-            ${'ArrowUp'}    | ${5} | ${4}
-            ${'ArrowDown'}  | ${5} | ${6}
-        `('updates the end selection cell and scrolls to it on shift + $key', ({ key, x, y }) => {
-            const event = { shiftKey: true, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => cellCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expect(startOrUpdateSelection).toHaveBeenCalledWith(event, props, gridState, {x, y});
-            expect(scrollToCell).toHaveBeenCalledWith({x, y}, gridState);
-            expect(endSelection).toHaveBeenCalledWith(props, gridState);
-        });
+        expectNothingToHaveHappened(gridState, props);
     });
 
-    describe('with row selection at index 5 (and edit cursor at 1, 5)', () => {
-        let rowCursor: CursorStateWithSelection<SelectionStateRow>;
+    it('does nothing if the key press results in the a seleciton state with a null selected range', () => {
+        const event = createEvent('ArrowUp');
+        jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(newSelection);
+        jest.spyOn(newSelection, 'getSelectionRange').mockReturnValue(null);
 
-        beforeEach(() => {
-            rowCursor = startRangeRow({ x: 1, y: 5 }, { x: 10, y: 5 }) as CursorStateWithSelection<SelectionStateRow>;
-        });
+        keyDownOnGrid(event, props, gridState);
 
-        it.each`
-            key             | x    | y
-            ${'ArrowRight'} | ${1} | ${5}
-            ${'ArrowLeft'}  | ${1} | ${5}
-            ${'ArrowUp'}    | ${1} | ${4}
-            ${'ArrowDown'}  | ${1} | ${6}
-        `('updates the row and scrolls to it on $key', ({ key, x, y }) => {
-            const event = { shiftKey: false, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => rowCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expect(selectOrUpdateRow).toHaveBeenCalledWith(event, props, gridState, {x, y});
-            expect(scrollToRow).toHaveBeenCalledWith(y, gridState);
-            expect(endSelection).toHaveBeenCalledWith(props, gridState);
-        });
+        expectNothingToHaveHappened(gridState, props);
     });
 
-    describe('with row selection between index 4 and 5', () => {
-        let rowCursor: CursorStateWithSelection<SelectionStateRow>;
+    it('does nothing if the key press results in the a seleciton state with a null focus grid offset', () => {
+        const event = createEvent('ArrowUp');
+        jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(newSelection);
+        jest.spyOn(newSelection, 'getFocusGridOffset').mockReturnValue(null);
 
-        beforeEach(() => {
-            rowCursor = startRangeRow({ x: 1, y: 4 }, { x: 10, y: 4 }) as CursorStateWithSelection<SelectionStateRow>;
-            rowCursor = updateRangeRow(rowCursor, { x: 1, y: 5 });
-        });
+        keyDownOnGrid(event, props, gridState);
 
-        it.each`
-            key             | x    | y
-            ${'ArrowRight'} | ${10} | ${5}
-            ${'ArrowLeft'}  | ${10} | ${5}
-            ${'ArrowUp'}    | ${10} | ${4}
-            ${'ArrowDown'}  | ${10} | ${6}
-        `('updates the row and scrolls to it on $key', ({ key, x, y }) => {
-            const event = { shiftKey: true, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => rowCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expect(selectOrUpdateRow).toHaveBeenCalledWith(event, props, gridState, {x, y});
-            expect(scrollToRow).toHaveBeenCalledWith(y, gridState);
-            expect(endSelection).toHaveBeenCalledWith(props, gridState);
-        });
+        expectNothingToHaveHappened(gridState, props);
     });
 
-    describe('with col selection at index 5 (and edit cursor at 5, 1)', () => {
-        let colCursor: CursorStateWithSelection<SelectionStateColumn>;
+    it.each`
+        key             | arrowMethod
+        ${'ArrowUp'}    | ${'arrowUp'}
+        ${'ArrowDown'}  | ${'arrowDown'}
+        ${'ArrowRight'} | ${'arrowRight'}
+        ${'ArrowLeft'}  | ${'arrowLeft'}
+    `('calls on start / on end, scrolls the grid, and updates the selection on $key press without shift', ({
+        key,
+        arrowMethod,
+    }) => {
+        const event = createEvent(key);
+        jest.spyOn(initialSelection, arrowMethod).mockReturnValue(newSelection);
 
-        beforeEach(() => {
-            colCursor = startRangeColumn({ x: 5, y: 1 }, { x: 5, y: 10 }) as
-                CursorStateWithSelection<SelectionStateColumn>;
-        });
+        keyDownOnGrid(event, props, gridState);
 
-        it.each`
-            key             | x    | y
-            ${'ArrowRight'} | ${6} | ${1}
-            ${'ArrowLeft'}  | ${4} | ${1}
-            ${'ArrowUp'}    | ${5} | ${1}
-            ${'ArrowDown'}  | ${5} | ${1}
-        `('updates the column and scrolls to it on $key', ({ key, x, y }) => {
-            const event = { shiftKey: false, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => colCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expect(selectOrUpdateCol).toHaveBeenCalledWith(event, props, gridState, {x, y});
-            expect(scrollToColumn).toHaveBeenCalledWith(x, gridState);
-            expect(endSelection).toHaveBeenCalledWith(props, gridState);
-        });
+        expect(props.onSelectionChangeStart).toHaveBeenCalledWith('dummy selection range');
+        expect(props.onSelectionChangeUpdate).not.toHaveBeenCalled();
+        expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
+        expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
+        expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
     });
 
-    describe('with col selection between 4 and 5', () => {
-        let colCursor: CursorStateWithSelection<SelectionStateColumn>;
+    it.each`
+        key             | arrowMethod
+        ${'ArrowUp'}    | ${'shiftArrowUp'}
+        ${'ArrowDown'}  | ${'shiftArrowDown'}
+        ${'ArrowRight'} | ${'shiftArrowRight'}
+        ${'ArrowLeft'}  | ${'shiftArrowLeft'}
+    `('calls on update / on end, scrolls the grid, and updates the selection on $key press with shift', ({
+        key,
+        arrowMethod,
+    }) => {
+        const event = createEvent(key, true);
+        jest.spyOn(initialSelection, arrowMethod).mockReturnValue(newSelection);
 
-        beforeEach(() => {
-            colCursor = startRangeColumn({ x: 4, y: 1 }, { x: 4, y: 10 }) as
-                CursorStateWithSelection<SelectionStateColumn>;
-            colCursor = updateRangeColumn(colCursor, { x: 5, y: 1 });
-        });
+        keyDownOnGrid(event, props, gridState);
 
-        it.each`
-            key             | x    | y
-            ${'ArrowRight'} | ${6} | ${10}
-            ${'ArrowLeft'}  | ${4} | ${10}
-            ${'ArrowUp'}    | ${5} | ${10}
-            ${'ArrowDown'}  | ${5} | ${10}
-        `('updates the column and scrolls to it on $key', ({ key, x, y }) => {
-            const event = { shiftKey: true, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => colCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expect(selectOrUpdateCol).toHaveBeenCalledWith(event, props, gridState, {x, y});
-            expect(scrollToColumn).toHaveBeenCalledWith(x, gridState);
-            expect(endSelection).toHaveBeenCalledWith(props, gridState);
-        });
-    });
-
-    describe('with "corner" (i.e. whole table) selection', () => {
-        let cornerCursor: CursorStateWithSelection<SelectionStateCorner>;
-
-        beforeEach(() => {
-            cornerCursor = startRangeCorner({ x: 1, y: 1 }, { x: 10, y: 10 }) as
-                CursorStateWithSelection<SelectionStateCorner>;
-        });
-
-        it.each`
-            key             | shiftKey
-            ${'ArrowRight'} | ${true}
-            ${'ArrowLeft'}  | ${true}
-            ${'ArrowUp'}    | ${true}
-            ${'ArrowDown'}  | ${true}
-            ${'ArrowRight'} | ${false}
-            ${'ArrowLeft'}  | ${false}
-            ${'ArrowUp'}    | ${false}
-            ${'ArrowDown'}  | ${false}
-        `('does not update selection or scroll on $key', ({ key, shiftKey }) => {
-            const event = { shiftKey, key } as React.KeyboardEvent<any>;
-            const props = 'dummy props' as any;
-            const gridState = { cursorState: () => cornerCursor } as any;
-
-            keyDownOnGrid(event, props, gridState);
-
-            expectNoSelectionToHaveHappened();
-            expectNoScrollToHaveHappened();
-        });
+        expect(props.onSelectionChangeStart).not.toHaveBeenCalled();
+        expect(props.onSelectionChangeUpdate).toHaveBeenCalledWith('dummy selection range');
+        expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
+        expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
+        expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
     });
 });

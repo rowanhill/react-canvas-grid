@@ -1,7 +1,9 @@
 import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { Coord } from '../types';
-import { BaseSelectionState, CellCoordBounds, ClickMeta, SelectRange } from './selectionState';
+import { BaseSelectionState } from './selectionState';
+import { createSelectionStateForMouseDown } from './selectionStateFactory';
+import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
 export class RowsSelection extends BaseSelectionState<RowsSelection> {
     private readonly editCursorCell: Coord;
@@ -70,6 +72,8 @@ export class RowsSelection extends BaseSelectionState<RowsSelection> {
     public shiftArrowRight = (): RowsSelection => {
         return this;
     }
+
+    public mouseDown = (cell: Coord, meta: ClickMeta) => createSelectionStateForMouseDown(cell, meta);
 
     public shiftMouseDown = (cell: Coord, meta: ClickMeta): RowsSelection => {
         if (meta.region !== 'frozen-cols') {

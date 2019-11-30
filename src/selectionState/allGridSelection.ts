@@ -1,7 +1,8 @@
 import { GridState } from '../gridState';
 import { Coord } from '../types';
-import { BaseSelectionState, CellCoordBounds, ClickMeta, SelectRange } from './selectionState';
-import { mouseDown } from './selectionStateFactory';
+import { BaseSelectionState } from './selectionState';
+import { createSelectionStateForMouseDown } from './selectionStateFactory';
+import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
 export class AllGridSelection extends BaseSelectionState<AllGridSelection> {
     public arrowUp = (_: CellCoordBounds) => this;
@@ -22,8 +23,10 @@ export class AllGridSelection extends BaseSelectionState<AllGridSelection> {
         }
     }
 
-    public shiftMouseDown = (cell: Coord, meta: ClickMeta, _: CellCoordBounds) => {
-        return mouseDown(cell, meta);
+    public mouseDown = (cell: Coord, meta: ClickMeta) => createSelectionStateForMouseDown(cell, meta);
+
+    public shiftMouseDown = (cell: Coord, meta: ClickMeta) => {
+        return this.mouseDown(cell, meta);
     }
 
     public getSelectionRange = (cellBounds: CellCoordBounds): SelectRange  => {

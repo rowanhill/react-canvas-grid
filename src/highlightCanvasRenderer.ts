@@ -3,8 +3,8 @@ import { ColumnBoundary } from './gridGeometry';
 import * as ScrollGeometry from './scrollbarGeometry';
 import { ScrollbarPosition } from './scrollbarGeometry';
 import { NoSelection } from './selectionState/noSelection';
-import { CellCoordBounds, SelectRange } from './selectionState/selectionState';
 import { AllSelectionStates } from './selectionState/selectionStateFactory';
+import { CellCoordBounds, SelectRange } from './selectionState/selectionTypes';
 import { ColumnDef, Coord, DataRow } from './types';
 
 export interface HighlightCanvasRendererBasics {
@@ -28,7 +28,7 @@ export interface HighlightCanvasRendererScrollbar {
 }
 
 export interface HighlightCanvasRendererSelection {
-    selectionState: AllSelectionStates | NoSelection;
+    selectionState: AllSelectionStates;
 }
 
 const defaultPosProps: HighlightCanvasRendererPosition = {

@@ -3,9 +3,8 @@ import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { NoSelection } from '../selectionState/noSelection';
-import { CellCoordBounds, GridClickRegion } from '../selectionState/selectionState';
-import { mouseDown } from '../selectionState/selectionStateFactory';
 import { Coord } from '../types';
+import { getMouseCellCoordAndRegion } from './mouseCellAndRegionCalc';
 import { isLeftButton } from './mouseEvents';
 import { clearScrollByDragTimer, startScrollBySelectionDragIfNeeded } from './scrollingTimer';
 
@@ -29,17 +28,11 @@ export const mouseDownOnGrid = <T>(
 
     // Now we can process the click and update the selection state
     const selectionState = gridState.selectionState();
-    const process = event.shiftKey ? selectionState.shiftMouseDown : mouseDown;
+    const process = event.shiftKey ? selectionState.shiftMouseDown : selectionState.mouseDown;
     const callback = event.shiftKey && !(selectionState instanceof NoSelection) ?
         props.onSelectionChangeUpdate :
         props.onSelectionChangeStart;
-    const cellBounds: CellCoordBounds = {
-        frozenCols: gridState.frozenCols(),
-        frozenRows: gridState.frozenRows(),
-        numCols: gridState.columns().length,
-        numRows: gridState.data().length,
-    };
-    const newSelState = process(truncatedCoord, { region }, cellBounds);
+    const newSelState = process(truncatedCoord, { region });
     if (selectionState !== newSelState) {
         if (callback) {
             callback(newSelState.getSelectionRange(gridState.cellBounds()));
@@ -113,51 +106,4 @@ export const mouseUpOnGrid = <T>(
         }
         gridState.selectionState(newSelState);
     }
-};
-
-const getMouseCellCoordAndRegion = <T>(
-    event: { clientX: number; clientY: number; },
-    componentPixelCoord: Coord,
-    rootRef: RefObject<HTMLDivElement>,
-    props: ReactCanvasGridProps<T>,
-    gridState: GridState<T>,
-) => {
-    // Find the cell coordinates of the mouse event. This is untruncated, and ignoring frozen cell overlays
-    const gridCoords = GridGeometry.calculateGridCellCoordsFromGridState(event, rootRef.current, gridState);
-
-    // Figure out if the mouse event is in a frozen cell to determine the region
-    const clickInFrozenCols = componentPixelCoord.x < gridState.frozenColsWidth();
-    const clickInFrozenRows = componentPixelCoord.y < gridState.frozenRowsHeight();
-    const region: GridClickRegion = clickInFrozenCols ?
-                        (clickInFrozenRows ? 'frozen-corner' : 'frozen-cols') :
-                        (clickInFrozenRows ? 'frozen-rows' : 'cells');
-
-    // If the mouse event was on a frozen cell, the gridCoords will be for the cell coords 'underneath' the
-    // frozen cell, so we need to update to coordinate to zero
-    switch (region) {
-        case 'frozen-corner':
-            gridCoords.x = 0;
-            gridCoords.y = 0;
-            break;
-        case 'frozen-rows':
-            gridCoords.y = 0;
-            break;
-        case 'frozen-cols':
-            gridCoords.x = 0;
-            break;
-    }
-
-    // The mouse event may be beyond the grid's actual size, so we need to truncate it (to avoid selections that
-    // include fictional cells)
-    return {
-        truncatedCoord: truncateCoord(gridCoords, props),
-        region,
-    };
-};
-
-const truncateCoord = <T>(coord: Coord, props: ReactCanvasGridProps<T>): Coord => {
-    return {
-        x: Math.min(Math.max(coord.x, props.frozenCols), props.columns.length - 1),
-        y: Math.min(Math.max(coord.y, props.frozenRows), props.data.length - 1),
-    };
 };

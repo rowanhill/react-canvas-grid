@@ -1,23 +1,6 @@
 import { GridState } from '../gridState';
 import { Coord } from '../types';
-
-export type GridClickRegion = 'frozen-rows' | 'frozen-cols' | 'frozen-corner' | 'cells';
-
-export interface ClickMeta {
-    region: GridClickRegion;
-}
-
-export interface CellCoordBounds {
-    frozenRows: number;
-    frozenCols: number;
-    numRows: number;
-    numCols: number;
-}
-
-export interface SelectRange {
-    topLeft: Coord;
-    bottomRight: Coord;
-}
+import { CellCoordBounds } from './selectionTypes';
 
 export abstract class BaseSelectionState<T extends BaseSelectionState<T>> {
     public readonly isSelectionInProgress: boolean;
@@ -31,6 +14,7 @@ export abstract class BaseSelectionState<T extends BaseSelectionState<T>> {
     public abstract shiftArrowLeft: (cellBounds: CellCoordBounds) => T;
     public abstract shiftArrowRight: (cellBounds: CellCoordBounds) => T;
 
+    // mouseDown is defined on derived classes (to avoid circular file imports, annoyingly...)
     public abstract mouseMove: (cell: Coord) => T;
     public abstract mouseUp: () => T;
 

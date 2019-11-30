@@ -2,7 +2,9 @@ import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { Coord } from '../types';
 import { equal } from '../utils';
-import { BaseSelectionState, CellCoordBounds, ClickMeta, SelectRange } from './selectionState';
+import { BaseSelectionState } from './selectionState';
+import { createSelectionStateForMouseDown } from './selectionStateFactory';
+import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
 export class CellsSelection extends BaseSelectionState<CellsSelection> {
     private readonly editCursorCell: Coord;
@@ -63,6 +65,8 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
         const cell = truncateCoord({ x: this.selectionCursorCell.x + 1, y: this.selectionCursorCell.y }, cellBounds);
         return new CellsSelection(this.editCursorCell, this.selectionStartCell, cell, false, cell);
     }
+
+    public mouseDown = (cell: Coord, meta: ClickMeta) => createSelectionStateForMouseDown(cell, meta);
 
     public shiftMouseDown = (cell: Coord, meta: ClickMeta): CellsSelection => {
         if (meta.region !== 'cells') {
