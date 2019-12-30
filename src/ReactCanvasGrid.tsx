@@ -1,14 +1,7 @@
 import { batch, consumer } from 'instigator';
 import * as React from 'react';
-import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './eventHandlers/gridMouseEvents';
 import { keyDownOnGrid } from './eventHandlers/keyboardEvents';
-import {
-    mouseDownOnScrollbar,
-    mouseDragOnScrollbar,
-    mouseHoverOnScrollbar,
-    mouseUpOnScrollbar,
-} from './eventHandlers/scrollbarMouseEvents';
-import { updateOffsetByDelta } from './eventHandlers/scrolling';
+import { handleMouseDown, handleMouseMove, handleMouseUp, handleWheel } from './eventHandlers/mouseEvents';
 import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
 import { GridState } from './gridState';
@@ -241,19 +234,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private onWheel = (e: WheelEvent) => {
-        // Browsers may use a 'delta mode' when wheeling, requesting multi-pixel movement
-        // See https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-        const scaleFactors: { [index: number]: number; } = {
-            0: 1,  // DOM_DELTA_PIXEL: 1-to-1
-            1: 16, // DOM_DELTA_LINE: 16 seems a decent guess. See https://stackoverflow.com/q/20110224
-        };
-        const scaleFactor = scaleFactors[e.deltaMode || 0];
-        const willUpdate = updateOffsetByDelta(e.deltaX * scaleFactor, e.deltaY * scaleFactor, this.gridState);
-
-        if (willUpdate) {
-            // The grid is going to move, so we want to prevent any other scrolling from happening
-            e.preventDefault();
-        }
+        handleWheel(e, this.gridState);
     }
 
     private onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -265,11 +246,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return;
         }
 
-        if (mouseDownOnScrollbar(coord, this.gridState)) {
-            return;
-        }
-
-        mouseDownOnGrid(event, coord, this.rootRef, this.props, this.gridState, this.state.editingCell);
+        handleMouseDown(event, coord, this.rootRef, this.gridState, this.props, this.state.editingCell);
     }
 
     private onMouseMove = (event: MouseEvent) => {
@@ -281,24 +258,14 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return;
         }
 
-        if (mouseDragOnScrollbar(coord, this.gridState)) {
-            return;
-        } else if (mouseDragOnGrid(event, this.rootRef, this.props, this.gridState, this.state.editingCell)) {
-            return;
-        } else {
-            mouseHoverOnScrollbar(coord, this.gridState);
-        }
+        handleMouseMove(event, coord, this.rootRef, this.gridState, this.props, this.state.editingCell);
     }
 
     private onMouseUp = (event: MouseEvent) => {
         batch(() => {
             const coord = GridGeometry.calculateComponentPixel(event, this.rootRef.current);
-            if (mouseUpOnScrollbar()) {
-                mouseHoverOnScrollbar(coord, this.gridState);
-                return;
-            }
 
-            mouseUpOnGrid(this.props, this.gridState, this.state.editingCell);
+            handleMouseUp(coord, this.gridState, this.props, this.state.editingCell);
         });
     }
 
