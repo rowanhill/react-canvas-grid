@@ -2,6 +2,7 @@ import { RefObject } from 'react';
 import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
+import { CellsSelection } from '../selectionState/cellsSelection';
 import { NoSelection } from '../selectionState/noSelection';
 import { Coord } from '../types';
 import { getMouseCellCoordAndRegion } from './mouseCellAndRegionCalc';
@@ -87,7 +88,7 @@ export const mouseUpOnGrid = <T>(
     props: ReactCanvasGridProps<T>,
     gridState: GridState<T>,
     editingCell: EditingCell<T> | null,
-) => {
+): void => {
     clearScrollByDragTimer();
 
     if (editingCell !== null) {
@@ -96,7 +97,7 @@ export const mouseUpOnGrid = <T>(
     }
     const selectionState = gridState.selectionState();
     if (!selectionState.isSelectionInProgress) {
-        return false;
+        return;
     }
 
     const newSelState = selectionState.mouseUp();
@@ -105,5 +106,14 @@ export const mouseUpOnGrid = <T>(
             props.onSelectionChangeEnd(newSelState.getSelectionRange(gridState.cellBounds()));
         }
         gridState.selectionState(newSelState);
+    }
+
+    if (selectionState instanceof CellsSelection && selectionState.isAutofillDragging() &&
+        newSelState instanceof CellsSelection && !newSelState.isAutofillDragging()
+    ) {
+        const rangeToFill = selectionState.getAutofillRange();
+        if (rangeToFill && props.onAutofill) {
+            props.onAutofill(selectionState.getSelectionRange(), rangeToFill);
+        }
     }
 };

@@ -11,6 +11,7 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     private readonly selectionStartCell: Coord;
     private readonly selectionCursorCell: Coord;
     private readonly focusCell: Coord;
+    private readonly autofillDragCell: Coord | null;
 
     constructor(
         editCursorCell: Coord,
@@ -18,12 +19,14 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
         selectionCursorCell: Coord,
         isSelectionInProgress: boolean,
         focusCell: Coord,
+        autofillDragCell: Coord | null = null,
     ) {
         super(isSelectionInProgress);
         this.editCursorCell = editCursorCell;
         this.selectionStartCell = selectionStartCell;
         this.selectionCursorCell = selectionCursorCell;
         this.focusCell = focusCell;
+        this.autofillDragCell = autofillDragCell;
     }
 
     public arrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
@@ -76,23 +79,48 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     }
 
     public mouseMove = (cell: Coord): CellsSelection => {
-        if (this.isSelectionInProgress && !equal(cell, this.selectionCursorCell)) {
-            return new CellsSelection(
-                this.editCursorCell,
-                this.selectionStartCell,
-                cell,
-                true,
-                cell,
-            );
-        } else {
-            return this;
+        if (this.autofillDragCell !== null) {
+            if (!equal(cell, this.autofillDragCell)) {
+                return new CellsSelection(
+                    this.editCursorCell,
+                    this.selectionStartCell,
+                    this.selectionCursorCell,
+                    true,
+                    this.focusCell,
+                    cell,
+                );
+            }
+        } else if (this.isSelectionInProgress) {
+            if (!equal(cell, this.selectionCursorCell)) {
+                return new CellsSelection(
+                    this.editCursorCell,
+                    this.selectionStartCell,
+                    cell,
+                    true,
+                    cell,
+                );
+            }
         }
+        return this;
     }
 
     public mouseUp = (): CellsSelection => {
-        if (!this.isSelectionInProgress) {
-            return this;
-        } else {
+        if (this.autofillDragCell !== null) {
+            // TODO: Allow selection ranges where the edit cursor is not at a corner
+            const fillRange = this.getAutofillRange();
+            if (fillRange) {
+                return new CellsSelection(
+                    this.editCursorCell,
+                    this.selectionStartCell,
+                    this.autofillDragCell,
+                    false,
+                    this.autofillDragCell,
+                    null,
+                );
+            } else {
+                return this;
+            }
+        } else if (this.isSelectionInProgress) {
             return new CellsSelection(
                 this.editCursorCell,
                 this.selectionStartCell,
@@ -100,7 +128,20 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
                 false,
                 this.selectionCursorCell,
             );
+        } else {
+            return this;
         }
+    }
+
+    public mouseDownOnAutofillHandle = (): CellsSelection => {
+        return new CellsSelection(
+            this.editCursorCell,
+            this.selectionStartCell,
+            this.selectionCursorCell,
+            true,
+            this.focusCell,
+            this.selectionCursorCell,
+        );
     }
 
     public getSelectionRange = (): SelectRange => {
@@ -133,6 +174,68 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     }
 
     public getCursorCell = () => this.editCursorCell;
+
+    public isAutofillDragging = () => this.autofillDragCell !== null;
+
+    public getAutofillRange = (): SelectRange | null => {
+        if (this.autofillDragCell === null) {
+            return null;
+        }
+
+        const selRange = this.getSelectionRange();
+
+        if (this.autofillDragCell.y > selRange.bottomRight.y) {
+            // Below the selection
+            return {
+                topLeft: {
+                    x: selRange.topLeft.x,
+                    y: selRange.bottomRight.y + 1,
+                },
+                bottomRight: {
+                    x: selRange.bottomRight.x,
+                    y: this.autofillDragCell.y,
+                },
+            };
+        } else if (this.autofillDragCell.y < selRange.topLeft.y) {
+            // Above the selection
+            return {
+                topLeft: {
+                    x: selRange.topLeft.x,
+                    y: this.autofillDragCell.y,
+                },
+                bottomRight: {
+                    x: selRange.bottomRight.x,
+                    y: selRange.topLeft.y - 1,
+                },
+            };
+        } else if (this.autofillDragCell.x > selRange.bottomRight.x) {
+            // Right of the selection
+            return {
+                topLeft: {
+                    x: selRange.bottomRight.x + 1,
+                    y: selRange.topLeft.y,
+                },
+                bottomRight: {
+                    x: this.autofillDragCell.x,
+                    y: selRange.bottomRight.y,
+                },
+            };
+        } else if (this.autofillDragCell.x < selRange.topLeft.x) {
+            // Left of the selection
+            return {
+                topLeft: {
+                    x: this.autofillDragCell.x,
+                    y: selRange.topLeft.y,
+                },
+                bottomRight: {
+                    x: selRange.topLeft.x - 1,
+                    y: selRange.bottomRight.y,
+                },
+            };
+        } else {
+            return null;
+        }
+    }
 }
 
 const truncateCoord = (coord: Coord, cellBounds: CellCoordBounds): Coord => {

@@ -1,6 +1,6 @@
 import { consumer, ReactiveConsumer, transformer } from 'instigator';
 import * as React from 'react';
-import { GridState } from './gridState';
+import { GridState, shallowEqualsExceptFunctions } from './gridState';
 import {
     HighlightCanvasRenderer,
     HighlightCanvasRendererBasics,
@@ -54,6 +54,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             gridState.horizontalGutterBounds,
             gridState.verticalGutterBounds,
             gridState.cellBounds,
+            gridState.shouldAllowAutofill,
         ],
         (
             rowHeight,
@@ -62,6 +63,7 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             horizontalGutterBounds,
             verticalGutterBounds,
             cellBounds,
+            shouldAllowAutofill,
         ): HighlightCanvasRendererBasics => ({
             rowHeight,
             columnBoundaries,
@@ -69,7 +71,10 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
             horizontalGutterBounds,
             verticalGutterBounds,
             cellBounds,
-        }));
+            shouldAllowAutofill,
+        }),
+        shallowEqualsExceptFunctions,
+        );
 
         const scrollProps = transformer([
             gridState.horizontalScrollbarPos,

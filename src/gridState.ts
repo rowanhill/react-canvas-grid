@@ -1,11 +1,22 @@
 import { activeSource, ActiveSource, ReactiveFn, transformer } from 'instigator';
+import shallowEquals from 'shallow-equals';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
 import * as ScrollbarGeometry from './scrollbarGeometry';
 import { ScrollbarExtent, ScrollbarPosition } from './scrollbarGeometry';
 import { NoSelection } from './selectionState/noSelection';
 import { AllSelectionStates } from './selectionState/selectionStateFactory';
-import { CellCoordBounds } from './selectionState/selectionTypes';
+import { CellCoordBounds, SelectRange } from './selectionState/selectionTypes';
 import { ColumnDef, Coord, DataRow, Size } from './types';
+
+export const refEquals = <T>(a: T, b: T) => a === b;
+
+export const shallowEqualsExceptFunctions = (a: any, b: any): boolean => {
+    if (typeof a === 'function' && typeof b === 'function') {
+        return a === b;
+    } else {
+        return shallowEquals(a, b);
+    }
+};
 
 export class GridState<T> {
     // ReactCanvasGrid props
@@ -15,6 +26,7 @@ export class GridState<T> {
     public borderWidth: ActiveSource<number>;
     public frozenRows: ActiveSource<number>;
     public frozenCols: ActiveSource<number>;
+    public shouldAllowAutofill: ActiveSource<(selectRange: SelectRange) => boolean>;
 
     // Other inputs
     public dpr: ActiveSource<number>;
@@ -51,6 +63,7 @@ export class GridState<T> {
         borderWidth: number,
         frozenRows: number,
         frozenCols: number,
+        shouldAllowAutofill: (selectRange: SelectRange) => boolean,
     ) {
         this.columns = activeSource(columns);
         this.data = activeSource(data);
@@ -58,6 +71,7 @@ export class GridState<T> {
         this.borderWidth = activeSource(borderWidth);
         this.frozenRows = activeSource(frozenRows);
         this.frozenCols = activeSource(frozenCols);
+        this.shouldAllowAutofill = activeSource(shouldAllowAutofill, refEquals);
 
         this.dpr = activeSource(window.devicePixelRatio);
         this.rootSize = activeSource<Size|null>(null);

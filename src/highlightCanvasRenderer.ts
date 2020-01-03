@@ -1,7 +1,8 @@
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
-import { ColumnBoundary } from './gridGeometry';
+import { ColumnBoundary, GridGeometry } from './gridGeometry';
 import * as ScrollGeometry from './scrollbarGeometry';
 import { ScrollbarPosition } from './scrollbarGeometry';
+import { CellsSelection } from './selectionState/cellsSelection';
 import { NoSelection } from './selectionState/noSelection';
 import { AllSelectionStates } from './selectionState/selectionStateFactory';
 import { CellCoordBounds, SelectRange } from './selectionState/selectionTypes';
@@ -14,6 +15,7 @@ export interface HighlightCanvasRendererBasics {
     horizontalGutterBounds: ClientRect|null;
     verticalGutterBounds: ClientRect|null;
     cellBounds: CellCoordBounds;
+    shouldAllowAutofill: (selectRange: SelectRange) => boolean;
 }
 
 export interface HighlightCanvasRendererPosition {
@@ -107,6 +109,33 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
             context.strokeRect(tl.left, tl.top, br.right - tl.left, br.bottom - tl.top);
         }
 
+        if (this.selectionProps.selectionState instanceof CellsSelection) {
+            if (selectionRange && this.basicProps.shouldAllowAutofill(selectionRange)) {
+                // Draw autofill handle
+                context.fillStyle = 'rgba(33, 117, 228, 1)';
+                const rect = this.gridCellCoordToGridPixelCoord(selectionRange.bottomRight);
+                context.fillRect(rect.right - 3, rect.bottom - 3, 6, 6);
+                context.strokeRect(rect.right - 3, rect.bottom - 3, 6, 6);
+            }
+
+            const autofillRange = this.selectionProps.selectionState.getAutofillRange();
+            if (autofillRange) {
+                const topLeftRect = this.gridCellCoordToGridPixelCoord(autofillRange.topLeft);
+                const bottomRightRect = this.gridCellCoordToGridPixelCoord(autofillRange.bottomRight);
+
+                // Draw the currently dragged autofill range
+                context.strokeStyle = 'rgba(33, 117, 228, 1)';
+                context.setLineDash([5, 7]);
+                context.strokeRect(
+                    topLeftRect.left,
+                    topLeftRect.top,
+                    bottomRightRect.right - topLeftRect.left,
+                    bottomRightRect.bottom - topLeftRect.top,
+                );
+                context.setLineDash([]);
+            }
+        }
+
         // Translate back, to bring our drawn area into the bounds of the canvas element
         context.translate(this.posProps.gridOffset.x, this.posProps.gridOffset.y);
 
@@ -177,14 +206,13 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     }
 
     private gridCellCoordToGridPixelCoord = ({x, y}: {x: number; y: number}): ClientRect => {
-        return {
-            top: y * (this.basicProps.rowHeight + this.basicProps.borderWidth),
-            bottom: (y + 1) * (this.basicProps.rowHeight + + this.basicProps.borderWidth) - this.basicProps.borderWidth,
-            height: this.basicProps.rowHeight,
-            left: this.basicProps.columnBoundaries[x].left,
-            right: this.basicProps.columnBoundaries[x].right,
-            width: this.basicProps.columnBoundaries[x].right - this.basicProps.columnBoundaries[x].left,
-        };
+        return GridGeometry.calculateCellBounds(
+            x,
+            y,
+            this.basicProps.rowHeight,
+            this.basicProps.borderWidth,
+            this.basicProps.columnBoundaries,
+        );
     }
 }
 

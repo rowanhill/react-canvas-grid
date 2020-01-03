@@ -4,3 +4,4 @@ export {
     CellDef, CustomDrawCallbackMetadata, DataRow, ColumnDef, Coord, Size,
     getCellText, cellHasTextFunction, cellIsEditable,
 } from './types';
+export { AutofillContext, repeatSelectionIntoFill } from './autofill';

@@ -31,6 +31,8 @@ interface RequiredProps<T> {
     onSelectionChangeEnd?: (selectRange: SelectRange | null) => void;
     onSelectionCleared?: () => void;
 
+    onAutofill?: (selectRange: SelectRange, fillRange: SelectRange) => void;
+
     onCellDataChanged?: (event: CellDataChangeEvent<T>) => void;
 }
 interface DefaultedProps {
@@ -40,6 +42,8 @@ interface DefaultedProps {
     frozenRows: number;
     frozenCols: number;
     focusedColIndex: number | null;
+
+    shouldAllowAutofill: (selectRange: SelectRange) => boolean;
 }
 
 export type DefaultedReactCanvasGridProps<T> = RequiredProps<T> & Partial<DefaultedProps>;
@@ -70,6 +74,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         frozenRows: 0,
         frozenCols: 0,
         focusedColIndex: null,
+        shouldAllowAutofill: () => false,
     };
 
     private readonly rootRef: React.RefObject<HTMLDivElement> = React.createRef();
@@ -85,6 +90,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             props.borderWidth,
             props.frozenRows,
             props.frozenCols,
+            props.shouldAllowAutofill,
         );
         this.state = {
             rootSize: null,
@@ -127,6 +133,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.gridState.frozenRows(this.props.frozenRows);
             this.gridState.frozenCols(this.props.frozenCols);
             this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
+            this.gridState.shouldAllowAutofill(this.props.shouldAllowAutofill);
 
             if (shouldSelectionClear(prevProps, this.props)) {
                 this.gridState.selectionState(new NoSelection(false));
@@ -286,7 +293,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.props.rowHeight,
             this.props.borderWidth,
             this.gridState.columnBoundaries(),
-            this.props.columns,
         );
         const col = this.props.columns[cellCoords.x];
         const cell = this.props.data[cellCoords.y][col.fieldName];

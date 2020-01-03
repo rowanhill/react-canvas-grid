@@ -306,6 +306,7 @@ describe('mouseUpOnGrid', () => {
         const defaults: MouseUpParams<T> = {
             props: {
                 onSelectionChangeEnd: jest.fn() as any,
+                onAutofill: jest.fn() as any,
             } as ReactCanvasGridProps<T>,
             gridState: {
                 cellBounds: jest.fn() as any,
@@ -342,6 +343,7 @@ describe('mouseUpOnGrid', () => {
         expect(params.gridState.selectionState as unknown as jest.Mock)
             .not.toHaveBeenCalledWith(expect.objectContaining({}));
         expect(params.props.onSelectionChangeEnd).not.toHaveBeenCalled();
+        expect(params.props.onAutofill).not.toHaveBeenCalled();
         expectNoSelectionsToHaveBeenMade(initialState);
     });
 
@@ -353,6 +355,7 @@ describe('mouseUpOnGrid', () => {
         expect(params.gridState.selectionState as unknown as jest.Mock)
             .not.toHaveBeenCalledWith(expect.objectContaining({}));
         expect(params.props.onSelectionChangeEnd).not.toHaveBeenCalled();
+        expect(params.props.onAutofill).not.toHaveBeenCalled();
         expectNoSelectionsToHaveBeenMade(initialState);
     });
 
@@ -365,6 +368,7 @@ describe('mouseUpOnGrid', () => {
         expect(params.gridState.selectionState as unknown as jest.Mock)
             .not.toHaveBeenCalledWith(expect.objectContaining({}));
         expect(params.props.onSelectionChangeEnd).not.toHaveBeenCalled();
+        expect(params.props.onAutofill).not.toHaveBeenCalled();
     });
 
     it('ends the selection', () => {
@@ -376,5 +380,18 @@ describe('mouseUpOnGrid', () => {
         expect(params.gridState.selectionState as unknown as jest.Mock).toHaveBeenCalledWith(newState);
         expect(params.props.onSelectionChangeEnd).toHaveBeenCalledWith(newState.getSelectionRange());
         expect(initialState.mouseUp).toHaveBeenCalled();
+    });
+
+    it('calls the onAutofill callback on finishing an autofill drag', () => {
+        const newState = createSpiedOnCellSelectionState();
+        jest.spyOn(initialState, 'mouseUp').mockReturnValue(newState);
+        jest.spyOn(initialState as CellsSelection, 'isAutofillDragging').mockReturnValue(true);
+        jest.spyOn(newState, 'isAutofillDragging').mockReturnValue(false);
+        jest.spyOn(initialState as CellsSelection, 'getSelectionRange').mockReturnValue('dummy selection range' as any);
+        jest.spyOn(initialState as CellsSelection, 'getAutofillRange').mockReturnValue('dummy autofill range' as any);
+
+        const { params } = invokeMouseUp({ editingCell: null });
+
+        expect(params.props.onAutofill).toHaveBeenCalledWith('dummy selection range', 'dummy autofill range');
     });
 });

@@ -19,3 +19,20 @@ export const InlineGroup = (props: { children?: React.ReactNode }) => {
 
 export const NumberInput = (props: Partial<React.InputHTMLAttributes<HTMLInputElement>>) =>
     <input type="number" {...props} />;
+
+interface SelectInputProps<T> {
+    values: T[];
+    selectedValue: T;
+    onSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
+export const RadioInputs = <T extends {}>(
+    { values, selectedValue, onSelect}: SelectInputProps<T>,
+) => {
+    return <React.Fragment>
+        {values.map((val) =>
+            <label>
+                <input type="radio" value={val.toString()} checked={val === selectedValue} onChange={onSelect} />
+                {val}
+            </label>)}
+    </React.Fragment>;
+};

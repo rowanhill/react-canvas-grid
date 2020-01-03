@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AutofillableGrid } from './Autofill';
 import { CustomBackgroundGrid } from './CustomBackground';
 import { CustomTextGrid } from './CustomText';
 import { DynamicDataGrid } from './DynamicData';
@@ -91,6 +92,12 @@ const exampleMeta: ExampleMeta[] = [
         name: 'Edit Events',
         description: 'Respond to users changing the grid\'s data',
         component: EditEventsGrid,
+    },
+    {
+        pathFragment: '/autofill',
+        name: 'Autofill',
+        description: 'Autofill',
+        component: AutofillableGrid,
     },
 ];
 

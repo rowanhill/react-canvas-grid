@@ -2,6 +2,7 @@ import { RefObject } from 'react';
 import { GridState } from '../gridState';
 import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
+import { mouseDownOnAutofillHandle } from './autofillMouseEvents';
 import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './gridMouseEvents';
 import {
     mouseDownOnScrollbar,
@@ -41,6 +42,8 @@ export function handleMouseDown<T>(
     editingCell: EditingCell<T> | null,
 ) {
     if (mouseDownOnScrollbar(coord, gridState)) {
+        return;
+    } else if (mouseDownOnAutofillHandle(event, gridState, rootRef)) {
         return;
     } else {
         mouseDownOnGrid(event, coord, rootRef, props, gridState, editingCell);

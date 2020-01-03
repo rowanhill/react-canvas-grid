@@ -141,23 +141,38 @@ export class GridGeometry {
         );
     }
 
+    public static calculateGridPixelCoords = (
+        event: {clientX: number, clientY: number},
+        gridOffset: Coord,
+        root: HTMLDivElement|null,
+    ): Coord => {
+        if (!root) {
+            throw new Error('Cannot convert mouse event coords to grid coords because rootRef is not set');
+        }
+        return GridGeometry.windowPixelToGridPixel(
+            {x: event.clientX, y: event.clientY},
+            gridOffset,
+            root,
+        );
+    }
+
     public static calculateCellBounds = (
         colIndex: number,
         rowIndex: number,
         rowHeight: number,
         borderWidth: number,
         columnBoundaries: ColumnBoundary[],
-        columns: ColumnDef[],
     ): ClientRect => {
         const cellLeft = columnBoundaries[colIndex].left;
-        const col = columns[colIndex];
+        const cellRight = columnBoundaries[colIndex].right;
+        const cellWidth = cellRight - cellLeft;
 
         return {
             left: cellLeft,
             top: rowIndex * (rowHeight + borderWidth),
-            right: cellLeft + col.width,
+            right: cellRight,
             bottom: rowIndex * (rowHeight + borderWidth) + rowHeight,
-            width: col.width,
+            width: cellWidth,
             height: rowHeight,
         };
     }
