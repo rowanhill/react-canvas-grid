@@ -17,5 +17,4 @@ There was also originally a goal of making use of browser-native scrolling, alth
 
 ## TODO :memo:
 * Middle-click "auto-scrolling"
-* Drag to copy
 * Column dragging (callback to with suggested reordering of ColumnDefs, up to parent to actually re-order & re-render)
