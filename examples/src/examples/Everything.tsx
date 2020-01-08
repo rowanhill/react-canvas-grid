@@ -1,6 +1,14 @@
 import React, { Component } from 'react';
 import {
-  CellDataChangeEvent, CellDef, ColumnDef, DataRow, getCellText, ReactCanvasGrid, SelectRange,
+  AutofillContext,
+  CellDataChangeEvent,
+  CellDef,
+  ColumnDef,
+  DataRow,
+  getCellText,
+  ReactCanvasGrid,
+  repeatSelectionIntoFill,
+  SelectRange,
 } from 'react-canvas-grid';
 import './Everything.css';
 
@@ -224,6 +232,8 @@ export class Everything extends Component<{}, EverythingState> {
                 onSelectionCleared={this.selectionCleared}
                 onCellDataChanged={this.onCellDataChanged}
                 focusedColIndex={this.state.focusedCol}
+                shouldAllowAutofill={() => true}
+                onAutofill={this.onAutofill}
               />
             </div>
             <div style={{height: '80px', backgroundColor: 'red'}}>
@@ -318,4 +328,29 @@ export class Everything extends Component<{}, EverythingState> {
       lastKeyPress: event.key,
     });
   }
+
+  private onAutofill = (selectRange: SelectRange, fillRange: SelectRange) => {
+    const data = repeatSelectionIntoFill(
+        selectRange,
+        fillRange,
+        this.state.data,
+        this.state.colDefs,
+        autofillCell,
+    );
+    this.setState({ data });
+  }
+}
+
+function autofillCell(context: AutofillContext<AllCellDataTypes>): CellDef<AllCellDataTypes> {
+  if (!context.destCellDef.data || !context.srcCellDef.data) {
+    throw new Error(`Can't autofill to/from null data`);
+  }
+  return {
+      ...context.destCellDef,
+      data: {
+        ...context.destCellDef.data,
+        shouldReverseText: context.srcCellDef.data.shouldReverseText,
+        text: context.srcCellDef.data.text,
+      },
+  };
 }
