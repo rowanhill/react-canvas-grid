@@ -1,7 +1,7 @@
 import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { Coord } from '../types';
-import { equal } from '../utils';
+import { equalCoord } from '../utils';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
@@ -80,7 +80,7 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
 
     public mouseMove = (cell: Coord): CellsSelection => {
         if (this.autofillDragCell !== null) {
-            if (!equal(cell, this.autofillDragCell)) {
+            if (!equalCoord(cell, this.autofillDragCell)) {
                 return new CellsSelection(
                     this.editCursorCell,
                     this.selectionStartCell,
@@ -91,7 +91,7 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
                 );
             }
         } else if (this.isSelectionInProgress) {
-            if (!equal(cell, this.selectionCursorCell)) {
+            if (!equalCoord(cell, this.selectionCursorCell)) {
                 return new CellsSelection(
                     this.editCursorCell,
                     this.selectionStartCell,

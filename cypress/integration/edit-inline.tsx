@@ -24,6 +24,17 @@ describe('ReactCanvasGrid with inline editor & data management callbacks', () =>
         cy.get('@Root')
             .matchImageSnapshot('editing-updates-grid');
     });
+
+    it('does not update the selection when using the arrow keys whilst editing text', () => {
+        kludgeCaretInvisible();
+        cy.get('@Canvas')
+            .click(5, 5, { force: true })
+            .trigger('dblclick', 5, 5, { force: true })
+            .get('input')
+            .type('{downarrow}{rightarrow}');
+        cy.get('@Root')
+            .matchImageSnapshot('inline-editor-arrows-dont-change-selection');
+    });
 });
 
 /**

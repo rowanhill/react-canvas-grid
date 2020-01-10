@@ -1,5 +1,6 @@
 import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
+import { CellsSelection } from '../selectionState/cellsSelection';
 import { NoSelection } from '../selectionState/noSelection';
 import { AllSelectionStates } from '../selectionState/selectionStateFactory';
 import { keyDownOnGrid } from './keyboardEvents';
@@ -9,7 +10,7 @@ beforeEach(() => {
 });
 
 function createEvent(key: string, shiftKey: boolean = false): React.KeyboardEvent<any> {
-    return { key, shiftKey } as React.KeyboardEvent<any>;
+    return { key, shiftKey, preventDefault: jest.fn() as any } as React.KeyboardEvent<any>;
 }
 
 function expectNoUpdateToSelectionState(gridState: GridState<any>) {
@@ -26,10 +27,15 @@ function expectNoCallToAnyOnSelectionCallback(props: ReactCanvasGridProps<any>) 
     expect(props.onSelectionChangeEnd).not.toHaveBeenCalled();
 }
 
-function expectNothingToHaveHappened(gridState: GridState<any>, props: ReactCanvasGridProps<any>) {
+function expectNothingToHaveHappened(
+    gridState: GridState<any>,
+    props: ReactCanvasGridProps<any>,
+    event: React.KeyboardEvent<any>,
+) {
     expectNoUpdateToSelectionState(gridState);
     expectNoUpdateToGridOffset(gridState);
     expectNoCallToAnyOnSelectionCallback(props);
+    expect(event.preventDefault).not.toHaveBeenCalled();
 }
 
 describe('keyDownOnGrid', () => {
@@ -64,35 +70,58 @@ describe('keyDownOnGrid', () => {
 
         keyDownOnGrid(event, props, gridState);
 
-        expectNothingToHaveHappened(gridState, props);
+        expectNothingToHaveHappened(gridState, props, event);
     });
 
-    it('does nothing if the key press results in the same seleciton state', () => {
+    it('does nothing if the key press results in the same selection state', () => {
         const event = createEvent('ArrowUp');
 
         keyDownOnGrid(event, props, gridState);
 
-        expectNothingToHaveHappened(gridState, props);
+        expectNothingToHaveHappened(gridState, props, event);
     });
 
-    it('does nothing if the key press results in the a seleciton state with a null selected range', () => {
+    it('does nothing if the key press results in an equivalent selection state', () => {
+        const event = createEvent('ArrowUp');
+        initialSelection = new CellsSelection(
+            { x: 0, y: 0 },
+            { x: 0, y: 0 },
+            { x: 0, y: 0 },
+            false,
+            { x: 0, y: 0 },
+        );
+        newSelection = new CellsSelection(
+            { x: 0, y: 0 },
+            { x: 0, y: 0 },
+            { x: 0, y: 0 },
+            false,
+            { x: 0, y: 0 },
+        );
+        jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(newSelection);
+
+        keyDownOnGrid(event, props, gridState);
+
+        expectNothingToHaveHappened(gridState, props, event);
+    });
+
+    it('does nothing if the key press results in the a selection state with a null selected range', () => {
         const event = createEvent('ArrowUp');
         jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(newSelection);
         jest.spyOn(newSelection, 'getSelectionRange').mockReturnValue(null);
 
         keyDownOnGrid(event, props, gridState);
 
-        expectNothingToHaveHappened(gridState, props);
+        expectNothingToHaveHappened(gridState, props, event);
     });
 
-    it('does nothing if the key press results in the a seleciton state with a null focus grid offset', () => {
+    it('does nothing if the key press results in the a selection state with a null focus grid offset', () => {
         const event = createEvent('ArrowUp');
         jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(newSelection);
         jest.spyOn(newSelection, 'getFocusGridOffset').mockReturnValue(null);
 
         keyDownOnGrid(event, props, gridState);
 
-        expectNothingToHaveHappened(gridState, props);
+        expectNothingToHaveHappened(gridState, props, event);
     });
 
     it.each`
@@ -115,6 +144,7 @@ describe('keyDownOnGrid', () => {
         expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
         expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
         expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
+        expect(event.preventDefault).toHaveBeenCalled();
     });
 
     it.each`
@@ -137,5 +167,6 @@ describe('keyDownOnGrid', () => {
         expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
         expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
         expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
+        expect(event.preventDefault).toHaveBeenCalled();
     });
 });

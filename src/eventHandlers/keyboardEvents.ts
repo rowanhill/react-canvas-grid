@@ -3,6 +3,7 @@ import { GridState } from '../gridState';
 import { ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { AllSelectionStates } from '../selectionState/selectionStateFactory';
 import { CellCoordBounds } from '../selectionState/selectionTypes';
+import { equalSelectRange } from '../utils';
 
 interface ShiftNoShiftActions {
     shift: (cellBounds: CellCoordBounds) => AllSelectionStates;
@@ -40,7 +41,9 @@ export const keyDownOnGrid = <T>(
     const selectionRange = newSelState.getSelectionRange(cellBounds);
     const newOffset = newSelState.getFocusGridOffset(gridState);
 
-    if (newSelState !== selectionState && selectionRange !== null && newOffset !== null) {
+    const oldSelectionRange = selectionState.getSelectionRange(cellBounds);
+
+    if (selectionRange !== null && newOffset !== null && !equalSelectRange(oldSelectionRange, selectionRange)) {
         // Start / update prop callback
         const onStartOrUpdate = event.shiftKey ? props.onSelectionChangeUpdate : props.onSelectionChangeStart;
         if (onStartOrUpdate) {
@@ -57,5 +60,8 @@ export const keyDownOnGrid = <T>(
 
         // Update selection state
         gridState.selectionState(newSelState);
+
+        // Prevent the arrow key from scrolling the page (as we've scrolled in the grid instead)
+        event.preventDefault();
     }
 };

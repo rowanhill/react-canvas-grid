@@ -283,7 +283,9 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
     }
 
     private onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        keyDownOnGrid(event, this.props, this.gridState);
+        if (!this.state.editingCell) {
+            keyDownOnGrid(event, this.props, this.gridState);
+        }
     }
 
     private startEditingCell = (cellCoords: Coord) => {
