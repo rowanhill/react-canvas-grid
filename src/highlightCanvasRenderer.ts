@@ -53,24 +53,40 @@ const defaultHoverProps: HighlightCanvasRendererHover = {
 };
 
 const colours = {
+    grey: {
+        veryLight: 'hsla(0, 0%, 93%, 1)',
+        light: 'hsla(0, 0%, 83%, 1)', // == lightgrey
+    },
+    black: {
+        veryTransparent: 'hsla(0, 0%, 0%, 0.4)',
+        transparent: 'hsla(0, 0%, 0%, 0.55)',
+    },
+    blue: {
+        mediumTransparent: 'hsla(214, 78%, 51%, 0.25)',
+        medium: 'hsla(214, 78%, 51%, 1)',
+        light: 'hsla(214, 93%, 64%, 1)',
+    },
+};
+
+const styles = {
     scrollbar: {
-        defaultFill: 'hsla(0, 0%, 0%, 0.4)',
-        hoverFill: 'hsla(0, 0%, 0%, 0.55)',
+        defaultFill: colours.black.veryTransparent,
+        hoverFill: colours.black.transparent,
     },
     scrollGutters: {
-        fill: 'hsla(0, 0%, 93%, 1)',
-        stroke: 'hsla(0, 0%, 83%, 1)',
+        fill: colours.grey.veryLight,
+        stroke: colours.grey.light,
     },
     selectedCells: {
-        fill: 'hsla(214, 78%, 51%, 0.25)',
-        stroke: 'hsla(214, 78%, 51%, 1)',
+        fill: colours.blue.mediumTransparent,
+        stroke: colours.blue.medium,
     },
     autofillCells: {
-        stroke: 'hsla(214, 78%, 51%, 1)',
+        stroke: colours.blue.medium,
     },
     autofillHandle: {
-        defaultFill: 'hsla(214, 78%, 51%, 1)',
-        hoverFill: 'hsla(214, 93%, 64%, 1)',
+        defaultFill: colours.blue.medium,
+        hoverFill: colours.blue.light,
     },
 };
 
@@ -118,8 +134,8 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         context.translate(-this.posProps.gridOffset.x, -this.posProps.gridOffset.y);
 
         context.lineCap = 'butt';
-        context.fillStyle = colours.selectedCells.fill;
-        context.strokeStyle = colours.selectedCells.stroke;
+        context.fillStyle = styles.selectedCells.fill;
+        context.strokeStyle = styles.selectedCells.stroke;
 
         // Draw edit cursor cell outline
         const editCursorCell = this.selectionProps.selectionState.getCursorCell(this.basicProps.cellBounds);
@@ -143,8 +159,8 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
             if (selectionRange && this.basicProps.shouldAllowAutofill(selectionRange)) {
                 // Draw autofill handle
                 context.fillStyle = this.hoverProps.autofillHandleIsHovered ?
-                    colours.autofillHandle.hoverFill :
-                    colours.autofillHandle.defaultFill;
+                    styles.autofillHandle.hoverFill :
+                    styles.autofillHandle.defaultFill;
                 const rect = this.gridCellCoordToGridPixelCoord(selectionRange.bottomRight);
                 context.fillRect(rect.right - 3, rect.bottom - 3, 6, 6);
                 context.strokeRect(rect.right - 3, rect.bottom - 3, 6, 6);
@@ -156,7 +172,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
                 const bottomRightRect = this.gridCellCoordToGridPixelCoord(autofillRange.bottomRight);
 
                 // Draw the currently dragged autofill range
-                context.strokeStyle = colours.autofillCells.stroke;
+                context.strokeStyle = styles.autofillCells.stroke;
                 context.setLineDash([5, 7]);
                 context.strokeRect(
                     topLeftRect.left,
@@ -175,7 +191,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         const vBounds = this.basicProps.verticalGutterBounds;
         const hBounds = this.basicProps.horizontalGutterBounds;
         if (vBounds || hBounds) {
-            this.context.fillStyle = colours.scrollGutters.fill;
+            this.context.fillStyle = styles.scrollGutters.fill;
             if (vBounds) {
                 this.context.fillRect(vBounds.left, vBounds.top, vBounds.width, vBounds.height);
             }
@@ -183,7 +199,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
                 this.context.fillRect(hBounds.left, hBounds.top, hBounds.width, hBounds.height);
             }
 
-            this.context.strokeStyle = colours.scrollGutters.stroke;
+            this.context.strokeStyle = styles.scrollGutters.stroke;
             this.context.lineWidth = 1;
             this.context.beginPath();
             if (vBounds) {
@@ -207,10 +223,10 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         // Draw horizontal scrollbar (if needed)
         if (this.scrollProps.horizontalScrollbarPos) {
             if (this.hoverProps.hoveredScrollbar === 'x') {
-                context.strokeStyle = colours.scrollbar.hoverFill;
+                context.strokeStyle = styles.scrollbar.hoverFill;
                 context.lineWidth = ScrollGeometry.barWidth + 3;
             } else {
-                context.strokeStyle = colours.scrollbar.defaultFill;
+                context.strokeStyle = styles.scrollbar.defaultFill;
                 context.lineWidth = ScrollGeometry.barWidth;
             }
             const scrollPos = this.scrollProps.horizontalScrollbarPos;
@@ -223,10 +239,10 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         // Draw vertical scrollbar (if needed)
         if (this.scrollProps.verticalScrollbarPos) {
             if (this.hoverProps.hoveredScrollbar === 'y') {
-                context.strokeStyle = colours.scrollbar.hoverFill;
+                context.strokeStyle = styles.scrollbar.hoverFill;
                 context.lineWidth = ScrollGeometry.barWidth + 3;
             } else {
-                context.strokeStyle = colours.scrollbar.defaultFill;
+                context.strokeStyle = styles.scrollbar.defaultFill;
                 context.lineWidth = ScrollGeometry.barWidth;
             }
             const scrollPos = this.scrollProps.verticalScrollbarPos;
