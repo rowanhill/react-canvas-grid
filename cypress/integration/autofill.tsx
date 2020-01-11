@@ -68,4 +68,18 @@ describe('ReactCanvasGrid autofill', () => {
             .trigger('mouseup', 230, 80, { force: true })
             .matchImageSnapshot('autofill-complete');
     });
+
+    it('highlights the autofill handle on hover and changes the cursor to crosshair', () => {
+        cy.get('@Canvas')
+            // Set up a selection
+            .trigger('mousedown', 60, 30, { buttons: 1, force: true })
+            .trigger('mousemove', 120, 75, { buttons: 1, force: true })
+            .trigger('mouseup', 120, 75, { force: true })
+            // Hover over the autofill handle
+            .trigger('mousemove', 150, 80, { buttons: 1, force: true })
+            .matchImageSnapshot('autofill-hover-highlight');
+
+        cy.get('@Root')
+            .should('have.css', 'cursor', 'crosshair');
+    });
 });

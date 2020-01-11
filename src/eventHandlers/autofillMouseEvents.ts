@@ -19,6 +19,48 @@ export const mouseDownOnAutofillHandle = <T>(
         return false;
     }
 
+    const isHandleHit = isOverAutofillHandle(selectionState, event, gridState, rootRef);
+
+    if (isHandleHit) {
+        // Start tracking autofill drag
+        const newSelState = selectionState.mouseDownOnAutofillHandle();
+        gridState.selectionState(newSelState);
+        return true;
+    } else {
+        return false;
+    }
+};
+
+export const mouseHoverOnAutofillHandle = <T>(
+    event: MouseEvent,
+    gridState: GridState<T>,
+    rootRef: RefObject<HTMLDivElement>,
+): boolean => {
+    const selectionState = gridState.selectionState();
+    if (selectionState instanceof CellsSelection) {
+        const selectionRange = selectionState.getSelectionRange();
+        const shouldAllowAutofill = gridState.shouldAllowAutofill();
+        if (shouldAllowAutofill(selectionRange)) {
+            const isHandleHit = isOverAutofillHandle(selectionState, event, gridState, rootRef);
+            if (isHandleHit) {
+                gridState.autofillHandleIsHovered(true);
+                return true;
+            }
+        }
+    }
+
+    gridState.autofillHandleIsHovered(false);
+    return false;
+};
+
+const isOverAutofillHandle = <T>(
+    selectionState: CellsSelection,
+    event: {clientX: number, clientY: number},
+    gridState: GridState<T>,
+    rootRef: RefObject<HTMLDivElement>,
+): boolean => {
+    const selectionRange = selectionState.getSelectionRange();
+
     const bottomRightCellBounds = GridGeometry.calculateCellBounds(
         selectionRange.bottomRight.x,
         selectionRange.bottomRight.y,
@@ -30,12 +72,5 @@ export const mouseDownOnAutofillHandle = <T>(
     const dx = gridPixelCoord.x - bottomRightCellBounds.right;
     const dy = gridPixelCoord.y - bottomRightCellBounds.bottom;
 
-    if (Math.abs(dx) <= 3 && Math.abs(dy) <= 3) {
-        // Start tracking autofill drag
-        const newSelState = selectionState.mouseDownOnAutofillHandle();
-        gridState.selectionState(newSelState);
-        return true;
-    } else {
-        return false;
-    }
+    return Math.abs(dx) <= 3 && Math.abs(dy) <= 3;
 };

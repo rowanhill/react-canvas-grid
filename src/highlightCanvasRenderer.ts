@@ -26,7 +26,11 @@ export interface HighlightCanvasRendererPosition {
 export interface HighlightCanvasRendererScrollbar {
     horizontalScrollbarPos: ScrollbarPosition | null;
     verticalScrollbarPos: ScrollbarPosition | null;
+}
+
+export interface HighlightCanvasRendererHover {
     hoveredScrollbar: 'x' | 'y' | null;
+    autofillHandleIsHovered: boolean;
 }
 
 export interface HighlightCanvasRendererSelection {
@@ -41,7 +45,11 @@ const defaultPosProps: HighlightCanvasRendererPosition = {
 const defaultScrollbarProps: HighlightCanvasRendererScrollbar = {
     horizontalScrollbarPos: null,
     verticalScrollbarPos: null,
+};
+
+const defaultHoverProps: HighlightCanvasRendererHover = {
     hoveredScrollbar: null,
+    autofillHandleIsHovered: false,
 };
 
 const defaultScrollbarStyle = 'rgba(0, 0, 0, 0.4)';
@@ -51,6 +59,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
     private basicProps: HighlightCanvasRendererBasics;
     private posProps: HighlightCanvasRendererPosition = defaultPosProps;
     private scrollProps: HighlightCanvasRendererScrollbar = defaultScrollbarProps;
+    private hoverProps: HighlightCanvasRendererHover = defaultHoverProps;
     private selectionProps: HighlightCanvasRendererSelection = {
         selectionState: new NoSelection(false),
     };
@@ -65,6 +74,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         basicProps: HighlightCanvasRendererBasics,
         posProps: HighlightCanvasRendererPosition,
         scrollProps: HighlightCanvasRendererScrollbar,
+        hoverProps: HighlightCanvasRendererHover,
         selectProps: HighlightCanvasRendererSelection,
     ) {
         if (this.canvas !== canvas) {
@@ -73,6 +83,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         this.basicProps = basicProps;
         this.posProps = posProps;
         this.scrollProps = scrollProps,
+        this.hoverProps = hoverProps;
         this.selectionProps = selectProps;
         this.drawScaled(this.draw);
     }
@@ -112,7 +123,10 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         if (this.selectionProps.selectionState instanceof CellsSelection) {
             if (selectionRange && this.basicProps.shouldAllowAutofill(selectionRange)) {
                 // Draw autofill handle
-                context.fillStyle = 'rgba(33, 117, 228, 1)';
+                context.fillStyle = this.hoverProps.autofillHandleIsHovered ?
+                    'hsla(214, 93%, 64%, 1)' :
+                    'hsla(214, 78%, 51%, 1)';
+                // context.fillStyle = 'rgba(33, 117, 228, 1)';
                 const rect = this.gridCellCoordToGridPixelCoord(selectionRange.bottomRight);
                 context.fillRect(rect.right - 3, rect.bottom - 3, 6, 6);
                 context.strokeRect(rect.right - 3, rect.bottom - 3, 6, 6);
@@ -174,7 +188,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
 
         // Draw horizontal scrollbar (if needed)
         if (this.scrollProps.horizontalScrollbarPos) {
-            if (this.scrollProps.hoveredScrollbar === 'x') {
+            if (this.hoverProps.hoveredScrollbar === 'x') {
                 context.strokeStyle = hoveredScrollbarStyle;
                 context.lineWidth = ScrollGeometry.barWidth + 3;
             } else {
@@ -190,7 +204,7 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
 
         // Draw vertical scrollbar (if needed)
         if (this.scrollProps.verticalScrollbarPos) {
-            if (this.scrollProps.hoveredScrollbar === 'y') {
+            if (this.hoverProps.hoveredScrollbar === 'y') {
                 context.strokeStyle = hoveredScrollbarStyle;
                 context.lineWidth = ScrollGeometry.barWidth + 3;
             } else {

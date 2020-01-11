@@ -34,6 +34,7 @@ export class GridState<T> {
     public gridOffsetRaw: ActiveSource<Coord>; // Based on CSS pixels
     public selectionState: ActiveSource<AllSelectionStates>;
     public hoveredScrollbar: ActiveSource<'x'|'y'|null>;
+    public autofillHandleIsHovered: ActiveSource<boolean>;
 
     // Grid geometry derived properties
     public gridOffset: ReactiveFn<Coord>; // Quantized to values that result in integer canvas pixel coords
@@ -55,6 +56,9 @@ export class GridState<T> {
     public verticalScrollbarPos: ReactiveFn<ScrollbarPosition|null>;
     public horizontalGutterBounds: ReactiveFn<ClientRect|null>;
     public verticalGutterBounds: ReactiveFn<ClientRect|null>;
+
+    // Other derived properties
+    public cursorType: ReactiveFn<'crosshair'|'default'>;
 
     constructor(
         columns: ColumnDef[],
@@ -80,6 +84,7 @@ export class GridState<T> {
             new NoSelection(false) as AllSelectionStates,
         );
         this.hoveredScrollbar = activeSource<'x'|'y'|null>(null);
+        this.autofillHandleIsHovered = activeSource(false as boolean);
 
         this.gridOffset = transformer([this.gridOffsetRaw, this.dpr], GridGeometry.quantiseGridOffset);
         this.columnBoundaries = transformer([this.columns, this.borderWidth], GridGeometry.calculateColumnBoundaries);
@@ -126,5 +131,7 @@ export class GridState<T> {
         this.verticalGutterBounds = transformer(
             [this.canvasSize, this.gridInnerSize],
             ScrollbarGeometry.getVerticalGutterBounds);
+
+        this.cursorType = transformer([this.autofillHandleIsHovered], (h) => h ? 'crosshair' : 'default');
     }
 }

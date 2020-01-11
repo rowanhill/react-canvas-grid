@@ -4,6 +4,7 @@ import { GridState, shallowEqualsExceptFunctions } from './gridState';
 import {
     HighlightCanvasRenderer,
     HighlightCanvasRendererBasics,
+    HighlightCanvasRendererHover,
     HighlightCanvasRendererPosition,
     HighlightCanvasRendererScrollbar,
     HighlightCanvasRendererSelection,
@@ -79,15 +80,23 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         const scrollProps = transformer([
             gridState.horizontalScrollbarPos,
             gridState.verticalScrollbarPos,
-            gridState.hoveredScrollbar,
         ], (
             horizontalScrollbarPos,
             verticalScrollbarPos,
-            hoveredScrollbar,
         ): HighlightCanvasRendererScrollbar => ({
             horizontalScrollbarPos,
             verticalScrollbarPos,
+        }));
+
+        const hoverProps = transformer([
+            gridState.hoveredScrollbar,
+            gridState.autofillHandleIsHovered,
+        ], (
             hoveredScrollbar,
+            autofillHandleIsHovered,
+        ): HighlightCanvasRendererHover => ({
+            hoveredScrollbar,
+            autofillHandleIsHovered,
         }));
 
         const posProps = transformer([
@@ -108,14 +117,20 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
 
         this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
         this.renderCallback = consumer(
-            [basicProps, posProps, scrollProps, selectionProps],
-            (newBasicProps, newPosProps, newScrollProps, newSelectionProps) => {
+            [basicProps, posProps, scrollProps, hoverProps, selectionProps],
+            (newBasicProps, newPosProps, newScrollProps, newHoverProps, newSelectionProps) => {
                 if (this.renderer) {
                     if (!this.canvasRef.current) {
                         throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
                     }
                     this.renderer.updateProps(
-                        this.canvasRef.current, newBasicProps, newPosProps, newScrollProps, newSelectionProps);
+                        this.canvasRef.current,
+                        newBasicProps,
+                        newPosProps,
+                        newScrollProps,
+                        newHoverProps,
+                        newSelectionProps,
+                    );
                 }
             });
     }

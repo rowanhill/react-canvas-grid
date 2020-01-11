@@ -64,6 +64,7 @@ interface ReactCanvasGridState<T> {
     rootSize: Size|null;
     gridOffset: Coord;
     editingCell: EditingCell<T> | null;
+    cursorType: 'crosshair' | 'default';
 }
 
 export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps<T>, ReactCanvasGridState<T>> {
@@ -96,6 +97,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             rootSize: null,
             gridOffset: this.gridState.gridOffset(),
             editingCell: null,
+            cursorType: 'default',
         };
     }
 
@@ -118,6 +120,9 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
         // Keep the gridState gridOffset and the React state gridOffset in sync
         consumer([this.gridState.gridOffset], (gridOffset) => this.setState({gridOffset}));
+
+        // Keep the gridState cursorType and the React state cursorType in sync
+        consumer([this.gridState.cursorType], (cursorType) => this.setState({cursorType}));
     }
 
     public componentDidUpdate(prevProps: ReactCanvasGridProps<T>) {
@@ -203,6 +208,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     height: this.props.cssHeight,
                     overflow: 'hidden',
                     outline: 'none',
+                    cursor: this.state.cursorType,
                 }}
             >
                 <MainCanvas<T>

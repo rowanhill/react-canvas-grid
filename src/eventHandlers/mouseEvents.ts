@@ -2,7 +2,7 @@ import { RefObject } from 'react';
 import { GridState } from '../gridState';
 import { EditingCell, ReactCanvasGridProps } from '../ReactCanvasGrid';
 import { Coord } from '../types';
-import { mouseDownOnAutofillHandle } from './autofillMouseEvents';
+import { mouseDownOnAutofillHandle, mouseHoverOnAutofillHandle } from './autofillMouseEvents';
 import { mouseDownOnGrid, mouseDragOnGrid, mouseUpOnGrid } from './gridMouseEvents';
 import {
     mouseDownOnScrollbar,
@@ -61,6 +61,8 @@ export function handleMouseMove<T>(
     if (mouseDragOnScrollbar(coord, gridState)) {
         return;
     } else if (mouseDragOnGrid(event, rootRef, props, gridState, editingCell)) {
+        return;
+    } else if (mouseHoverOnAutofillHandle(event, gridState, rootRef)) {
         return;
     } else {
         mouseHoverOnScrollbar(coord, gridState);
