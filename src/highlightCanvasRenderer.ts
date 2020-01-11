@@ -54,19 +54,19 @@ const defaultHoverProps: HighlightCanvasRendererHover = {
 
 const colours = {
     scrollbar: {
-        defaultFill: 'rgba(0, 0, 0, 0.4)',
-        hoverFill: 'rgba(0, 0, 0, 0.55)',
+        defaultFill: 'hsla(0, 0%, 0%, 0.4)',
+        hoverFill: 'hsla(0, 0%, 0%, 0.55)',
     },
     scrollGutters: {
-        fill: '#eee',
-        stroke: 'lightgrey',
+        fill: 'hsla(0, 0%, 93%, 1)',
+        stroke: 'hsla(0, 0%, 83%, 1)',
     },
     selectedCells: {
-        fill: 'rgba(33, 117, 228, 0.25)',
-        stroke: '#2276e4',
+        fill: 'hsla(214, 78%, 51%, 0.25)',
+        stroke: 'hsla(214, 78%, 51%, 1)',
     },
     autofillCells: {
-        stroke: 'rgba(33, 117, 228, 1)',
+        stroke: 'hsla(214, 78%, 51%, 1)',
     },
     autofillHandle: {
         defaultFill: 'hsla(214, 78%, 51%, 1)',
