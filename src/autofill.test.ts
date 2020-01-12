@@ -1,6 +1,5 @@
-import { mapValues } from 'lodash';
 import { repeatSelectionIntoFill } from './autofill';
-import { CellDef, getCellText } from './types';
+import { CellDef, DataRow, getCellText } from './types';
 
 function text(data: string): string {
     return data;
@@ -11,6 +10,17 @@ function cell(y: number, x: number): CellDef<string> {
         data: `${y}x${x}`,
         getText: text,
     };
+}
+
+function mapDataToText(data: Array<DataRow<string>>) {
+    return data.map((r) => Object.keys(r)
+    .reduce(
+        (acc, k) => {
+            acc[k] = getCellText(r[k]);
+            return acc;
+        },
+        {} as Record<keyof typeof r, string>,
+    ));
 }
 
 describe('repeatSelectionIntoFill', () => {
@@ -37,7 +47,7 @@ describe('repeatSelectionIntoFill', () => {
             { a: '0x0', b: '0x1', c: '0x0', d: '0x1', e: '0x0' },
             { a: '1x0', b: '1x1', c: '1x0', d: '1x1', e: '1x0' },
         ];
-        const newDataText = newData.map((r) => mapValues(r, (c) => getCellText(c)));
+        const newDataText = mapDataToText(newData);
         expect(newDataText).toEqual(expectedText);
     });
 
@@ -67,7 +77,7 @@ describe('repeatSelectionIntoFill', () => {
             { a: '1x0', b: '1x1' },
             { a: '0x0', b: '0x1' },
         ];
-        const newDataText = newData.map((r) => mapValues(r, (c) => getCellText(c)));
+        const newDataText = mapDataToText(newData);
         expect(newDataText).toEqual(expectedText);
     });
 
