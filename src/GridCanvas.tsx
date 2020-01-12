@@ -1,4 +1,4 @@
-import { consumer, ReactiveConsumer, ReactiveFn, transformer } from 'instigator';
+import { consumer, mergeTransformer, ReactiveConsumer, ReactiveFn } from 'instigator';
 import * as React from 'react';
 import { GridCanvasRenderer, GridCanvasRendererPosition } from './gridCanvasRenderer';
 import { GridState } from './gridState';
@@ -40,29 +40,14 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
         }
 
         const gridState = this.props.gridState;
-        const basicProps = transformer([
-            gridState.data,
-            gridState.rowHeight,
-            gridState.columnBoundaries,
-            gridState.columns,
-            gridState.gridInnerSize,
-            gridState.borderWidth,
-        ],
-        (
-            data,
-            rowHeight,
-            colBoundaries,
-            columns,
-            gridInnerSize,
-            borderWidth,
-        ) => ({
-            data,
-            rowHeight,
-            colBoundaries,
-            columns,
-            gridInnerSize,
-            borderWidth,
-        }));
+        const basicProps = mergeTransformer({
+            data: gridState.data,
+            rowHeight: gridState.rowHeight,
+            colBoundaries: gridState.columnBoundaries,
+            columns: gridState.columns,
+            gridInnerSize: gridState.gridInnerSize,
+            borderWidth: gridState.borderWidth,
+        });
 
         {
             const canvasSize = { width: this.props.width, height: this.props.height };

@@ -1,14 +1,7 @@
-import { consumer, ReactiveConsumer, transformer } from 'instigator';
+import { consumer, mergeTransformer, ReactiveConsumer } from 'instigator';
 import * as React from 'react';
 import { GridState, shallowEqualsExceptFunctions } from './gridState';
-import {
-    HighlightCanvasRenderer,
-    HighlightCanvasRendererBasics,
-    HighlightCanvasRendererHover,
-    HighlightCanvasRendererPosition,
-    HighlightCanvasRendererScrollbar,
-    HighlightCanvasRendererSelection,
-} from './highlightCanvasRenderer';
+import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 
 export interface HighlightCanvasProps {
     width: number;
@@ -48,72 +41,32 @@ export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
         }
 
         const gridState = this.props.gridState;
-        const basicProps = transformer([
-            gridState.rowHeight,
-            gridState.columnBoundaries,
-            gridState.borderWidth,
-            gridState.horizontalGutterBounds,
-            gridState.verticalGutterBounds,
-            gridState.cellBounds,
-            gridState.shouldAllowAutofill,
-        ],
-        (
-            rowHeight,
-            columnBoundaries,
-            borderWidth,
-            horizontalGutterBounds,
-            verticalGutterBounds,
-            cellBounds,
-            shouldAllowAutofill,
-        ): HighlightCanvasRendererBasics => ({
-            rowHeight,
-            columnBoundaries,
-            borderWidth,
-            horizontalGutterBounds,
-            verticalGutterBounds,
-            cellBounds,
-            shouldAllowAutofill,
-        }),
-        shallowEqualsExceptFunctions,
-        );
+        const basicProps = mergeTransformer({
+            rowHeight: gridState.rowHeight,
+            columnBoundaries: gridState.columnBoundaries,
+            borderWidth: gridState.borderWidth,
+            horizontalGutterBounds: gridState.horizontalGutterBounds,
+            verticalGutterBounds: gridState.verticalGutterBounds,
+            cellBounds: gridState.cellBounds,
+            shouldAllowAutofill: gridState.shouldAllowAutofill,
+        }, shallowEqualsExceptFunctions);
 
-        const scrollProps = transformer([
-            gridState.horizontalScrollbarPos,
-            gridState.verticalScrollbarPos,
-        ], (
-            horizontalScrollbarPos,
-            verticalScrollbarPos,
-        ): HighlightCanvasRendererScrollbar => ({
-            horizontalScrollbarPos,
-            verticalScrollbarPos,
-        }));
+        const scrollProps = mergeTransformer({
+            horizontalScrollbarPos: gridState.horizontalScrollbarPos,
+            verticalScrollbarPos: gridState.verticalScrollbarPos,
+        });
 
-        const hoverProps = transformer([
-            gridState.hoveredScrollbar,
-            gridState.autofillHandleIsHovered,
-        ], (
-            hoveredScrollbar,
-            autofillHandleIsHovered,
-        ): HighlightCanvasRendererHover => ({
-            hoveredScrollbar,
-            autofillHandleIsHovered,
-        }));
+        const hoverProps = mergeTransformer({
+            hoveredScrollbar: gridState.hoveredScrollbar,
+            autofillHandleIsHovered: gridState.autofillHandleIsHovered,
+        });
 
-        const posProps = transformer([
-            gridState.gridOffset,
-            gridState.visibleRect,
-        ],
-        (
-            gridOffset,
-            visibleRect,
-        ): HighlightCanvasRendererPosition => ({
-            gridOffset,
-            visibleRect,
-        }));
+        const posProps = mergeTransformer({
+            gridOffset: gridState.gridOffset,
+            visibleRect: gridState.visibleRect,
+        });
 
-        const selectionProps = transformer(
-            [gridState.selectionState],
-            (selectionState): HighlightCanvasRendererSelection => ({ selectionState}));
+        const selectionProps = mergeTransformer({ selectionState: gridState.selectionState });
 
         this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
         this.renderCallback = consumer(
