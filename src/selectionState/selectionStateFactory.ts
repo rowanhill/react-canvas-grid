@@ -11,7 +11,7 @@ export type AllSelectionStates = CellsSelection | RowsSelection | ColsSelection 
 export const createSelectionStateForMouseDown = (cell: Coord, meta: ClickMeta) => {
     switch (meta.region) {
         case 'cells':
-            return new CellsSelection(cell, cell, cell, true);
+            return new CellsSelection(cell, cell, true);
         case 'frozen-cols':
             return new RowsSelection(cell, cell.y, cell.y, true, cell.y);
         case 'frozen-rows':

@@ -3,7 +3,6 @@ import { CellsSelection } from './cellsSelection';
 function cellSelection(from: [number, number], to: [number, number], autofill: [number, number]|null = null) {
     return new CellsSelection(
         { x: from[0], y: from[1] },
-        { x: from[0], y: from[1] },
         { x: to[0], y: to[1] },
         true,
         autofill ? { x: autofill[0], y: autofill[1] } : null,

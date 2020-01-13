@@ -8,62 +8,59 @@ import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
 export class CellsSelection extends BaseSelectionState<CellsSelection> {
     private readonly editCursorCell: Coord;
-    private readonly selectionStartCell: Coord;
     private readonly selectionCursorCell: Coord;
     private readonly autofillDragCell: Coord | null;
 
     constructor(
         editCursorCell: Coord,
-        selectionStartCell: Coord,
         selectionCursorCell: Coord,
         isSelectionInProgress: boolean,
         autofillDragCell: Coord | null = null,
     ) {
         super(isSelectionInProgress);
         this.editCursorCell = editCursorCell;
-        this.selectionStartCell = selectionStartCell;
         this.selectionCursorCell = selectionCursorCell;
         this.autofillDragCell = autofillDragCell;
     }
 
     public arrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x, y: this.editCursorCell.y - 1 }, cellBounds);
-        return new CellsSelection(newCell, newCell, newCell, false);
+        return new CellsSelection(newCell, newCell, false);
     }
 
     public arrowDown = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x, y: this.editCursorCell.y + 1 }, cellBounds);
-        return new CellsSelection(newCell, newCell, newCell, false);
+        return new CellsSelection(newCell, newCell, false);
     }
 
     public arrowLeft = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x - 1, y: this.editCursorCell.y }, cellBounds);
-        return new CellsSelection(newCell, newCell, newCell, false);
+        return new CellsSelection(newCell, newCell, false);
     }
 
     public arrowRight = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x + 1, y: this.editCursorCell.y }, cellBounds);
-        return new CellsSelection(newCell, newCell, newCell, false);
+        return new CellsSelection(newCell, newCell, false);
     }
 
     public shiftArrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
         const cell = truncateCoord({ x: this.selectionCursorCell.x, y: this.selectionCursorCell.y - 1 }, cellBounds);
-        return new CellsSelection(this.editCursorCell, this.selectionStartCell, cell, false);
+        return new CellsSelection(this.editCursorCell, cell, false);
     }
 
     public shiftArrowDown = (cellBounds: CellCoordBounds): CellsSelection => {
         const cell = truncateCoord({ x: this.selectionCursorCell.x, y: this.selectionCursorCell.y + 1 }, cellBounds);
-        return new CellsSelection(this.editCursorCell, this.selectionStartCell, cell, false);
+        return new CellsSelection(this.editCursorCell, cell, false);
     }
 
     public shiftArrowLeft = (cellBounds: CellCoordBounds): CellsSelection => {
         const cell = truncateCoord({ x: this.selectionCursorCell.x - 1, y: this.selectionCursorCell.y }, cellBounds);
-        return new CellsSelection(this.editCursorCell, this.selectionStartCell, cell, false);
+        return new CellsSelection(this.editCursorCell, cell, false);
     }
 
     public shiftArrowRight = (cellBounds: CellCoordBounds): CellsSelection => {
         const cell = truncateCoord({ x: this.selectionCursorCell.x + 1, y: this.selectionCursorCell.y }, cellBounds);
-        return new CellsSelection(this.editCursorCell, this.selectionStartCell, cell, false);
+        return new CellsSelection(this.editCursorCell, cell, false);
     }
 
     public mouseDown = (cell: Coord, meta: ClickMeta) => createSelectionStateForMouseDown(cell, meta);
@@ -72,7 +69,7 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
         if (meta.region !== 'cells') {
             return this;
         }
-        return new CellsSelection(this.editCursorCell, this.selectionStartCell, cell, true);
+        return new CellsSelection(this.editCursorCell, cell, true);
     }
 
     public mouseMove = (cell: Coord): CellsSelection => {
@@ -80,7 +77,6 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
             if (!equalCoord(cell, this.autofillDragCell)) {
                 return new CellsSelection(
                     this.editCursorCell,
-                    this.selectionStartCell,
                     this.selectionCursorCell,
                     true,
                     cell,
@@ -90,7 +86,6 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
             if (!equalCoord(cell, this.selectionCursorCell)) {
                 return new CellsSelection(
                     this.editCursorCell,
-                    this.selectionStartCell,
                     cell,
                     true,
                 );
@@ -106,7 +101,6 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
             if (fillRange) {
                 return new CellsSelection(
                     this.editCursorCell,
-                    this.selectionStartCell,
                     this.autofillDragCell,
                     false,
                     null,
@@ -117,7 +111,6 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
         } else if (this.isSelectionInProgress) {
             return new CellsSelection(
                 this.editCursorCell,
-                this.selectionStartCell,
                 this.selectionCursorCell,
                 false,
             );
@@ -129,7 +122,6 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     public mouseDownOnAutofillHandle = (): CellsSelection => {
         return new CellsSelection(
             this.editCursorCell,
-            this.selectionStartCell,
             this.selectionCursorCell,
             true,
             this.selectionCursorCell,
@@ -139,12 +131,12 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     public getSelectionRange = (): SelectRange => {
         return {
             topLeft: {
-                x: Math.min(this.selectionStartCell.x, this.selectionCursorCell.x),
-                y: Math.min(this.selectionStartCell.y, this.selectionCursorCell.y),
+                x: Math.min(this.editCursorCell.x, this.selectionCursorCell.x),
+                y: Math.min(this.editCursorCell.y, this.selectionCursorCell.y),
             },
             bottomRight: {
-                x: Math.max(this.selectionStartCell.x, this.selectionCursorCell.x),
-                y: Math.max(this.selectionStartCell.y, this.selectionCursorCell.y),
+                x: Math.max(this.editCursorCell.x, this.selectionCursorCell.x),
+                y: Math.max(this.editCursorCell.y, this.selectionCursorCell.y),
             },
         };
     }
