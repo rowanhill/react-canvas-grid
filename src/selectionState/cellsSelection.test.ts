@@ -6,7 +6,6 @@ function cellSelection(from: [number, number], to: [number, number], autofill: [
         { x: from[0], y: from[1] },
         { x: to[0], y: to[1] },
         true,
-        { x: to[0], y: to[1] },
         autofill ? { x: autofill[0], y: autofill[1] } : null,
     );
 }
