@@ -6,6 +6,10 @@ import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
+function createSingleCell(cell: Coord): CellsSelection {
+    return new CellsSelection(cell, cell, false);
+}
+
 export class CellsSelection extends BaseSelectionState<CellsSelection> {
     private readonly editCursorCell: Coord;
     private readonly selectionCursorCell: Coord;
@@ -25,22 +29,22 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
 
     public arrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x, y: this.editCursorCell.y - 1 }, cellBounds);
-        return new CellsSelection(newCell, newCell, false);
+        return createSingleCell(newCell);
     }
 
     public arrowDown = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x, y: this.editCursorCell.y + 1 }, cellBounds);
-        return new CellsSelection(newCell, newCell, false);
+        return createSingleCell(newCell);
     }
 
     public arrowLeft = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x - 1, y: this.editCursorCell.y }, cellBounds);
-        return new CellsSelection(newCell, newCell, false);
+        return createSingleCell(newCell);
     }
 
     public arrowRight = (cellBounds: CellCoordBounds): CellsSelection => {
         const newCell = truncateCoord({ x: this.editCursorCell.x + 1, y: this.editCursorCell.y }, cellBounds);
-        return new CellsSelection(newCell, newCell, false);
+        return createSingleCell(newCell);
     }
 
     public shiftArrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
