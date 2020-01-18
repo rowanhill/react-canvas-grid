@@ -23,7 +23,7 @@ describe('mouseDownOnAutofillHandle', () => {
 
     describe('with CellsSelection', () => {
         it('returns false when shouldAllowAutofill is false', () => {
-            const cellsSelection = new CellsSelection(null as any, null as any, null as any, false, null as any);
+            const cellsSelection = new CellsSelection(null as any, null as any, false, null as any);
             jest.spyOn(cellsSelection, 'getSelectionRange').mockReturnValue({
                 topLeft: { x: 1, y: 2 },
                 bottomRight: { x: 10, y: 12 },
@@ -36,7 +36,7 @@ describe('mouseDownOnAutofillHandle', () => {
         });
 
         it('returns false when the click is not on the autofill handle', () => {
-            const cellsSelection = new CellsSelection(null as any, null as any, null as any, false, null as any);
+            const cellsSelection = new CellsSelection(null as any, null as any, false, null as any);
             jest.spyOn(cellsSelection, 'getSelectionRange').mockReturnValue({
                 topLeft: { x: 1, y: 2 },
                 bottomRight: { x: 10, y: 12 },
@@ -58,7 +58,7 @@ describe('mouseDownOnAutofillHandle', () => {
         });
 
         it('updates the selection state and returns true when the click is on the autofill handle', () => {
-            const cellsSelection = new CellsSelection(null as any, null as any, null as any, false, null as any);
+            const cellsSelection = new CellsSelection(null as any, null as any, false, null as any);
             jest.spyOn(cellsSelection, 'getSelectionRange').mockReturnValue({
                 topLeft: { x: 1, y: 2 },
                 bottomRight: { x: 10, y: 12 },
@@ -104,7 +104,7 @@ describe('mouseHoverOnAutofillHandle', () => {
 
     describe('with CellsSelection', () => {
         it('returns false when shouldAllowAutofill is false', () => {
-            const cellsSelection = new CellsSelection(null as any, null as any, null as any, false, null as any);
+            const cellsSelection = new CellsSelection(null as any, null as any, false, null as any);
             jest.spyOn(cellsSelection, 'getSelectionRange').mockReturnValue({
                 topLeft: { x: 1, y: 2 },
                 bottomRight: { x: 10, y: 12 },
@@ -122,7 +122,7 @@ describe('mouseHoverOnAutofillHandle', () => {
         });
 
         it('returns false when the mouse is not on the autofill handle', () => {
-            const cellsSelection = new CellsSelection(null as any, null as any, null as any, false, null as any);
+            const cellsSelection = new CellsSelection(null as any, null as any, false, null as any);
             jest.spyOn(cellsSelection, 'getSelectionRange').mockReturnValue({
                 topLeft: { x: 1, y: 2 },
                 bottomRight: { x: 10, y: 12 },
@@ -146,7 +146,7 @@ describe('mouseHoverOnAutofillHandle', () => {
         });
 
         it('updates the hover state to true and returns true when the mouse is over the autofill handle', () => {
-            const cellsSelection = new CellsSelection(null as any, null as any, null as any, false, null as any);
+            const cellsSelection = new CellsSelection(null as any, null as any, false, null as any);
             jest.spyOn(cellsSelection, 'getSelectionRange').mockReturnValue({
                 topLeft: { x: 1, y: 2 },
                 bottomRight: { x: 10, y: 12 },

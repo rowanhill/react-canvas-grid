@@ -86,12 +86,10 @@ describe('keyDownOnGrid', () => {
         initialSelection = new CellsSelection(
             { x: 0, y: 0 },
             { x: 0, y: 0 },
-            { x: 0, y: 0 },
             false,
             { x: 0, y: 0 },
         );
         newSelection = new CellsSelection(
-            { x: 0, y: 0 },
             { x: 0, y: 0 },
             { x: 0, y: 0 },
             false,
