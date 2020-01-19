@@ -1,6 +1,9 @@
 import { Coord } from '../types';
 import { CellsSelection } from './cellsSelection';
+import { calculateGridOffsetForTargetCell } from './focusOffset';
 import { CellCoordBounds } from './selectionTypes';
+
+jest.mock('./focusOffset');
 
 function coord(c: [number, number]): Coord {
     return { x: c[0], y: c[1] };
@@ -63,21 +66,33 @@ describe('CellsSelection', () => {
 
             expect(newSel.getSelectionRange()).toEqual(singleCellRange(truncatedCoords));
         });
+
+        it('focuses on the new cell', () => {
+            const sel = singleCell(simpleCoords);
+            (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
+            (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
+
+            const newSel = (sel as any)[keyName](bounds);
+            const offset = newSel.getFocusGridOffset(null);
+
+            expect(offset).toBe('dummy offset');
+            expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(simpleResult));
+        });
     });
 
     describe.each`
         keyName | simpleCoords | simpleResult | truncatedCoords
-        ${'shiftArrowUp'} | ${[1, 1]} | ${[[1, 0], [1, 1]]} | ${[[1, 2], [1, 0]]}
-        ${'shiftArrowDown'} | ${[1, 1]} | ${[[1, 1], [1, 2]]} | ${[[1, 8], [1, 9]]}
-        ${'shiftArrowLeft'} | ${[1, 1]} | ${[[0, 1], [1, 1]]} | ${[[2, 1], [0, 1]]}
-        ${'shiftArrowRight'} | ${[1, 1]} | ${[[1, 1], [2, 1]]} | ${[[8, 1], [9, 1]]}
+        ${'shiftArrowUp'} | ${[1, 1]} | ${[1, 0]} | ${[[1, 2], [1, 0]]}
+        ${'shiftArrowDown'} | ${[1, 1]} | ${[1, 2]} | ${[[1, 8], [1, 9]]}
+        ${'shiftArrowLeft'} | ${[1, 1]} | ${[0, 1]} | ${[[2, 1], [0, 1]]}
+        ${'shiftArrowRight'} | ${[1, 1]} | ${[2, 1]} | ${[[8, 1], [9, 1]]}
     `('$keyName', ({ keyName, simpleCoords, simpleResult, truncatedCoords }) => {
         it('extends the selection', () => {
             const sel = singleCell(simpleCoords);
 
             const newSel = (sel as any)[keyName](bounds);
 
-            expect(newSel.getSelectionRange()).toEqual(cellRange(simpleResult[0], simpleResult[1]));
+            expect(newSel.getSelectionRange()).toEqual(cellRange(simpleCoords, simpleResult));
         });
 
         it('is truncated if attempting to extend the selection out of bounds', () => {
@@ -86,6 +101,18 @@ describe('CellsSelection', () => {
             const newSel = (sel as any)[keyName](bounds);
 
             expect(newSel.getSelectionRange()).toEqual(cellRange(truncatedCoords[0], truncatedCoords[1]));
+        });
+
+        it('focuses on the cell newly included in the selection', () => {
+            const sel = singleCell(simpleCoords);
+            (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
+            (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
+
+            const newSel = (sel as any)[keyName](bounds);
+            const offset = newSel.getFocusGridOffset(null);
+
+            expect(offset).toBe('dummy offset');
+            expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(simpleResult));
         });
     });
 
@@ -125,6 +152,18 @@ describe('CellsSelection', () => {
 
                 expect(newSel.getSelectionRange()).toEqual(cellRange([3, 3], clickCoord));
             });
+
+            it('focuses on the clicked cell', () => {
+                const sel = singleCell([4, 4]);
+                (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
+                (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
+
+                const newSel = sel.shiftMouseDown(coord(clickCoord), { region: 'cells' });
+                const offset = newSel.getFocusGridOffset(null as any);
+
+                expect(offset).toBe('dummy offset');
+                expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(clickCoord));
+            });
         });
     });
 
@@ -154,7 +193,7 @@ describe('CellsSelection', () => {
                 expect(newSel).toBe(sel);
             });
 
-            it.each`
+            describe.each`
                 direction | coords
                 ${'top-right'} | ${[6, 2]}
                 ${'right'} | ${[6, 4]}
@@ -164,12 +203,26 @@ describe('CellsSelection', () => {
                 ${'left'} | ${[2, 4]}
                 ${'top-left'} | ${[2, 2]}
                 ${'top'} | ${[4, 2]}
-            `('updates the selected range when moving to the $direction of the edit cell', ({ coords }) => {
-                const sel = singleCell([4, 4]);
+            `('when dragging on a cell to the $direction of the edit cell', ({ coords }) => {
+                it('updates the selected range', () => {
+                    const sel = singleCell([4, 4]);
 
-                const newSel = sel.mouseMove(coord(coords));
+                    const newSel = sel.mouseMove(coord(coords));
 
-                expect(newSel.getSelectionRange()).toEqual(cellRange([4, 4], coords));
+                    expect(newSel.getSelectionRange()).toEqual(cellRange([4, 4], coords));
+                });
+
+                it('focuses on the newly dragged cell', () => {
+                    const sel = singleCell([4, 4]);
+                    (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
+                    (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
+
+                    const newSel = sel.mouseMove(coord(coords));
+                    const offset = newSel.getFocusGridOffset(null as any);
+
+                    expect(offset).toBe('dummy offset');
+                    expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(coords));
+                });
             });
         });
 
@@ -182,7 +235,7 @@ describe('CellsSelection', () => {
                 expect(newSel).toBe(sel);
             });
 
-            it.each`
+            describe.each`
                 direction | coords | resultDir| from | to
                 ${'top-left'} | ${[1, 1]} | ${'upwards'} | ${[3, 1]} | ${[4, 2]}
                 ${'top'} | ${[4, 1]} | ${'upwards'} | ${[3, 1]} | ${[4, 2]}
@@ -192,16 +245,32 @@ describe('CellsSelection', () => {
                 ${'bottom'} | ${[4, 6]} | ${'downwards'} | ${[3, 5]} | ${[4, 6]}
                 ${'bottom-left'} | ${[1, 6]} | ${'downwards'} | ${[3, 5]} | ${[4, 6]}
                 ${'left'} | ${[1, 4]} | ${'leftwards'} | ${[1, 3]} | ${[2, 4]}
-            `('updates the autofill range $resultDir when moving to the $direction of the selection', ({
+            `('when moving to the $direction of the selection', ({
                 coords,
+                resultDir,
                 from,
                 to,
             }) => {
-                const sel = cellSelection([3, 3], [4, 4], [4, 4]);
+                it(`updates the autofill range ${resultDir}`, () => {
+                    const sel = cellSelection([3, 3], [4, 4], [4, 4]);
 
-                const newSel = sel.mouseMove(coord(coords));
+                    const newSel = sel.mouseMove(coord(coords));
 
-                expect(newSel.getAutofillRange()).toEqual(cellRange(from, to));
+                    expect(newSel.getAutofillRange()).toEqual(cellRange(from, to));
+                });
+
+                // TODO: Enable once cellsSelection updated
+                xit('focuses on the newly dragged cell', () => {
+                    const sel = cellSelection([3, 3], [4, 4], [4, 4]);
+                    (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
+                    (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
+
+                    const newSel = sel.mouseMove(coord(coords));
+                    const offset = newSel.getFocusGridOffset(null as any);
+
+                    expect(offset).toBe('dummy offset');
+                    expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(coords));
+                });
             });
         });
     });

@@ -1,7 +1,7 @@
-import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { Coord } from '../types';
 import { equalCoord } from '../utils';
+import { calculateGridOffsetForTargetCell } from './focusOffset';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
@@ -146,19 +146,7 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     }
 
     public getFocusGridOffset = <T>(gridState: GridState<T>): Coord|null => {
-        return GridGeometry.calculateGridOffsetForTargetCell(
-            gridState.gridOffset(),
-            gridState.canvasSize(),
-            gridState.frozenColsWidth(),
-            gridState.frozenRowsHeight(),
-            this.selectionCursorCell,
-            gridState.columnBoundaries(),
-            gridState.rowHeight(),
-            gridState.borderWidth(),
-            gridState.data().length,
-            gridState.verticalGutterBounds(),
-            gridState.horizontalGutterBounds(),
-        );
+        return calculateGridOffsetForTargetCell(gridState, this.selectionCursorCell);
     }
 
     public getCursorCell = () => this.editCursorCell;
