@@ -1,5 +1,5 @@
 import { Coord } from '../types';
-import { CellsSelection } from './cellsSelection';
+import { cellsSelection } from './cellsSelectionBuilder';
 import { calculateGridOffsetForTargetCell } from './focusOffset';
 import { CellCoordBounds } from './selectionTypes';
 
@@ -9,33 +9,10 @@ function coord(c: [number, number]): Coord {
     return { x: c[0], y: c[1] };
 }
 
-function bound(from: [number, number], to: [number, number]) {
-    return {
-        top: Math.min(from[1], to[1]),
-        left: Math.min(from[0], to[0]),
-        bottom: Math.max(from[1], to[1]),
-        right: Math.max(from[0], to[0]),
-    };
-}
-
-function cellSelection(from: [number, number], to: [number, number], autofill: [number, number]|null = null) {
-    return new CellsSelection(
-        coord(from),
-        bound(from, to),
-        coord(to),
-        true,
-        autofill ? coord(autofill) : null,
-    );
-}
-
-function singleCell(cell: [number, number]) {
-    return cellSelection(cell, cell);
-}
-
 function singleCellRange(cell: [number, number]) {
     return {
-        topLeft: { x: cell[0], y: cell[1] },
-        bottomRight: { x: cell[0], y: cell[1] },
+        topLeft: coord(cell),
+        bottomRight: coord(cell),
     };
 }
 
@@ -62,7 +39,7 @@ describe('CellsSelection', () => {
         ${'arrowRight'} | ${[1, 1]} | ${[2, 1]} | ${[9, 1]}
     `('$keyName', ({ keyName, simpleCoords, simpleResult, truncatedCoords }) => {
         it('moves the cell', () => {
-            const sel = singleCell(simpleCoords);
+            const sel = cellsSelection(simpleCoords).build();
 
             const newSel = (sel as any)[keyName](bounds);
 
@@ -70,7 +47,7 @@ describe('CellsSelection', () => {
         });
 
         it('is truncated if attempting to move out of bounds', () => {
-            const sel = singleCell(truncatedCoords);
+            const sel = cellsSelection(truncatedCoords).build();
 
             const newSel = (sel as any)[keyName](bounds);
 
@@ -78,7 +55,7 @@ describe('CellsSelection', () => {
         });
 
         it('focuses on the new cell', () => {
-            const sel = singleCell(simpleCoords);
+            const sel = cellsSelection(simpleCoords).build();
             (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
             (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
 
@@ -98,7 +75,7 @@ describe('CellsSelection', () => {
         ${'shiftArrowRight'} | ${[1, 1]} | ${[2, 1]}
     `('$keyName', ({ keyName, simpleCoords, simpleResult }) => {
         it('extends the selection', () => {
-            const sel = singleCell(simpleCoords);
+            const sel = cellsSelection(simpleCoords).build();
 
             const newSel = (sel as any)[keyName](bounds);
 
@@ -106,7 +83,7 @@ describe('CellsSelection', () => {
         });
 
         it('focuses on the cell newly included in the selection', () => {
-            const sel = singleCell(simpleCoords);
+            const sel = cellsSelection(simpleCoords).build();
             (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
             (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
 
@@ -126,7 +103,10 @@ describe('CellsSelection', () => {
         ${'shiftArrowRight'} | ${[[8, 1], [9, 1]]}
     `('$keyName', ({ keyName, truncatedCoords }) => {
         it('is truncated if attempting to extend the selection out of bounds', () => {
-            const sel = cellSelection(truncatedCoords[0], truncatedCoords[1]);
+            const sel = cellsSelection(truncatedCoords[0])
+                .withSelectionFromCursorTo(truncatedCoords[1])
+                .build();
+            expect(sel.getSelectionRange()).toEqual(cellRange(truncatedCoords[0], truncatedCoords[1]));
 
             const newSel = (sel as any)[keyName](bounds);
 
@@ -142,12 +122,10 @@ describe('CellsSelection', () => {
         ${'shiftArrowRight'} | ${[[2, 1], [5, 5]]}
     `('$keyName', ({ keyName, shrunkCoords }) => {
         it('shrinks the selection if the edit cell is not at the limit of the bounds', () => {
-            const sel = new CellsSelection(
-                coord([3, 3]),
-                bound([1, 1], [5, 5]),
-                coord([3, 3]),
-                false,
-            );
+            const sel = cellsSelection([3, 3])
+                .withSelection([1, 1], [5, 5])
+                .withoutOngoingSelectionDrag()
+                .build();
 
             const newSel = (sel as any)[keyName](bounds);
 
@@ -162,7 +140,7 @@ describe('CellsSelection', () => {
             ${'frozen-cols'}
             ${'frozen-corner'}
         `('does nothing if the click region is $region', ({ region }) => {
-            const sel = singleCell([4, 4]);
+            const sel = cellsSelection(4, 4).build();
 
             const newSel = sel.shiftMouseDown(coord([2, 6]), { region });
 
@@ -177,7 +155,7 @@ describe('CellsSelection', () => {
             ${'bottom-left'} | ${[2, 6]}
         `('clicking a cell to the $direction', ({ clickCoord }) => {
             it('updates a 1-cell selection to a range spanning from the original cell to the clicked cell', () => {
-                const sel = singleCell([4, 4]);
+                const sel = cellsSelection(4, 4).build();
 
                 const newSel = sel.shiftMouseDown(coord(clickCoord), { region: 'cells' });
 
@@ -185,7 +163,10 @@ describe('CellsSelection', () => {
             });
 
             it('updates a multi-cell seleciton to a range from the cursor cell to the clicked cell', () => {
-                const sel = cellSelection([3, 3], [4, 4]);
+                const sel = cellsSelection(3, 3)
+                    .withSelectionFromCursorTo(4, 4)
+                    .withOngoingSelectionDrag()
+                    .build();
 
                 const newSel = sel.shiftMouseDown(coord(clickCoord), { region: 'cells' });
 
@@ -193,7 +174,7 @@ describe('CellsSelection', () => {
             });
 
             it('focuses on the clicked cell', () => {
-                const sel = singleCell([4, 4]);
+                const sel = cellsSelection(4, 4).build();
                 (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
                 (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
 
@@ -208,7 +189,7 @@ describe('CellsSelection', () => {
 
     describe('mouseMove', () => {
         it('does nothing if there is no ongoing selection of any type', () => {
-            const sel = singleCell([4, 4]).mouseUp();
+            const sel = cellsSelection(4, 4).build();
 
             const newSel = sel.mouseMove(coord([1, 1]));
 
@@ -217,7 +198,7 @@ describe('CellsSelection', () => {
 
         describe('with an ongoing selection drag', () => {
             it('does nothing if moving over the single selected cell', () => {
-                const sel = singleCell([4, 4]);
+                const sel = cellsSelection(4, 4).withOngoingSelectionDrag().build();
 
                 const newSel = sel.mouseMove(coord([4, 4]));
 
@@ -225,7 +206,10 @@ describe('CellsSelection', () => {
             });
 
             it('does nothing if moving over the most recently selected cell in the range', () => {
-                const sel = cellSelection([1, 1], [4, 4]);
+                const sel = cellsSelection(1, 1)
+                    .withSelectionFromCursorTo(4, 4)
+                    .withOngoingSelectionDrag()
+                    .build();
 
                 const newSel = sel.mouseMove(coord([4, 4]));
 
@@ -244,7 +228,7 @@ describe('CellsSelection', () => {
                 ${'top'} | ${[4, 2]}
             `('when dragging on a cell to the $direction of the edit cell', ({ coords }) => {
                 it('updates the selected range', () => {
-                    const sel = singleCell([4, 4]);
+                    const sel = cellsSelection(4, 4).withOngoingSelectionDrag().build();
 
                     const newSel = sel.mouseMove(coord(coords));
 
@@ -252,7 +236,7 @@ describe('CellsSelection', () => {
                 });
 
                 it('focuses on the newly dragged cell', () => {
-                    const sel = singleCell([4, 4]);
+                    const sel = cellsSelection(4, 4).withOngoingSelectionDrag().build();
                     (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
                     (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
 
@@ -267,7 +251,9 @@ describe('CellsSelection', () => {
 
         describe('with an ongoing autofill drag', () => {
             it('does nothing if moving over the most recently autofill-dragged cell', () => {
-                const sel = cellSelection([4, 4], [4, 4], [6, 6]);
+                const sel = cellsSelection(4, 4)
+                    .withAutofillDragCell(6, 6)
+                    .build();
 
                 const newSel = sel.mouseMove(coord([6, 6]));
 
@@ -291,7 +277,10 @@ describe('CellsSelection', () => {
                 to,
             }) => {
                 it(`updates the autofill range ${resultDir}`, () => {
-                    const sel = cellSelection([3, 3], [4, 4], [4, 4]);
+                    const sel = cellsSelection(3, 3)
+                        .withSelectionFromCursorTo(4, 4)
+                        .withAutofillDragCell(4, 4)
+                        .build();
 
                     const newSel = sel.mouseMove(coord(coords));
 
@@ -299,7 +288,10 @@ describe('CellsSelection', () => {
                 });
 
                 it('focuses on the newly dragged cell', () => {
-                    const sel = cellSelection([3, 3], [4, 4], [4, 4]);
+                    const sel = cellsSelection(3, 3)
+                        .withSelectionFromCursorTo(4, 4)
+                        .withAutofillDragCell(4, 4)
+                        .build();
                     (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
                     (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
 
@@ -315,7 +307,7 @@ describe('CellsSelection', () => {
 
     describe('mouseUp', () => {
         it('does nothing if there is no type of drag in progress', () => {
-            const sel = singleCell([4, 4]).mouseUp();
+            const sel = cellsSelection(4, 4).build();
 
             const newSel = sel.mouseUp();
 
@@ -324,7 +316,7 @@ describe('CellsSelection', () => {
 
         describe('with an ongoing selection drag', () => {
             it('ends the selection drag', () => {
-                const sel = singleCell([4, 4]);
+                const sel = cellsSelection(4, 4).build();
 
                 const newSel = sel.mouseUp();
 
@@ -336,13 +328,10 @@ describe('CellsSelection', () => {
         describe('with an ongoing autofill drag', () => {
             // TODO: Update cellsSelection.ts to get this to pass!
             xit('ends the autofill drag', () => {
-                const sel = new CellsSelection(
-                    coord([2, 2]),
-                    bound([2, 2], [4, 4]),
-                    coord([4, 4]),
-                    false,
-                    coord([3, 3]),
-                );
+                const sel = cellsSelection(2, 2)
+                    .withSelectionFromCursorTo(4, 4)
+                    .withAutofillDragCell(5, 5)
+                    .build();
 
                 const newSel = sel.mouseUp();
 
@@ -351,13 +340,10 @@ describe('CellsSelection', () => {
             });
 
             it('does not update the selected range if the autofill-drag was to within the previous selection', () => {
-                const sel = new CellsSelection(
-                    coord([2, 2]),
-                    bound([2, 2], [4, 4]),
-                    coord([4, 4]),
-                    false,
-                    coord([3, 3]),
-                );
+                const sel = cellsSelection(2, 2)
+                    .withSelectionFromCursorTo(4, 4)
+                    .withAutofillDragCell(3, 3)
+                    .build();
 
                 const newSel = sel.mouseUp();
 
@@ -368,7 +354,7 @@ describe('CellsSelection', () => {
 
     describe('getAutofillRange', () => {
         it('returns null if not autofill dragging', () => {
-            const sel = cellSelection([1, 1], [1, 1]);
+            const sel = cellsSelection(1, 1).build();
 
             const autofillRange = sel.getAutofillRange();
 
@@ -376,7 +362,10 @@ describe('CellsSelection', () => {
         });
 
         it('returns the range below the selection if dragging down', () => {
-            const sel = cellSelection([0, 0], [3, 2], [5, 7]); // dragged down and right
+            const sel = cellsSelection(0, 0)
+                .withSelectionFromCursorTo(3, 2)
+                .withAutofillDragCell(5, 7) // dragged down and right
+                .build();
 
             const autofillRange = sel.getAutofillRange();
 
@@ -387,7 +376,10 @@ describe('CellsSelection', () => {
         });
 
         it('returns the range above the selection if dragging up', () => {
-            const sel = cellSelection([0, 3], [3, 5], [5, 0]); // dragged up and right
+            const sel = cellsSelection(0, 3)
+                .withSelectionFromCursorTo(3, 5)
+                .withAutofillDragCell(5, 0) // dragged up and right
+                .build();
 
             const autofillRange = sel.getAutofillRange();
 
@@ -398,7 +390,10 @@ describe('CellsSelection', () => {
         });
 
         it('returns the range above the selection if dragging right (and not up or down)', () => {
-            const sel = cellSelection([0, 0], [3, 2], [5, 1]); // dragged right
+            const sel = cellsSelection(0, 0)
+                .withSelectionFromCursorTo(3, 2)
+                .withAutofillDragCell(5, 1) // dragged right
+                .build();
 
             const autofillRange = sel.getAutofillRange();
 
@@ -409,7 +404,10 @@ describe('CellsSelection', () => {
         });
 
         it('returns the range above the selection if dragging left (and not up or down)', () => {
-            const sel = cellSelection([2, 0], [5, 2], [0, 1]); // dragged left
+            const sel = cellsSelection(2, 0)
+                .withSelectionFromCursorTo(5, 2)
+                .withAutofillDragCell(0, 1) // dragged left
+                .build();
 
             const autofillRange = sel.getAutofillRange();
 
