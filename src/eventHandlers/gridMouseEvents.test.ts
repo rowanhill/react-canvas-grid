@@ -21,7 +21,8 @@ const expectNoSelectionsToHaveBeenMade = (selectionState: AllSelectionStates) =>
 
 const createDummyCellState = (isSelectionInProgress = true) => {
     const coord: Coord = { x: 1, y: 1 };
-    return new CellsSelection(coord, coord, isSelectionInProgress, coord);
+    const bounds = { top: 1, left: 1, bottom: 1, right: 1 };
+    return new CellsSelection(coord, bounds, coord, isSelectionInProgress, coord);
 };
 
 const createSpiedOnCellSelectionState = (isSelectionInProgress = true) => {

@@ -1,29 +1,32 @@
 import { GridState } from '../gridState';
-import { Coord } from '../types';
-import { equalCoord } from '../utils';
+import { Bounds, Coord } from '../types';
+import { equalBounds, equalCoord } from '../utils';
 import { calculateGridOffsetForTargetCell } from './focusOffset';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
 function createSingleCell(cell: Coord): CellsSelection {
-    return new CellsSelection(cell, cell, false);
+    return new CellsSelection(cell, { left: cell.x, right: cell.x, top: cell.y, bottom: cell.y }, cell, false);
 }
 
 export class CellsSelection extends BaseSelectionState<CellsSelection> {
     private readonly editCursorCell: Coord;
-    private readonly selectionCursorCell: Coord;
+    private readonly selection: Bounds;
+    private readonly focusCell: Coord;
     private readonly autofillDragCell: Coord | null;
 
     constructor(
         editCursorCell: Coord,
-        selectionCursorCell: Coord,
+        selection: Bounds,
+        focusCell: Coord,
         isSelectionInProgress: boolean,
         autofillDragCell: Coord | null = null,
     ) {
         super(isSelectionInProgress);
         this.editCursorCell = editCursorCell;
-        this.selectionCursorCell = selectionCursorCell;
+        this.selection = selection;
+        this.focusCell = focusCell,
         this.autofillDragCell = autofillDragCell;
     }
 
@@ -48,23 +51,83 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     }
 
     public shiftArrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
-        const cell = truncateCoord({ x: this.selectionCursorCell.x, y: this.selectionCursorCell.y - 1 }, cellBounds);
-        return new CellsSelection(this.editCursorCell, cell, false);
+        if (this.editCursorCell.y === this.selection.bottom) {
+            const newY = truncateY(this.selection.top - 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                top: newY,
+            };
+            const focusCell = { x: this.focusCell.x, y: newY };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        } else {
+            const newY = truncateY(this.selection.bottom - 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                bottom: newY,
+            };
+            const focusCell = { x: this.focusCell.x, y: newY };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        }
     }
 
     public shiftArrowDown = (cellBounds: CellCoordBounds): CellsSelection => {
-        const cell = truncateCoord({ x: this.selectionCursorCell.x, y: this.selectionCursorCell.y + 1 }, cellBounds);
-        return new CellsSelection(this.editCursorCell, cell, false);
+        if (this.editCursorCell.y === this.selection.top) {
+            const newY = truncateY(this.selection.bottom + 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                bottom: newY,
+            };
+            const focusCell = { x: this.focusCell.x, y: newY };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        } else {
+            const newY = truncateY(this.selection.top + 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                top: newY,
+            };
+            const focusCell = { x: this.focusCell.x, y: newY };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        }
     }
 
     public shiftArrowLeft = (cellBounds: CellCoordBounds): CellsSelection => {
-        const cell = truncateCoord({ x: this.selectionCursorCell.x - 1, y: this.selectionCursorCell.y }, cellBounds);
-        return new CellsSelection(this.editCursorCell, cell, false);
+        if (this.editCursorCell.x === this.selection.right) {
+            const newX = truncateX(this.selection.left - 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                left: newX,
+            };
+            const focusCell = { y: this.focusCell.y, x: newX };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        } else {
+            const newX = truncateX(this.selection.right - 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                right: newX,
+            };
+            const focusCell = { y: this.focusCell.y, x: newX };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        }
     }
 
     public shiftArrowRight = (cellBounds: CellCoordBounds): CellsSelection => {
-        const cell = truncateCoord({ x: this.selectionCursorCell.x + 1, y: this.selectionCursorCell.y }, cellBounds);
-        return new CellsSelection(this.editCursorCell, cell, false);
+        if (this.editCursorCell.x === this.selection.left) {
+            const newX = truncateX(this.selection.right + 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                right: newX,
+            };
+            const focusCell = { y: this.focusCell.y, x: newX };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        } else {
+            const newX = truncateX(this.selection.left + 1, cellBounds);
+            const bounds = {
+                ...this.selection,
+                left: newX,
+            };
+            const focusCell = { y: this.focusCell.y, x: newX };
+            return new CellsSelection(this.editCursorCell, bounds, focusCell, false);
+        }
     }
 
     public mouseDown = (cell: Coord, meta: ClickMeta) => createSelectionStateForMouseDown(cell, meta);
@@ -73,7 +136,8 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
         if (meta.region !== 'cells') {
             return this;
         }
-        return new CellsSelection(this.editCursorCell, cell, true);
+        const bounds = this.selectionBoundsTo(cell);
+        return new CellsSelection(this.editCursorCell, bounds, cell, true);
     }
 
     public mouseMove = (cell: Coord): CellsSelection => {
@@ -81,15 +145,18 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
             if (!equalCoord(cell, this.autofillDragCell)) {
                 return new CellsSelection(
                     this.editCursorCell,
-                    this.selectionCursorCell,
+                    this.selection,
+                    cell,
                     true,
                     cell,
                 );
             }
         } else if (this.isSelectionInProgress) {
-            if (!equalCoord(cell, this.selectionCursorCell)) {
+            const bounds = this.selectionBoundsTo(cell);
+            if (!equalBounds(this.selection, bounds)) {
                 return new CellsSelection(
                     this.editCursorCell,
+                    bounds,
                     cell,
                     true,
                 );
@@ -100,12 +167,13 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
 
     public mouseUp = (): CellsSelection => {
         if (this.autofillDragCell !== null) {
-            // TODO: Allow selection ranges where the edit cursor is not at a corner
             const fillRange = this.getAutofillRange();
             if (fillRange) {
+                const mergedRange = mergeBounds(this.selection, fillRange);
                 return new CellsSelection(
                     this.editCursorCell,
-                    this.autofillDragCell,
+                    mergedRange,
+                    this.focusCell,
                     false,
                     null,
                 );
@@ -115,7 +183,8 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
         } else if (this.isSelectionInProgress) {
             return new CellsSelection(
                 this.editCursorCell,
-                this.selectionCursorCell,
+                this.selection,
+                this.focusCell,
                 false,
             );
         } else {
@@ -126,27 +195,28 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
     public mouseDownOnAutofillHandle = (): CellsSelection => {
         return new CellsSelection(
             this.editCursorCell,
-            this.selectionCursorCell,
+            this.selection,
+            this.focusCell,
             true,
-            this.selectionCursorCell,
+            this.editCursorCell,
         );
     }
 
     public getSelectionRange = (): SelectRange => {
         return {
             topLeft: {
-                x: Math.min(this.editCursorCell.x, this.selectionCursorCell.x),
-                y: Math.min(this.editCursorCell.y, this.selectionCursorCell.y),
+                x: this.selection.left,
+                y: this.selection.top,
             },
             bottomRight: {
-                x: Math.max(this.editCursorCell.x, this.selectionCursorCell.x),
-                y: Math.max(this.editCursorCell.y, this.selectionCursorCell.y),
+                x: this.selection.right,
+                y: this.selection.bottom,
             },
         };
     }
 
     public getFocusGridOffset = <T>(gridState: GridState<T>): Coord|null => {
-        return calculateGridOffsetForTargetCell(gridState, this.selectionCursorCell);
+        return calculateGridOffsetForTargetCell(gridState, this.focusCell);
     }
 
     public getCursorCell = () => this.editCursorCell;
@@ -212,11 +282,37 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
             return null;
         }
     }
+
+    private selectionBoundsTo = (cell: Coord): Bounds => {
+        return {
+            left: Math.min(this.editCursorCell.x, cell.x),
+            right: Math.max(this.editCursorCell.x, cell.x),
+            top: Math.min(this.editCursorCell.y, cell.y),
+            bottom: Math.max(this.editCursorCell.y, cell.y),
+        };
+    }
 }
 
 const truncateCoord = (coord: Coord, cellBounds: CellCoordBounds): Coord => {
     return {
         x: Math.min(Math.max(coord.x, cellBounds.frozenCols), cellBounds.numCols - 1),
         y: Math.min(Math.max(coord.y, cellBounds.frozenRows), cellBounds.numRows - 1),
+    };
+};
+
+const truncateX = (x: number, cellBounds: CellCoordBounds): number => {
+    return Math.min(Math.max(x, cellBounds.frozenCols), cellBounds.numCols - 1);
+};
+
+const truncateY = (y: number, cellBounds: CellCoordBounds): number => {
+    return Math.min(Math.max(y, cellBounds.frozenRows), cellBounds.numRows - 1);
+};
+
+const mergeBounds = (a: Bounds, b: SelectRange): Bounds => {
+    return {
+        top: Math.min(a.top, b.topLeft.y),
+        bottom: Math.max(a.bottom, b.bottomRight.y),
+        left: Math.min(a.left, b.topLeft.x),
+        right: Math.max(a.right, b.bottomRight.x),
     };
 };

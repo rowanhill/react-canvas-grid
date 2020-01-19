@@ -9,12 +9,22 @@ function coord(c: [number, number]): Coord {
     return { x: c[0], y: c[1] };
 }
 
+function bound(from: [number, number], to: [number, number]) {
+    return {
+        top: Math.min(from[1], to[1]),
+        left: Math.min(from[0], to[0]),
+        bottom: Math.max(from[1], to[1]),
+        right: Math.max(from[0], to[0]),
+    };
+}
+
 function cellSelection(from: [number, number], to: [number, number], autofill: [number, number]|null = null) {
     return new CellsSelection(
-        { x: from[0], y: from[1] },
-        { x: to[0], y: to[1] },
+        coord(from),
+        bound(from, to),
+        coord(to),
         true,
-        autofill ? { x: autofill[0], y: autofill[1] } : null,
+        autofill ? coord(autofill) : null,
     );
 }
 
@@ -81,26 +91,18 @@ describe('CellsSelection', () => {
     });
 
     describe.each`
-        keyName | simpleCoords | simpleResult | truncatedCoords
-        ${'shiftArrowUp'} | ${[1, 1]} | ${[1, 0]} | ${[[1, 2], [1, 0]]}
-        ${'shiftArrowDown'} | ${[1, 1]} | ${[1, 2]} | ${[[1, 8], [1, 9]]}
-        ${'shiftArrowLeft'} | ${[1, 1]} | ${[0, 1]} | ${[[2, 1], [0, 1]]}
-        ${'shiftArrowRight'} | ${[1, 1]} | ${[2, 1]} | ${[[8, 1], [9, 1]]}
-    `('$keyName', ({ keyName, simpleCoords, simpleResult, truncatedCoords }) => {
+        keyName | simpleCoords | simpleResult
+        ${'shiftArrowUp'} | ${[1, 1]} | ${[1, 0]}
+        ${'shiftArrowDown'} | ${[1, 1]} | ${[1, 2]}
+        ${'shiftArrowLeft'} | ${[1, 1]} | ${[0, 1]}
+        ${'shiftArrowRight'} | ${[1, 1]} | ${[2, 1]}
+    `('$keyName', ({ keyName, simpleCoords, simpleResult }) => {
         it('extends the selection', () => {
             const sel = singleCell(simpleCoords);
 
             const newSel = (sel as any)[keyName](bounds);
 
             expect(newSel.getSelectionRange()).toEqual(cellRange(simpleCoords, simpleResult));
-        });
-
-        it('is truncated if attempting to extend the selection out of bounds', () => {
-            const sel = cellSelection(truncatedCoords[0], truncatedCoords[1]);
-
-            const newSel = (sel as any)[keyName](bounds);
-
-            expect(newSel.getSelectionRange()).toEqual(cellRange(truncatedCoords[0], truncatedCoords[1]));
         });
 
         it('focuses on the cell newly included in the selection', () => {
@@ -113,6 +115,43 @@ describe('CellsSelection', () => {
 
             expect(offset).toBe('dummy offset');
             expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(simpleResult));
+        });
+    });
+
+    describe.each`
+        keyName | truncatedCoords
+        ${'shiftArrowUp'} | ${[[1, 2], [1, 0]]}
+        ${'shiftArrowDown'} | ${[[1, 8], [1, 9]]}
+        ${'shiftArrowLeft'} | ${[[2, 1], [0, 1]]}
+        ${'shiftArrowRight'} | ${[[8, 1], [9, 1]]}
+    `('$keyName', ({ keyName, truncatedCoords }) => {
+        it('is truncated if attempting to extend the selection out of bounds', () => {
+            const sel = cellSelection(truncatedCoords[0], truncatedCoords[1]);
+
+            const newSel = (sel as any)[keyName](bounds);
+
+            expect(newSel.getSelectionRange()).toEqual(cellRange(truncatedCoords[0], truncatedCoords[1]));
+        });
+    });
+
+    describe.each`
+        keyName | shrunkCoords
+        ${'shiftArrowUp'} | ${[[1, 1], [5, 4]]}
+        ${'shiftArrowDown'} | ${[[1, 2], [5, 5]]}
+        ${'shiftArrowLeft'} | ${[[1, 1], [4, 5]]}
+        ${'shiftArrowRight'} | ${[[2, 1], [5, 5]]}
+    `('$keyName', ({ keyName, shrunkCoords }) => {
+        it('shrinks the selection if the edit cell is not at the limit of the bounds', () => {
+            const sel = new CellsSelection(
+                coord([3, 3]),
+                bound([1, 1], [5, 5]),
+                coord([3, 3]),
+                false,
+            );
+
+            const newSel = (sel as any)[keyName](bounds);
+
+            expect(newSel.getSelectionRange()).toEqual(cellRange(shrunkCoords[0], shrunkCoords[1]));
         });
     });
 
@@ -259,8 +298,7 @@ describe('CellsSelection', () => {
                     expect(newSel.getAutofillRange()).toEqual(cellRange(from, to));
                 });
 
-                // TODO: Enable once cellsSelection updated
-                xit('focuses on the newly dragged cell', () => {
+                it('focuses on the newly dragged cell', () => {
                     const sel = cellSelection([3, 3], [4, 4], [4, 4]);
                     (calculateGridOffsetForTargetCell as jest.Mock).mockReset();
                     (calculateGridOffsetForTargetCell as jest.Mock).mockReturnValue('dummy offset');
@@ -300,6 +338,7 @@ describe('CellsSelection', () => {
             xit('ends the autofill drag', () => {
                 const sel = new CellsSelection(
                     coord([2, 2]),
+                    bound([2, 2], [4, 4]),
                     coord([4, 4]),
                     false,
                     coord([3, 3]),
@@ -314,6 +353,7 @@ describe('CellsSelection', () => {
             it('does not update the selected range if the autofill-drag was to within the previous selection', () => {
                 const sel = new CellsSelection(
                     coord([2, 2]),
+                    bound([2, 2], [4, 4]),
                     coord([4, 4]),
                     false,
                     coord([3, 3]),

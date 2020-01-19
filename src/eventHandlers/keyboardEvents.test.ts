@@ -85,12 +85,14 @@ describe('keyDownOnGrid', () => {
         const event = createEvent('ArrowUp');
         initialSelection = new CellsSelection(
             { x: 0, y: 0 },
+            { top: 0, left: 0, bottom: 0, right: 0 },
             { x: 0, y: 0 },
             false,
             { x: 0, y: 0 },
         );
         newSelection = new CellsSelection(
             { x: 0, y: 0 },
+            { top: 0, left: 0, bottom: 0, right: 0 },
             { x: 0, y: 0 },
             false,
             { x: 0, y: 0 },
