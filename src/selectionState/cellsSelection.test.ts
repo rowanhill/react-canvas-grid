@@ -326,11 +326,22 @@ describe('CellsSelection', () => {
         });
 
         describe('with an ongoing autofill drag', () => {
-            // TODO: Update cellsSelection.ts to get this to pass!
-            xit('ends the autofill drag', () => {
+            it('ends the autofill drag', () => {
                 const sel = cellsSelection(2, 2)
                     .withSelectionFromCursorTo(4, 4)
                     .withAutofillDragCell(5, 5)
+                    .build();
+
+                const newSel = sel.mouseUp();
+
+                expect(newSel).toHaveProperty('isSelectionInProgress', false);
+                expect(newSel).toHaveProperty('autofillDragCell', null);
+            });
+
+            it('ends the autofill drag even if the drag finishes within the previous selection', () => {
+                const sel = cellsSelection(2, 2)
+                    .withSelectionFromCursorTo(4, 4)
+                    .withAutofillDragCell(3, 3)
                     .build();
 
                 const newSel = sel.mouseUp();

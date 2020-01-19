@@ -178,7 +178,13 @@ export class CellsSelection extends BaseSelectionState<CellsSelection> {
                     null,
                 );
             } else {
-                return this;
+                return new CellsSelection(
+                    this.editCursorCell,
+                    this.selection,
+                    this.focusCell,
+                    false,
+                    null,
+                );
             }
         } else if (this.isSelectionInProgress) {
             return new CellsSelection(
