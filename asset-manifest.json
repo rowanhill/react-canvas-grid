@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/react-canvas-grid/static/css/main.05877639.chunk.css",
-    "main.js": "/react-canvas-grid/static/js/main.80c60e84.chunk.js",
-    "main.js.map": "/react-canvas-grid/static/js/main.80c60e84.chunk.js.map",
+    "main.js": "/react-canvas-grid/static/js/main.69ccf892.chunk.js",
+    "main.js.map": "/react-canvas-grid/static/js/main.69ccf892.chunk.js.map",
     "runtime-main.js": "/react-canvas-grid/static/js/runtime-main.7da36007.js",
     "runtime-main.js.map": "/react-canvas-grid/static/js/runtime-main.7da36007.js.map",
-    "static/js/2.77f7233b.chunk.js": "/react-canvas-grid/static/js/2.77f7233b.chunk.js",
-    "static/js/2.77f7233b.chunk.js.map": "/react-canvas-grid/static/js/2.77f7233b.chunk.js.map",
+    "static/js/2.985e15ae.chunk.js": "/react-canvas-grid/static/js/2.985e15ae.chunk.js",
+    "static/js/2.985e15ae.chunk.js.map": "/react-canvas-grid/static/js/2.985e15ae.chunk.js.map",
     "index.html": "/react-canvas-grid/index.html",
-    "precache-manifest.407adc8334541467636b38815104397b.js": "/react-canvas-grid/precache-manifest.407adc8334541467636b38815104397b.js",
+    "precache-manifest.f30dc17a32216c760700a3da01c5ffb5.js": "/react-canvas-grid/precache-manifest.f30dc17a32216c760700a3da01c5ffb5.js",
     "service-worker.js": "/react-canvas-grid/service-worker.js",
     "static/css/main.05877639.chunk.css.map": "/react-canvas-grid/static/css/main.05877639.chunk.css.map",
-    "static/js/2.77f7233b.chunk.js.LICENSE": "/react-canvas-grid/static/js/2.77f7233b.chunk.js.LICENSE"
+    "static/js/2.985e15ae.chunk.js.LICENSE": "/react-canvas-grid/static/js/2.985e15ae.chunk.js.LICENSE"
   },
   "entrypoints": [
     "static/js/runtime-main.7da36007.js",
-    "static/js/2.77f7233b.chunk.js",
+    "static/js/2.985e15ae.chunk.js",
     "static/css/main.05877639.chunk.css",
-    "static/js/main.80c60e84.chunk.js"
+    "static/js/main.69ccf892.chunk.js"
   ]
 }
