@@ -30,7 +30,7 @@ export const RadioInputs = <T extends {}>(
 ) => {
     return <React.Fragment>
         {values.map((val) =>
-            <label>
+            <label key={val.toString()}>
                 <input type="radio" value={val.toString()} checked={val === selectedValue} onChange={onSelect} />
                 {val}
             </label>)}
