@@ -42,7 +42,7 @@ export class GridGeometry {
         const numRows = data.length;
         const height = (numRows * rowHeight) + ((numRows - 1) * borderWidth);
 
-        const width = columnBoundaries[columnBoundaries.length - 1].right;
+        const width = columnBoundaries.length > 0 ? columnBoundaries[columnBoundaries.length - 1].right : 0;
 
         return { width, height };
     }
