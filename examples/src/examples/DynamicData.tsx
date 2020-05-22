@@ -9,7 +9,9 @@ interface DynamicDataGridState {
     columns: ColumnDef[];
     data: Array<DataRow<void>>;
     numCols: number;
+    numColsInputValue: number;
     numRows: number;
+    numRowsInputValue: number;
     freezeFirstRowAndCol: boolean;
     filterCols: boolean;
 }
@@ -52,18 +54,16 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
                             <label>Number of rows: </label>
                             <NumberInput
                                 id="num-rows"
-                                key={this.state.numRows}
                                 onChange={this.changeNumRows}
-                                defaultValue={this.state.numRows.toString()}
+                                value={this.state.numRowsInputValue.toString()}
                             />
                         </InlineGroup>
                         <InlineGroup>
                             <label>Number of columns: </label>
                             <NumberInput
                                 id="num-cols"
-                                key={this.state.numCols}
                                 onChange={this.changeNumCols}
-                                defaultValue={this.state.numCols.toString()}
+                                value={this.state.numColsInputValue.toString()}
                             />
                         </InlineGroup>
                     </div>
@@ -122,6 +122,7 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
             clearTimeout(this.changeRowsDebounceTimeout);
         }
         const numRows = event.target.valueAsNumber;
+        this.setState({ numRowsInputValue: numRows });
         this.changeRowsDebounceTimeout = setTimeout(this.changeNumRowsDebounced, 80, numRows);
     }
 
@@ -137,6 +138,7 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
             clearTimeout(this.changeColsDebounceTimeout);
         }
         const numCols = event.target.valueAsNumber;
+        this.setState({ numColsInputValue: numCols });
         this.changeColsDebounceTimeout = setTimeout(this.changeNumColsDebounced, 80, numCols);
     }
 
@@ -196,7 +198,9 @@ const getDefaultState = (): DynamicDataGridState => {
         columns,
         data,
         numCols: 100,
+        numColsInputValue: 100,
         numRows: 20,
+        numRowsInputValue: 20,
         freezeFirstRowAndCol: false,
         filterCols: false,
     };
