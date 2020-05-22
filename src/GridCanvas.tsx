@@ -4,6 +4,7 @@ import { GridCanvasRenderer, GridCanvasRendererPosition } from './gridCanvasRend
 import { GridState } from './gridState';
 
 export interface GridCanvasProps<T> {
+    name: string;
     top: number;
     left: number;
     width: number;
@@ -51,7 +52,13 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
 
         {
             const canvasSize = { width: this.props.width, height: this.props.height };
-            this.renderer = new GridCanvasRenderer(this.canvasRef.current, canvasSize, basicProps(), gridState.dpr());
+            this.renderer = new GridCanvasRenderer(
+                this.canvasRef.current,
+                canvasSize,
+                basicProps(),
+                gridState.dpr(),
+                this.props.name,
+            );
         }
 
         this.renderCallback = consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {

@@ -41,7 +41,7 @@ export class FrozenRowsCanvas<T> extends React.Component<FrozenCanvasProps<T>, {
             posProps: this.rowsPosProps,
         };
         return (
-            <GridCanvas {...props} />
+            <GridCanvas {...props} name="rows" />
         );
     }
 }

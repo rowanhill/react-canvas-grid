@@ -46,7 +46,7 @@ export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
             posProps: this.posProps,
         };
         return (
-            <GridCanvas {...props} />
+            <GridCanvas {...props} name="main" />
         );
     }
 }

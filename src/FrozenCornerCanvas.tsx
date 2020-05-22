@@ -37,7 +37,7 @@ export class FrozenCornerCanvas<T> extends React.Component<FrozenCanvasProps<T>,
             posProps: this.cornerPosProps,
         };
         return (
-            <GridCanvas {...props} />
+            <GridCanvas {...props} name="corner" />
         );
     }
 }

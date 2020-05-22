@@ -31,11 +31,19 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
     private basicProps: GridCanvasRendererBasics<T>;
     private posProps: GridCanvasRendererPosition = defaultPosProps;
     private prevDraw: PreviousDrawInfo|null = null;
+    private name: string;
 
-    constructor(canvas: HTMLCanvasElement, canvasSize: Size, basicProps: GridCanvasRendererBasics<T>, dpr: number) {
+    constructor(
+        canvas: HTMLCanvasElement,
+        canvasSize: Size,
+        basicProps: GridCanvasRendererBasics<T>,
+        dpr: number,
+        name: string,
+    ) {
         super(canvas, dpr, false);
         this.canvasSize = canvasSize;
         this.basicProps = basicProps;
+        this.name = name;
     }
 
     public updateProps = (
