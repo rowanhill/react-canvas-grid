@@ -10,6 +10,8 @@ interface DynamicDataGridState {
     data: Array<DataRow<void>>;
     numCols: number;
     numRows: number;
+    freezeFirstRowAndCol: boolean;
+    filterCols: boolean;
 }
 
 export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
@@ -23,6 +25,7 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
     }
 
     public render() {
+        const shownCols = this.state.columns.filter((c, i) => !this.state.filterCols || i < 5);
         return (
             <PaddedPage>
                 <h1>Dynamic Data</h1>
@@ -50,7 +53,7 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
                             <NumberInput
                                 id="num-rows"
                                 onChange={this.changeNumRows}
-                                defaultValue={this.state.numRows as any}
+                                value={this.state.numRows}
                             />
                         </InlineGroup>
                         <InlineGroup>
@@ -58,7 +61,7 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
                             <NumberInput
                                 id="num-cols"
                                 onChange={this.changeNumCols}
-                                defaultValue={this.state.numCols as any}
+                                value={this.state.numCols}
                             />
                         </InlineGroup>
                     </div>
@@ -77,13 +80,35 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
                             <button id="reset" onClick={this.reset}>Reset</button>
                         </InlineGroup>
                     </div>
+                    <div>
+                        <InlineGroup>
+                            <label htmlFor="toggle-frozen-cols">Select to freeze row 1 &amp; column 1: </label>
+                            <input
+                                id="toggle-frozen-cols"
+                                type="checkbox"
+                                onChange={this.toggleFrozen}
+                                checked={this.state.freezeFirstRowAndCol}
+                            />
+                        </InlineGroup>
+                        <InlineGroup>
+                            <label htmlFor="toggle-filter-cols">Select to hide columns over 5: </label>
+                            <input
+                                id="toggle-filter-cols"
+                                type="checkbox"
+                                onChange={this.toggleFilterCols}
+                                checked={this.state.filterCols}
+                            />
+                        </InlineGroup>
+                    </div>
                 </ControlsForm>
 
                 <FixedSizeHolder>
                     <ReactCanvasGrid<void>
-                        columns={this.state.columns}
+                        columns={shownCols}
                         data={this.state.data}
                         rowHeight={20}
+                        frozenCols={this.state.freezeFirstRowAndCol ? 1 : 0}
+                        frozenRows={this.state.freezeFirstRowAndCol ? 1 : 0}
                     />
                 </FixedSizeHolder>
             </PaddedPage>
@@ -148,9 +173,21 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
         this.setState(getDefaultState());
         event.preventDefault();
     }
+
+    private toggleFrozen = () => {
+        this.setState({
+            freezeFirstRowAndCol: !this.state.freezeFirstRowAndCol,
+        });
+    }
+
+    private toggleFilterCols = () => {
+        this.setState({
+            filterCols: !this.state.filterCols,
+        });
+    }
 }
 
-const getDefaultState = () => {
+const getDefaultState = (): DynamicDataGridState => {
     const { columns, rows: data } = createFakeDataAndColumns(20, 100, () => {/* no op */});
 
     return {
@@ -158,5 +195,7 @@ const getDefaultState = () => {
         data,
         numCols: 100,
         numRows: 20,
+        freezeFirstRowAndCol: false,
+        filterCols: false,
     };
 };
