@@ -4,7 +4,7 @@ import { FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
 import { GridCanvasRendererPosition } from './gridCanvasRenderer';
 
-export class FrozenCornerCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
+export class FrozenCornerCanvas<T> extends React.PureComponent<FrozenCanvasProps<T>> {
     private readonly cornerPosProps: ReactiveFn<GridCanvasRendererPosition>;
 
     public constructor(props: FrozenCanvasProps<T>) {

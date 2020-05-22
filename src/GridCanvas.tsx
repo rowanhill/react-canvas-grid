@@ -13,7 +13,7 @@ export interface GridCanvasProps<T> {
     posProps: ReactiveFn<GridCanvasRendererPosition>;
 }
 
-export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
+export class GridCanvas<T> extends React.PureComponent<GridCanvasProps<T>> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: GridCanvasRenderer<T>|null = null;
     private renderCallback: ReactiveConsumer|null = null;

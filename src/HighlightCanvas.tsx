@@ -9,7 +9,7 @@ export interface HighlightCanvasProps {
     gridState: GridState<any>;
 }
 
-export class HighlightCanvas extends React.Component<HighlightCanvasProps, {}> {
+export class HighlightCanvas extends React.PureComponent<HighlightCanvasProps> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: HighlightCanvasRenderer|null = null;
     private renderCallback: ReactiveConsumer|null = null;

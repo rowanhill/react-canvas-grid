@@ -12,7 +12,7 @@ export interface FrozenCanvasProps<T> {
     gridState: GridState<T>;
 }
 
-export class FrozenCanvas<T> extends React.Component<FrozenCanvasProps<T>, {}> {
+export class FrozenCanvas<T> extends React.PureComponent<FrozenCanvasProps<T>> {
     public render() {
         return (
             <React.Fragment>

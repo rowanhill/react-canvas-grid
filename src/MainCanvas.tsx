@@ -13,7 +13,7 @@ export interface MainCanvasProps<T> {
     gridState: GridState<T>;
 }
 
-export class MainCanvas<T> extends React.Component<MainCanvasProps<T>, {}> {
+export class MainCanvas<T> extends React.PureComponent<MainCanvasProps<T>> {
     private readonly posProps: ReactiveFn<GridCanvasRendererPosition>;
 
     public constructor(props: FrozenCanvasProps<T>) {
