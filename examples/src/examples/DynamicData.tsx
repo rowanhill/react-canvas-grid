@@ -52,16 +52,18 @@ export class DynamicDataGrid extends React.Component<{}, DynamicDataGridState> {
                             <label>Number of rows: </label>
                             <NumberInput
                                 id="num-rows"
+                                key={this.state.numRows}
                                 onChange={this.changeNumRows}
-                                value={this.state.numRows}
+                                defaultValue={this.state.numRows.toString()}
                             />
                         </InlineGroup>
                         <InlineGroup>
                             <label>Number of columns: </label>
                             <NumberInput
                                 id="num-cols"
+                                key={this.state.numCols}
                                 onChange={this.changeNumCols}
-                                value={this.state.numCols}
+                                defaultValue={this.state.numCols.toString()}
                             />
                         </InlineGroup>
                     </div>
