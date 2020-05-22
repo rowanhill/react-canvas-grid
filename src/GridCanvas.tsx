@@ -61,7 +61,7 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
             );
         }
 
-        this.renderCallback = consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {
+        const renderCallback = consumer([basicProps, this.props.posProps], (newBasicProps, newPosProps) => {
             if (this.renderer) {
                 if (!this.canvasRef.current) {
                     throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
@@ -70,6 +70,10 @@ export class GridCanvas<T> extends React.Component<GridCanvasProps<T>, {}> {
                 this.renderer.updateProps(this.canvasRef.current, canvasSize, newBasicProps, newPosProps);
             }
         });
+        // Force the render - there's no guarantee the consumer's inputs will ever update, so we need to ensure
+        // something is painted to the canvas.
+        renderCallback();
+        this.renderCallback = renderCallback;
     }
 
     public componentWillUnmount() {
