@@ -2,3 +2,4 @@ node_modules
 dist
 __diff_output__
 coverage
+cypress/screenshots
