@@ -1,3 +1,4 @@
+import shallow_equals from 'shallow-equals';
 import { CommonCanvasRenderer } from './commonCanvasRenderer';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
 import * as ScrollGeometry from './scrollbarGeometry';
@@ -274,5 +275,5 @@ export function shouldSelectionClear(
     prev: { columns: ColumnDef[], data: Array<DataRow<any>>},
     next: { columns: ColumnDef[], data: Array<DataRow<any>>},
 ): boolean {
-    return (prev.columns !== next.columns || prev.data.length !== next.data.length);
+    return (!shallow_equals(prev.columns, next.columns) || prev.data.length !== next.data.length);
 }
