@@ -1,13 +1,15 @@
 import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
-import { FrozenCanvasProps } from './FrozenCanvas';
+import { FrozenCanvasCoreProps, FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
 import { GridCanvasRendererPosition } from './gridCanvasRenderer';
 
-export class FrozenColsCanvas<T> extends React.PureComponent<FrozenCanvasProps<T>> {
+type FrozenColsCanvasProps<T> =  FrozenCanvasCoreProps<T> & Pick<FrozenCanvasProps<T>, 'horizontalGutterBounds'>;
+
+export class FrozenColsCanvas<T> extends React.PureComponent<FrozenColsCanvasProps<T>> {
     private readonly colsPosProps: ReactiveFn<GridCanvasRendererPosition>;
 
-    public constructor(props: FrozenCanvasProps<T>) {
+    public constructor(props: FrozenColsCanvasProps<T>) {
         super(props);
 
         const colsVisibleRect = transformer(
@@ -30,7 +32,7 @@ export class FrozenColsCanvas<T> extends React.PureComponent<FrozenCanvasProps<T
     }
 
     public render() {
-        const horizontalGutterBounds = this.props.gridState.horizontalGutterBounds();
+        const horizontalGutterBounds = this.props.horizontalGutterBounds;
         const scrollGutterHeight = horizontalGutterBounds ? horizontalGutterBounds.height : 0;
         const props = {
             ...this.props,

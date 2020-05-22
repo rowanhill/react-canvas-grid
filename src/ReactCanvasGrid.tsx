@@ -65,6 +65,9 @@ interface ReactCanvasGridState<T> {
     gridOffset: Coord;
     editingCell: EditingCell<T> | null;
     cursorType: 'crosshair' | 'default';
+    dpr: number;
+    horizontalGutterBounds: ClientRect | null;
+    verticalGutterBounds: ClientRect | null;
 }
 
 export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps<T>, ReactCanvasGridState<T>> {
@@ -98,6 +101,9 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             gridOffset: this.gridState.gridOffset(),
             editingCell: null,
             cursorType: 'default',
+            dpr: window.devicePixelRatio,
+            horizontalGutterBounds: null,
+            verticalGutterBounds: null,
         };
     }
 
@@ -118,11 +124,14 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
         });
 
-        // Keep the gridState gridOffset and the React state gridOffset in sync
+        // Synchronise properties calculated in GridState into react state, to be passed down as props
         consumer([this.gridState.gridOffset], (gridOffset) => this.setState({gridOffset}));
-
-        // Keep the gridState cursorType and the React state cursorType in sync
         consumer([this.gridState.cursorType], (cursorType) => this.setState({cursorType}));
+        consumer([this.gridState.dpr], (dpr) => this.setState({dpr}));
+        consumer([this.gridState.horizontalGutterBounds], (horizontalGutterBounds) =>
+            this.setState({horizontalGutterBounds}));
+        consumer([this.gridState.verticalGutterBounds], (verticalGutterBounds) =>
+            this.setState({verticalGutterBounds}));
     }
 
     public componentDidUpdate(prevProps: ReactCanvasGridProps<T>) {
@@ -216,6 +225,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     height={canvasSize.height}
                     frozenColsWidth={frozenColsWidth}
                     frozenRowsHeight={frozenRowsHeight}
+                    dpr={this.state.dpr}
                     gridState={this.gridState}
                 />
                 <HighlightCanvas
@@ -240,7 +250,10 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     height={canvasSize.height}
                     frozenColsWidth={frozenColsWidth}
                     frozenRowsHeight={frozenRowsHeight}
+                    dpr={this.state.dpr}
                     gridState={this.gridState}
+                    horizontalGutterBounds={this.state.horizontalGutterBounds}
+                    verticalGutterBounds={this.state.verticalGutterBounds}
                 />
             </div>
         );

@@ -4,26 +4,32 @@ import { FrozenCornerCanvas } from './FrozenCornerCanvas';
 import { FrozenRowsCanvas } from './FrozenRowsCanvas';
 import { GridState } from './gridState';
 
-export interface FrozenCanvasProps<T> {
+export interface FrozenCanvasCoreProps<T> {
     width: number;
     height: number;
     frozenColsWidth: number;
     frozenRowsHeight: number;
+    dpr: number;
     gridState: GridState<T>;
+}
+export interface FrozenCanvasProps<T> extends FrozenCanvasCoreProps<T> {
+    horizontalGutterBounds: ClientRect | null;
+    verticalGutterBounds: ClientRect | null;
 }
 
 export class FrozenCanvas<T> extends React.PureComponent<FrozenCanvasProps<T>> {
     public render() {
+        const { horizontalGutterBounds, verticalGutterBounds, ...coreProps } = this.props;
         return (
             <React.Fragment>
                 {(this.props.frozenRowsHeight > 0 && this.props.frozenColsWidth > 0) &&
-                    <FrozenCornerCanvas {...this.props} />
+                    <FrozenCornerCanvas {...coreProps} />
                 }
                 {this.props.frozenRowsHeight > 0 &&
-                    <FrozenRowsCanvas {...this.props} />
+                    <FrozenRowsCanvas {...coreProps} verticalGutterBounds={verticalGutterBounds} />
                 }
                 {this.props.frozenColsWidth > 0 &&
-                    <FrozenColsCanvas {...this.props} />
+                    <FrozenColsCanvas {...coreProps} horizontalGutterBounds={horizontalGutterBounds} />
                 }
             </React.Fragment>
         );

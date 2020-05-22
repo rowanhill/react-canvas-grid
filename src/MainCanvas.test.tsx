@@ -27,6 +27,7 @@ const props: MainCanvasProps<null> = {
     frozenColsWidth: 0,
     frozenRowsHeight: 0,
     gridState: new GridState([{width: 40} as any], [], 20, 1, 0, 0, () => false),
+    dpr: 1,
 };
 
 describe('MainCanvas', () => {

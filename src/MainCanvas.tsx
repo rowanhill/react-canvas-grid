@@ -10,13 +10,14 @@ export interface MainCanvasProps<T> {
     height: number;
     frozenColsWidth: number;
     frozenRowsHeight: number;
+    dpr: number;
     gridState: GridState<T>;
 }
 
 export class MainCanvas<T> extends React.PureComponent<MainCanvasProps<T>> {
     private readonly posProps: ReactiveFn<GridCanvasRendererPosition>;
 
-    public constructor(props: FrozenCanvasProps<T>) {
+    public constructor(props: MainCanvasProps<T>) {
         super(props);
 
         const mainVisibleRect = transformer(
