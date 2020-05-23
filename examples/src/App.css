@@ -6,13 +6,31 @@
 
 main {
   flex: 1;
+  margin: 0 1.5em;
+}
+
+main ul {
+  padding: 0;
+  list-style-type: none;
+}
+
+main ul li {
+  margin-bottom: 1.5em;
+}
+
+main ul li h3 {
+  margin: 0 0 0.5em 0;
+}
+
+main ul li p {
+  margin: 0 0 0.5em 0;
 }
 
 nav {
   flex: 0 0 12em;
   order: -1;
   min-height: 100vh;
-  padding: 0.5em;
+  margin: 0.5em;
 }
 
 nav ul {
@@ -27,6 +45,9 @@ nav ul li {
   font-weight: 600;
   border-bottom: 1px solid #eeeeee;
 }
+nav ul li:hover {
+  background-color: hsl(0, 0%, 97%);
+}
 
 nav ul li:first-of-type a {
   border-top-right-radius: 2px;
@@ -40,9 +61,11 @@ nav ul li:last-of-type {
 
 nav ul li a {
   display: block;
-  text-decoration: none;
-  color: #666666;
+  color: hsl(0, 0%, 40%);
   padding: 0.4em;
+}
+nav ul li:hover a {
+  color: hsl(0, 0%, 50%);
 }
 nav ul li a.selected {
   border-right: 2px solid #333944;

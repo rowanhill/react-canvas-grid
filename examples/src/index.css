@@ -23,6 +23,9 @@ a {
   font-weight: bold;
   text-decoration: none;
 }
+a:hover {
+  color: hsl(123, 59%, 47%);
+}
 
 p {
   line-height: 1.3em;
