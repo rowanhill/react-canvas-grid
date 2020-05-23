@@ -16,6 +16,7 @@ class App extends Component<{}, {}> {
             ))}
           </main>
           <nav>
+            <h1><NavLink to="/">react-canvas-grid</NavLink></h1>
             <ul>
               {exampleMeta.map((meta) => (
                 <li key={meta.pathFragment}>

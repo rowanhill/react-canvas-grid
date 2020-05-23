@@ -12,10 +12,10 @@ nav {
   flex: 0 0 12em;
   order: -1;
   min-height: 100vh;
+  padding: 0.5em;
 }
 
 nav ul {
-  margin: 0.5em;
   border: 1px solid #eeeeee;
   border-radius: 3px;
   padding: 0;

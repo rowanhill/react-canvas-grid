@@ -17,3 +17,13 @@ code {
   border-radius: 2px;
   color: rgb(196, 78, 78);
 }
+
+a {
+  color: hsl(123, 59%, 36%);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+p {
+  line-height: 1.3em;
+}
