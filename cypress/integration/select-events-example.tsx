@@ -287,7 +287,7 @@ update: (1,1) -> (19,1)
 
     describe('clicking outside the grid', () => {
         it('logs nothing', () => {
-            cy.get('h1')
+            cy.get('main h1')
                 .click(0, 0);
             cy.get('@Log')
                 .invoke('text')
@@ -299,7 +299,7 @@ update: (1,1) -> (19,1)
         it('logs nothing additional', () => {
             cy.get('@Root')
                 .click(60, 50);
-            cy.get('h1')
+            cy.get('main h1')
                 .trigger('mousedown', 0, 0, { buttons: 1, force: true })
                 .trigger('mousemove', 10, 10, { buttons: 1, force: true });
 
