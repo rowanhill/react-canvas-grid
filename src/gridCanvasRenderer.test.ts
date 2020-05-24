@@ -58,7 +58,7 @@ describe('GridCanvasRenderer', () => {
         mockCanvas = {
             getContext: () => mockContext,
         } as unknown as HTMLCanvasElement;
-        renderer = new GridCanvasRenderer<null>(mockCanvas, canvasSize, props, dpr);
+        renderer = new GridCanvasRenderer<null>(mockCanvas, canvasSize, props, dpr, 'test');
 
         mockRaf();
     });
