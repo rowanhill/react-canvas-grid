@@ -1,6 +1,5 @@
 import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
-import { FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
 import { GridCanvasRendererPosition } from './gridCanvasRenderer';
 import { GridState } from './gridState';

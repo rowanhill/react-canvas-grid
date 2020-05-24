@@ -6,6 +6,7 @@ import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 export interface HighlightCanvasProps {
     width: number;
     height: number;
+    dpr: number;
     gridState: GridState<any>;
 }
 
@@ -22,8 +23,8 @@ export class HighlightCanvas extends React.PureComponent<HighlightCanvasProps> {
         return (
             <canvas
                 ref={this.canvasRef}
-                width={this.props.width * this.props.gridState.dpr()}
-                height={this.props.height * this.props.gridState.dpr()}
+                width={this.props.width * this.props.dpr}
+                height={this.props.height * this.props.dpr}
                 style={{
                     position: 'absolute',
                     width: `${this.props.width}px`,
