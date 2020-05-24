@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { CellDef, ReactCanvasGrid } from 'react-canvas-grid';
-import { Link } from 'react-router-dom';
 import { EventLog } from '../components/EventLog';
 import { FixedSizeHolder } from '../components/FixedSizeHolder';
-import PaddedPage from '../components/PaddedPage';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 interface KeyboardEventsState {
@@ -29,22 +27,7 @@ export class KeyboardEventsGrid extends React.Component<{}, KeyboardEventsState>
 
     public render() {
         return (
-            <PaddedPage>
-                <h1>Keyboard Events</h1>
-                <p>
-                    Keyboard events bubble up, so can be captured the parent element of the grid (when
-                    the grid has focus).
-                </p>
-                <p>
-                    Note that keyboard events will also bubble up when the user interacts with the
-                    inline editor, which you may wish to ignore. To do so, you may wish to observe
-                    the grid's edit events.
-                </p>
-                <p>
-                    Also note that the editing functionality provided in this example is incomplete;
-                    changes are not persisted. To see a more complete example, see
-                    the <Link to="/editable">Editable Data</Link> example.
-                </p>
+            <>
                 <FixedSizeHolder>
                     <div onKeyUp={this.onKeyUp} style={{ height: '100%' }}>
                         <ReactCanvasGrid<string>
@@ -55,7 +38,7 @@ export class KeyboardEventsGrid extends React.Component<{}, KeyboardEventsState>
                     </div>
                 </FixedSizeHolder>
                 <EventLog log={this.state.eventLog} />
-            </PaddedPage>
+            </>
         );
     }
 

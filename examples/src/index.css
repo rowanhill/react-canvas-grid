@@ -18,12 +18,18 @@ code {
   color: rgb(196, 78, 78);
 }
 
-a {
+button.link {
+  background: none!important;
+  border: none;
+  padding: 0!important;
+  cursor: pointer;
+}
+a, .link {
   color: hsl(123, 59%, 36%);
   font-weight: bold;
   text-decoration: none;
 }
-a:hover {
+a:hover, .link:hover {
   color: hsl(123, 59%, 47%);
 }
 

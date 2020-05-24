@@ -9,6 +9,7 @@
     "@types/react-dom": "16.0.11",
     "@types/react-router": "^5.0.3",
     "@types/react-router-dom": "^4.3.4",
+    "prism-react-renderer": "^1.1.1",
     "react": "^16.7.0",
     "react-canvas-grid": "file:../.",
     "react-dom": "^16.7.0",
@@ -19,9 +20,10 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npm run copy-examples && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "copy-examples": "cd src && copy examples/*.grid.tsx ../public",
     "predeploy": "npm run build",
     "deploy": "NODE_DEBUG=gh-pages gh-pages -d build"
   },
@@ -35,6 +37,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "copy": "^0.3.2",
     "gh-pages": "^2.1.1"
   }
 }

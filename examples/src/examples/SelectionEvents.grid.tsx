@@ -2,7 +2,6 @@ import * as React from 'react';
 import { ReactCanvasGrid, SelectRange } from 'react-canvas-grid';
 import { EventLog } from '../components/EventLog';
 import { FixedSizeHolder } from '../components/FixedSizeHolder';
-import PaddedPage from '../components/PaddedPage';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 interface SelectionEventsState {
@@ -21,16 +20,7 @@ export class SelectionEventsGrid extends React.Component<{}, SelectionEventsStat
 
     public render() {
         return (
-            <PaddedPage>
-                <h1>Selection Events</h1>
-                <p>
-                    The three callbacks <code>onSelectionChange[Start|Update|End]</code> allow consumers
-                    of react-canvas-grid to take action in response to the user changing the selected area.
-                    This can be useful for keeping track of the selection, in order to act upon the data.
-                </p>
-                <p>
-                    Note that clicking / dragging on frozen headers allows the user to select entire rows / columns.
-                </p>
+            <>
                 <FixedSizeHolder>
                     <ReactCanvasGrid<void>
                         columns={columns}
@@ -44,7 +34,7 @@ export class SelectionEventsGrid extends React.Component<{}, SelectionEventsStat
                     />
                 </FixedSizeHolder>
                 <EventLog log={this.state.eventLog} />
-            </PaddedPage>
+            </>
         );
     }
 

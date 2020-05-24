@@ -2,7 +2,6 @@ import * as React from 'react';
 import { ReactCanvasGrid } from 'react-canvas-grid';
 import { ControlsForm } from '../components/ControlsForm';
 import { FixedSizeHolder } from '../components/FixedSizeHolder';
-import PaddedPage from '../components/PaddedPage';
 import { createFakeDataAndColumns } from '../data/dataAndColumns';
 
 interface FocusColumnGridState {
@@ -24,17 +23,7 @@ export class FocusColumnGrid extends React.Component<{}, FocusColumnGridState> {
         const { columns, rows: data } = createFakeDataAndColumns(20, 100, () => {/* no op */});
 
         return (
-            <PaddedPage>
-                <h1>Focused Columns</h1>
-                <p>
-                    Updates to the <code>focusedColIndex</code> cause the grid to automatically scroll
-                    to ensure the indicated column is displayed. The scrolling behaviour is aware of
-                    frozen columns.
-                </p>
-                <p>
-                    This can be useful for building a 'search' feature.
-                </p>
-
+            <>
                 <ControlsForm>
                     <div>
                         <label>Select a column to focus: </label>
@@ -60,7 +49,7 @@ export class FocusColumnGrid extends React.Component<{}, FocusColumnGridState> {
                         frozenCols={this.state.freezeCols ? 2 : 0}
                     />
                 </FixedSizeHolder>
-            </PaddedPage>
+            </>
         );
     }
 

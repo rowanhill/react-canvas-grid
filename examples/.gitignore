@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignore the .grid.tsx files in public/examples - they're copied over at build time
+/public/examples/*.grid.tsx

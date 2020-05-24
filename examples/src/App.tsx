@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { HashRouter, NavLink, Route } from 'react-router-dom';
 import './App.css';
 import exampleMeta from './examples/exampleMeta';
+import { examplePage } from './examples/ExamplePage';
 import { Index } from './examples/Index';
 
 class App extends Component<{}, {}> {
@@ -12,7 +13,11 @@ class App extends Component<{}, {}> {
           <main>
             <Route exact path="/" component={Index} />
             {exampleMeta.map((meta) => (
-              <Route key={meta.pathFragment} path={meta.pathFragment} component={meta.component} />
+              <Route
+                key={meta.pathFragment}
+                path={meta.pathFragment}
+                component={examplePage(meta.text, meta.grid, meta.fileName)}
+              />
             ))}
           </main>
           <nav>

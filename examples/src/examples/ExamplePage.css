@@ -1,0 +1,10 @@
+button.code-toggle {
+    margin-top: 2em;
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+.code-example {
+    padding: 1em;
+    margin-top: 2em;
+}
