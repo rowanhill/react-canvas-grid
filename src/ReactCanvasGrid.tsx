@@ -228,7 +228,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     dpr={this.state.dpr}
                     gridState={this.gridState}
                 />
-                <HighlightCanvas
+                <HighlightCanvas<T>
                     width={canvasSize.width}
                     height={canvasSize.height}
                     dpr={this.state.dpr}

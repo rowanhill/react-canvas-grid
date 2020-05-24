@@ -3,19 +3,19 @@ import * as React from 'react';
 import { GridState, shallowEqualsExceptFunctions } from './gridState';
 import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 
-export interface HighlightCanvasProps {
+export interface HighlightCanvasProps<T> {
     width: number;
     height: number;
     dpr: number;
-    gridState: GridState<any>;
+    gridState: GridState<T>;
 }
 
-export class HighlightCanvas extends React.PureComponent<HighlightCanvasProps> {
+export class HighlightCanvas<T> extends React.PureComponent<HighlightCanvasProps<T>> {
     private readonly canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
     private renderer: HighlightCanvasRenderer|null = null;
     private renderCallback: ReactiveConsumer|null = null;
 
-    constructor(props: HighlightCanvasProps) {
+    constructor(props: HighlightCanvasProps<T>) {
         super(props);
     }
 
