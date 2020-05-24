@@ -8,6 +8,10 @@ describe('ReactCanvasGrid in a fixed size parent', () => {
         cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
 
         cy.get('Canvas').invoke('width').should('be.greaterThan', 0);
+
+        // Yuck :(
+        // A small wait here does seem to make the tests much more reliable, however...
+        cy.wait(20);
     });
 
     it('renders a selection overlay over clicked cell', () => {
@@ -19,7 +23,9 @@ describe('ReactCanvasGrid in a fixed size parent', () => {
     it('scrolls the selection overlay with the grid', () => {
         cy.get('@Root')
             .click()
-            .trigger('wheel', { deltaX: 50, deltaY: 50 })
+            .trigger('wheel', { deltaX: 50, deltaY: 50 });
+        cy.wait(20); // Another short wait helps ensure the scroll has been redrawn before the screenshot is taken
+        cy.get('@Root')
             .matchImageSnapshot('simple-grid-after-click-then-scroll');
     });
 
