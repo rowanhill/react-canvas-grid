@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { GridState } from '../gridState';
+import { CornerScrollbarCanvas } from './CornerScrollbarCanvas';
 import { HorizontalScrollbarCanvas } from './HorizontalScrollbarCanvas';
 import { VerticalScrollbarCanvas } from './VerticalScrollbarCanvas';
 
@@ -23,6 +24,13 @@ export class ScrollbarCanvas<T> extends React.PureComponent<ScrollbarCanvasProps
                 }
                 {verticalGutterBounds &&
                     <VerticalScrollbarCanvas {...coreProps} verticalGutterBounds={verticalGutterBounds} />
+                }
+                {horizontalGutterBounds && verticalGutterBounds &&
+                    <CornerScrollbarCanvas
+                        {...coreProps}
+                        horizontalGutterBounds={horizontalGutterBounds}
+                        verticalGutterBounds={verticalGutterBounds}
+                    />
                 }
             </React.Fragment>
         );

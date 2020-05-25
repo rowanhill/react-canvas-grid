@@ -33,23 +33,31 @@ export class VerticalScrollbarRenderer extends BaseScrollbarRenderer {
             this.context.stroke();
         }
 
-        // Set up for drawing scrollbars
-        context.lineCap = 'round';
-
         // Draw vertical scrollbar (if needed)
-        if (this.basicProps.verticalScrollbarPos) {
-            if (this.basicProps.hoveredScrollbar === 'y') {
-                context.strokeStyle = styles.scrollbar.hoverFill;
-                context.lineWidth = ScrollGeometry.barWidth + 3;
-            } else {
-                context.strokeStyle = styles.scrollbar.defaultFill;
-                context.lineWidth = ScrollGeometry.barWidth;
-            }
-            const scrollPos = this.basicProps.verticalScrollbarPos;
-            context.beginPath();
-            context.moveTo(scrollPos.transverse, scrollPos.extent.start);
-            context.lineTo(scrollPos.transverse, scrollPos.extent.end);
-            context.stroke();
+        drawVScrollbar(context, this.basicProps.verticalScrollbarPos, this.basicProps.hoveredScrollbar);
+    }
+}
+
+export function drawVScrollbar(
+    context: CanvasRenderingContext2D,
+    verticalScrollbarPos: ScrollGeometry.ScrollbarPosition | null,
+    hoveredScrollbar: 'x' | 'y' | null,
+) {
+    // Set up for drawing scrollbars
+    context.lineCap = 'round';
+
+    if (verticalScrollbarPos) {
+        if (hoveredScrollbar === 'y') {
+            context.strokeStyle = styles.scrollbar.hoverFill;
+            context.lineWidth = ScrollGeometry.barWidth + 3;
+        } else {
+            context.strokeStyle = styles.scrollbar.defaultFill;
+            context.lineWidth = ScrollGeometry.barWidth;
         }
+        const scrollPos = verticalScrollbarPos;
+        context.beginPath();
+        context.moveTo(scrollPos.transverse, scrollPos.extent.start);
+        context.lineTo(scrollPos.transverse, scrollPos.extent.end);
+        context.stroke();
     }
 }
