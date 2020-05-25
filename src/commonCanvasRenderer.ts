@@ -1,16 +1,29 @@
-import { CellDef, CustomDrawCallbackMetadata, getCellText } from './types';
+import { Coord } from './types';
+
+export interface CanvasRendererPosition {
+    gridOffset: Coord;
+    visibleRect: ClientRect;
+}
+
+const defaultPosProps = {
+    gridOffset: { x: 0, y: 0 },
+    visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
+};
 
 export const borderColour = 'lightgrey';
 
-export class CommonCanvasRenderer<T> {
+export abstract class CommonCanvasRenderer<T> {
     protected canvas: HTMLCanvasElement;
     protected context: CanvasRenderingContext2D;
+    protected posProps: CanvasRendererPosition = defaultPosProps;
+    protected readonly name: string;
     protected readonly alpha: boolean;
     protected readonly dpr: number;
 
     private queuedRender: number | null = null;
 
-    constructor(canvas: HTMLCanvasElement, dpr: number, alpha: boolean) {
+    constructor(name: string, canvas: HTMLCanvasElement, dpr: number, alpha: boolean) {
+        this.name = name;
         this.alpha = alpha;
         this.dpr = dpr;
 
@@ -23,30 +36,34 @@ export class CommonCanvasRenderer<T> {
         this.context = context;
     }
 
-    public drawScaled(draw: () => void) {
+    public drawScaled(draw: () => void, drawUntranslated?: () => void) {
         if (this.queuedRender !== null) {
             return;
         }
 
         this.queuedRender = window.requestAnimationFrame(() => {
+            this.context.save();
             this.context.scale(this.dpr, this.dpr);
             try {
-                draw();
+                if (drawUntranslated) {
+                    drawUntranslated();
+                }
+                this.context.save();
+                this.translate();
+                try {
+                    draw();
+                } finally {
+                    this.context.restore();
+                }
             } finally {
-                this.context.scale(1 / this.dpr, 1 / this.dpr);
+                this.context.restore();
 
                 this.queuedRender = null;
             }
         });
     }
 
-    public drawCell(cell: CellDef<T>, cellBounds: ClientRect, metadata: CustomDrawCallbackMetadata) {
-        const renderBackground = cell.renderBackground || this.drawCellBackgroundDefault;
-        const renderText = cell.renderText || this.drawCellTextDefault;
-
-        renderBackground(this.context, cellBounds, cell, metadata);
-        renderText(this.context, cellBounds, cell, metadata);
-    }
+    public abstract translate(): void;
 
     protected setCanvas = (canvas: HTMLCanvasElement) => {
         this.canvas = canvas;
@@ -55,25 +72,5 @@ export class CommonCanvasRenderer<T> {
             throw new Error('Could not create canvas contex');
         }
         this.context = context;
-    }
-
-    private drawCellBackgroundDefault = (
-        context: CanvasRenderingContext2D,
-        cellBounds: ClientRect,
-    ) => {
-        context.fillStyle = 'white';
-        context.fillRect(cellBounds.left, cellBounds.top, cellBounds.width, cellBounds.height);
-    }
-
-    private drawCellTextDefault = (
-        context: CanvasRenderingContext2D,
-        cellBounds: ClientRect,
-        cell: CellDef<T>,
-    ) => {
-        context.fillStyle = 'black';
-        context.textBaseline = 'middle';
-        const verticalCentre = cellBounds.top + (cellBounds.height / 2);
-        const text = getCellText(cell);
-        context.fillText(text, cellBounds.left + 2, verticalCentre, cellBounds.width - 4);
     }
 }

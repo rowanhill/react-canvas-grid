@@ -1,13 +1,18 @@
-import { consumer, mergeTransformer, ReactiveConsumer } from 'instigator';
+import { consumer, mergeTransformer, ReactiveConsumer, ReactiveFn } from 'instigator';
 import * as React from 'react';
+import { CanvasRendererPosition } from './commonCanvasRenderer';
 import { GridState, shallowEqualsExceptFunctions } from './gridState';
 import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 
 export interface HighlightCanvasProps<T> {
+    name: string;
+    top: number;
+    left: number;
     width: number;
     height: number;
     dpr: number;
     gridState: GridState<T>;
+    posProps: ReactiveFn<CanvasRendererPosition>;
 }
 
 export class HighlightCanvas<T> extends React.PureComponent<HighlightCanvasProps<T>> {
@@ -23,14 +28,15 @@ export class HighlightCanvas<T> extends React.PureComponent<HighlightCanvasProps
         return (
             <canvas
                 ref={this.canvasRef}
+                data-name={this.props.name}
                 width={this.props.width * this.props.dpr}
                 height={this.props.height * this.props.dpr}
                 style={{
                     position: 'absolute',
+                    top: `${this.props.top}px`,
+                    left: `${this.props.left}px`,
                     width: `${this.props.width}px`,
                     height: `${this.props.height}px`,
-                    top: 0,
-                    left: 0,
                 }}
             />
         );
@@ -46,33 +52,25 @@ export class HighlightCanvas<T> extends React.PureComponent<HighlightCanvasProps
             rowHeight: gridState.rowHeight,
             columnBoundaries: gridState.columnBoundaries,
             borderWidth: gridState.borderWidth,
-            horizontalGutterBounds: gridState.horizontalGutterBounds,
-            verticalGutterBounds: gridState.verticalGutterBounds,
             cellBounds: gridState.cellBounds,
             shouldAllowAutofill: gridState.shouldAllowAutofill,
         }, shallowEqualsExceptFunctions);
 
-        const scrollProps = mergeTransformer({
-            horizontalScrollbarPos: gridState.horizontalScrollbarPos,
-            verticalScrollbarPos: gridState.verticalScrollbarPos,
-        });
-
         const hoverProps = mergeTransformer({
-            hoveredScrollbar: gridState.hoveredScrollbar,
             autofillHandleIsHovered: gridState.autofillHandleIsHovered,
-        });
-
-        const posProps = mergeTransformer({
-            gridOffset: gridState.gridOffset,
-            visibleRect: gridState.visibleRect,
         });
 
         const selectionProps = mergeTransformer({ selectionState: gridState.selectionState });
 
-        this.renderer = new HighlightCanvasRenderer(this.canvasRef.current, basicProps(), gridState.dpr());
+        this.renderer = new HighlightCanvasRenderer(
+            this.props.name,
+            this.canvasRef.current,
+            basicProps(),
+            gridState.dpr(),
+        );
         this.renderCallback = consumer(
-            [basicProps, posProps, scrollProps, hoverProps, selectionProps],
-            (newBasicProps, newPosProps, newScrollProps, newHoverProps, newSelectionProps) => {
+            [basicProps, this.props.posProps, hoverProps, selectionProps],
+            (newBasicProps, newPosProps, newHoverProps, newSelectionProps) => {
                 if (this.renderer) {
                     if (!this.canvasRef.current) {
                         throw new Error('canvasRef is null in componentDidMount - cannot create renderer');
@@ -81,7 +79,6 @@ export class HighlightCanvas<T> extends React.PureComponent<HighlightCanvasProps
                         this.canvasRef.current,
                         newBasicProps,
                         newPosProps,
-                        newScrollProps,
                         newHoverProps,
                         newSelectionProps,
                     );

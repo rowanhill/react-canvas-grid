@@ -1,6 +1,7 @@
 import { ActiveSource, activeSource, consumer, mergeTransformer, ReactiveConsumer, ReactiveFn } from 'instigator';
 import * as React from 'react';
-import { GridCanvasRenderer, GridCanvasRendererPosition } from './gridCanvasRenderer';
+import { CanvasRendererPosition } from './commonCanvasRenderer';
+import { GridCanvasRenderer } from './gridCanvasRenderer';
 import { GridState } from './gridState';
 import { Size } from './types';
 
@@ -12,7 +13,7 @@ export interface GridCanvasProps<T> {
     height: number;
     dpr: number;
     gridState: GridState<T>;
-    posProps: ReactiveFn<GridCanvasRendererPosition>;
+    posProps: ReactiveFn<CanvasRendererPosition>;
 }
 
 export class GridCanvas<T> extends React.PureComponent<GridCanvasProps<T>> {
@@ -33,6 +34,7 @@ export class GridCanvas<T> extends React.PureComponent<GridCanvasProps<T>> {
         return (
             <canvas
                 ref={this.canvasRef}
+                data-name={this.props.name}
                 width={this.props.width * this.props.dpr}
                 height={this.props.height * this.props.dpr}
                 style={{

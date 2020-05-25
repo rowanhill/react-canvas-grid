@@ -11,7 +11,7 @@ describe('ReactCanvasGrid autofill', () => {
 
     describe('multi mode', () => {
         it('displays an autofill handle regardless of selection size', () => {
-            cy.get('@Canvas')
+            cy.get('@Root')
                 .trigger('mousedown', 60, 30, { buttons: 1, force: true })
                 .trigger('mousemove', 120, 75, { buttons: 1, force: true })
                 .trigger('mouseup', 120, 75, { force: true })
@@ -26,13 +26,13 @@ describe('ReactCanvasGrid autofill', () => {
         });
 
         it('displays an autofill handle on a one-cell selection', () => {
-            cy.get('@Canvas')
+            cy.get('@Root')
                 .click(60, 30, { force: true })
                 .matchImageSnapshot('single-autofill-handle');
         });
 
         it('does not display an autofill handle on a multi-cell selection', () => {
-            cy.get('@Canvas')
+            cy.get('@Root')
                 .trigger('mousedown', 60, 30, { buttons: 1, force: true })
                 .trigger('mousemove', 120, 75, { buttons: 1, force: true })
                 .trigger('mouseup', 120, 75, { force: true })
@@ -47,30 +47,30 @@ describe('ReactCanvasGrid autofill', () => {
         });
 
         it('does not display an autofill handle regardless of selection size', () => {
-            cy.get('@Canvas')
+            cy.get('@Root')
                 .click(60, 30, { force: true })
                 .matchImageSnapshot('none-no-autofill-handle');
         });
     });
 
     it('displays an outline around the area to be filled before filling', () => {
-        cy.get('@Canvas')
+        cy.get('@Root')
             .trigger('mousedown', 60, 30, { buttons: 1, force: true })
             .trigger('mousemove', 120, 75, { buttons: 1, force: true })
             .trigger('mouseup', 120, 75, { force: true });
 
-        cy.get('@Canvas')
+        cy.get('@Root')
             .trigger('mousedown', 150, 80, { buttons: 1, force: true })
             .trigger('mousemove', 230, 80, { buttons: 1, force: true })
             .matchImageSnapshot('autofill-drag-outline');
 
-        cy.get('@Canvas')
+        cy.get('@Root')
             .trigger('mouseup', 230, 80, { force: true })
             .matchImageSnapshot('autofill-complete');
     });
 
     it('highlights the autofill handle on hover and changes the cursor to crosshair', () => {
-        cy.get('@Canvas')
+        cy.get('@Root')
             // Set up a selection
             .trigger('mousedown', 60, 30, { buttons: 1, force: true })
             .trigger('mousemove', 120, 75, { buttons: 1, force: true })

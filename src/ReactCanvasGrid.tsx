@@ -5,14 +5,13 @@ import { handleMouseDown, handleMouseMove, handleMouseUp, handleWheel } from './
 import { FrozenCanvas } from './FrozenCanvas';
 import { GridGeometry } from './gridGeometry';
 import { GridState } from './gridState';
-import { HighlightCanvas } from './HighlightCanvas';
 import { shouldSelectionClear } from './highlightCanvasRenderer';
 import { InlineTextEditor } from './InlineEditor';
 import { MainCanvas } from './MainCanvas';
+import { ScrollbarCanvas } from './scrollbars/ScrollbarCanvas';
 import { NoSelection } from './selectionState/noSelection';
 import { SelectRange } from './selectionState/selectionTypes';
 import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, Size } from './types';
-
 export interface CellDataChangeEvent<T> {
     newData: T;
     cell: EditableCellDef<T>;
@@ -228,12 +227,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     dpr={this.state.dpr}
                     gridState={this.gridState}
                 />
-                <HighlightCanvas<T>
-                    width={canvasSize.width}
-                    height={canvasSize.height}
-                    dpr={this.state.dpr}
-                    gridState={this.gridState}
-                />
                 {this.state.editingCell &&
                     <InlineTextEditor<T>
                         cell={this.state.editingCell.cell}
@@ -251,6 +244,12 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
                     height={canvasSize.height}
                     frozenColsWidth={frozenColsWidth}
                     frozenRowsHeight={frozenRowsHeight}
+                    dpr={this.state.dpr}
+                    gridState={this.gridState}
+                    horizontalGutterBounds={this.state.horizontalGutterBounds}
+                    verticalGutterBounds={this.state.verticalGutterBounds}
+                />
+                <ScrollbarCanvas
                     dpr={this.state.dpr}
                     gridState={this.gridState}
                     horizontalGutterBounds={this.state.horizontalGutterBounds}

@@ -1,5 +1,7 @@
 import shallowEqual from 'shallow-equals';
-import { borderColour, CommonCanvasRenderer } from './commonCanvasRenderer';
+import { BaseGridOffsetRenderer } from './baseGridOffsetRenderer';
+import { drawCell } from './cellRenderer';
+import { borderColour, CanvasRendererPosition } from './commonCanvasRenderer';
 import { Bounds, ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface GridCanvasRendererBasics<T> {
@@ -11,27 +13,15 @@ export interface GridCanvasRendererBasics<T> {
     borderWidth: number;
 }
 
-export interface GridCanvasRendererPosition {
-    gridOffset: Coord;
-    visibleRect: ClientRect;
-}
-
 interface PreviousDrawInfo {
     gridOffset: Coord;
     rect: Bounds;
 }
 
-const defaultPosProps = {
-    gridOffset: { x: 0, y: 0 },
-    visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
-};
-
-export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
+export class GridCanvasRenderer<T> extends BaseGridOffsetRenderer<T> {
     private canvasSize: Size;
     private basicProps: GridCanvasRendererBasics<T>;
-    private posProps: GridCanvasRendererPosition = defaultPosProps;
     private prevDraw: PreviousDrawInfo|null = null;
-    private name: string;
 
     constructor(
         canvas: HTMLCanvasElement,
@@ -40,17 +30,16 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         dpr: number,
         name: string,
     ) {
-        super(canvas, dpr, false);
+        super(name, canvas, dpr, false);
         this.canvasSize = canvasSize;
         this.basicProps = basicProps;
-        this.name = name;
     }
 
     public updateProps = (
         canvas: HTMLCanvasElement,
         canvasSize: Size,
         basicProps: GridCanvasRendererBasics<T>,
-        posProps: GridCanvasRendererPosition,
+        posProps: CanvasRendererPosition,
     ) => {
         if (this.canvas !== canvas) {
             this.setCanvas(canvas);
@@ -61,13 +50,13 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         this.canvasSize = canvasSize;
         this.basicProps = basicProps;
         this.posProps = posProps;
-        this.drawScaled(this.draw);
+        this.drawScaled(this.draw, this.drawUntranslated);
     }
 
-    public draw = () => {
+    public drawUntranslated = () => {
         const prevDraw = this.prevDraw;
-        const basicProps = this.basicProps;
         const posProps = this.posProps;
+
         if (prevDraw) {
             // Translate according to difference from previous draw
             const xDiff = (prevDraw.gridOffset.x - posProps.gridOffset.x);
@@ -77,9 +66,12 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
         } else {
             this.drawWholeBorderBackground(this.canvasSize.width, this.canvasSize.height);
         }
+    }
 
-        // Translate the canvas context so that it's covering the visibleRect
-        this.translateToGridOffset(posProps.gridOffset);
+    public draw = () => {
+        const prevDraw = this.prevDraw;
+        const basicProps = this.basicProps;
+        const posProps = this.posProps;
 
         // Draw cells
         let colIndex = 0;
@@ -122,13 +114,10 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
                     continue;
                 }
 
-                this.drawCell(cell, cellBounds, {column: col, rowIndex, colIndex});
+                drawCell(this.context, cell, cellBounds, {column: col, rowIndex, colIndex});
             }
             colIndex++;
         }
-
-        // Translate back, to bring our drawn area into the bounds of the canvas element
-        this.translateToOrigin(posProps.gridOffset);
 
         // Remember what area is now drawn
         this.prevDraw = {
@@ -140,14 +129,6 @@ export class GridCanvasRenderer<T> extends CommonCanvasRenderer<T> {
                 bottom: Math.min(posProps.gridOffset.y + this.canvasSize.height, posProps.visibleRect.bottom),
             },
         };
-    }
-
-    public translateToGridOffset(gridOffset: Coord) {
-        this.context.translate(-gridOffset.x, -gridOffset.y);
-    }
-
-    public translateToOrigin(gridOffset: Coord) {
-        this.context.translate(gridOffset.x, gridOffset.y);
     }
 
     /*

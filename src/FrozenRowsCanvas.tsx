@@ -1,13 +1,13 @@
 import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
+import { CanvasRendererPosition } from './commonCanvasRenderer';
 import { FrozenCanvasCoreProps, FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
-import { GridCanvasRendererPosition } from './gridCanvasRenderer';
 
 type FrozenRowsCanvasProps<T> =  FrozenCanvasCoreProps<T> & Pick<FrozenCanvasProps<T>, 'verticalGutterBounds'>;
 
 export class FrozenRowsCanvas<T> extends React.PureComponent<FrozenRowsCanvasProps<T>> {
-    private readonly rowsPosProps: ReactiveFn<GridCanvasRendererPosition>;
+    private readonly rowsPosProps: ReactiveFn<CanvasRendererPosition>;
 
     public constructor(props: FrozenRowsCanvasProps<T>) {
         super(props);
@@ -25,7 +25,7 @@ export class FrozenRowsCanvas<T> extends React.PureComponent<FrozenRowsCanvasPro
                     width: visibleRect.width - frozenColsWidth - scrollGutterWidth,
                 };
             });
-        this.rowsPosProps = transformer([rowsVisibleRect], (visibleRect): GridCanvasRendererPosition => ({
+        this.rowsPosProps = transformer([rowsVisibleRect], (visibleRect): CanvasRendererPosition => ({
             gridOffset: { x: visibleRect.left, y: visibleRect.top },
             visibleRect,
         }));

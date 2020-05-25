@@ -1,6 +1,14 @@
-import { GridCanvasRenderer, GridCanvasRendererBasics, GridCanvasRendererPosition } from './gridCanvasRenderer';
+import * as cellRenderer from './cellRenderer';
+import { CanvasRendererPosition } from './commonCanvasRenderer';
+import { GridCanvasRenderer, GridCanvasRendererBasics } from './gridCanvasRenderer';
 import { execRaf, mockRaf, resetRaf } from './rafTestHelper';
 import { CellDef, ColumnDef, DataRow, Size } from './types';
+
+jest.mock('./cellRenderer', () => {
+    return {
+        drawCell: jest.fn(),
+    };
+});
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -54,6 +62,8 @@ describe('GridCanvasRenderer', () => {
             fillRect: jest.fn(),
             drawImage: jest.fn(),
             fillText: jest.fn(),
+            save: jest.fn(),
+            restore: jest.fn(),
         } as unknown as CanvasRenderingContext2D;
         mockCanvas = {
             getContext: () => mockContext,
@@ -83,7 +93,7 @@ describe('GridCanvasRenderer', () => {
     const props: GridCanvasRendererBasics<null> = calcProps(normalisedProps);
 
     describe('draw', () => {
-        const posProps: GridCanvasRendererPosition = {
+        const posProps: CanvasRendererPosition = {
             gridOffset: { x: 10, y: 10 },
             visibleRect: {
                 left: 10,
@@ -96,9 +106,9 @@ describe('GridCanvasRenderer', () => {
         };
 
         function getDrawnCellRects() {
-            const mockDrawCell = renderer.drawCell as jest.Mock<typeof renderer.drawCell>;
-            const calls = mockDrawCell.mock.calls as Array<[CellDef<null>, ClientRect, ColumnDef]>;
-            return calls.map((c) => c[1]);
+            const mockDrawCell = cellRenderer.drawCell as jest.Mock<typeof cellRenderer.drawCell>;
+            const calls = mockDrawCell.mock.calls as Array<[any, CellDef<null>, ClientRect, ColumnDef]>;
+            return calls.map((c) => c[2]);
         }
 
         describe('with no previous draw', () => {
@@ -106,7 +116,7 @@ describe('GridCanvasRenderer', () => {
                 jest.spyOn(renderer, 'drawWholeBorderBackground');
                 jest.spyOn(renderer, 'shiftExistingCanvas');
 
-                renderer.draw();
+                renderer.drawUntranslated();
 
                 expect(renderer.drawWholeBorderBackground).toHaveBeenCalledTimes(1);
                 expect(renderer.shiftExistingCanvas).not.toHaveBeenCalled();
@@ -124,12 +134,11 @@ describe('GridCanvasRenderer', () => {
                         bottom: 75,
                     },
                 };
-                jest.spyOn(renderer, 'drawCell');
 
                 renderer.updateProps(mockCanvas, canvasSize, props, shiftedPosProps);
                 execRaf();
 
-                expect(renderer.drawCell).toHaveBeenCalledTimes(18);
+                expect(cellRenderer.drawCell).toHaveBeenCalledTimes(18);
                 getDrawnCellRects().forEach((r) => {
                     // Cell is in view horizontally
                     expect(r.right).toBeGreaterThanOrEqual(shiftedPosProps.visibleRect.left);
@@ -143,7 +152,7 @@ describe('GridCanvasRenderer', () => {
         });
 
         describe('with previous draw', () => {
-            function getNewPosProps(dx: number, dy: number): GridCanvasRendererPosition {
+            function getNewPosProps(dx: number, dy: number): CanvasRendererPosition {
                 const x = posProps.gridOffset.x + dx;
                 const y = posProps.gridOffset.y + dy;
                 return {
@@ -195,12 +204,12 @@ describe('GridCanvasRenderer', () => {
                     const newProps = getNewPosProps(0, 5);
                     renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
-                    jest.spyOn(renderer, 'drawCell');
+                    (cellRenderer.drawCell as jest.Mock).mockReset();
 
                     renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
-                    expect(renderer.drawCell).toHaveBeenCalledTimes(4);
+                    expect(cellRenderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
                         expect(r.top).toBe(60);
                     });
@@ -210,12 +219,12 @@ describe('GridCanvasRenderer', () => {
                     const newProps = getNewPosProps(0, -5);
                     renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
-                    jest.spyOn(renderer, 'drawCell');
+                    (cellRenderer.drawCell as jest.Mock).mockReset();
 
                     renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
-                    expect(renderer.drawCell).toHaveBeenCalledTimes(4);
+                    expect(cellRenderer.drawCell).toHaveBeenCalledTimes(4);
                     getDrawnCellRects().forEach((r) => {
                         expect(r.top).toBe(0);
                     });
@@ -225,12 +234,12 @@ describe('GridCanvasRenderer', () => {
                     const newProps = getNewPosProps(5, 0);
                     renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
-                    jest.spyOn(renderer, 'drawCell');
+                    (cellRenderer.drawCell as jest.Mock).mockReset();
 
                     renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
-                    expect(renderer.drawCell).toHaveBeenCalledTimes(5);
+                    expect(cellRenderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {
                         expect(r.left).toBe(60);
                     });
@@ -240,12 +249,12 @@ describe('GridCanvasRenderer', () => {
                     const newProps = getNewPosProps(-5, 0);
                     renderer.updateProps(mockCanvas, canvasSize, props, posProps);
                     execRaf();
-                    jest.spyOn(renderer, 'drawCell');
+                    (cellRenderer.drawCell as jest.Mock).mockReset();
 
                     renderer.updateProps(mockCanvas, canvasSize, props, newProps);
                     execRaf();
 
-                    expect(renderer.drawCell).toHaveBeenCalledTimes(5);
+                    expect(cellRenderer.drawCell).toHaveBeenCalledTimes(5);
                     getDrawnCellRects().forEach((r) => {
                         expect(r.left).toBe(0);
                     });
@@ -261,6 +270,8 @@ describe('GridCanvasRenderer', () => {
                     fillRect: jest.fn(),
                     drawImage: jest.fn(),
                     fillText: jest.fn(),
+                    save: jest.fn(),
+                    restore: jest.fn(),
                 } as unknown as CanvasRenderingContext2D;
                 const mockNewCanvas = {
                     getContext: () => mockNewContext,

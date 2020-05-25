@@ -1,8 +1,6 @@
-import shallow_equals from 'shallow-equals';
-import { CommonCanvasRenderer } from './commonCanvasRenderer';
+import shallowEqual from 'shallow-equals';
+import { BaseGridOffsetRenderer } from './baseGridOffsetRenderer';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
-import * as ScrollGeometry from './scrollbarGeometry';
-import { ScrollbarPosition } from './scrollbarGeometry';
 import { CellsSelection } from './selectionState/cellsSelection';
 import { NoSelection } from './selectionState/noSelection';
 import { AllSelectionStates } from './selectionState/selectionStateFactory';
@@ -24,13 +22,7 @@ export interface HighlightCanvasRendererPosition {
     visibleRect: ClientRect;
 }
 
-export interface HighlightCanvasRendererScrollbar {
-    horizontalScrollbarPos: ScrollbarPosition | null;
-    verticalScrollbarPos: ScrollbarPosition | null;
-}
-
 export interface HighlightCanvasRendererHover {
-    hoveredScrollbar: 'x' | 'y' | null;
     autofillHandleIsHovered: boolean;
 }
 
@@ -38,30 +30,11 @@ export interface HighlightCanvasRendererSelection {
     selectionState: AllSelectionStates;
 }
 
-const defaultPosProps: HighlightCanvasRendererPosition = {
-    gridOffset: { x: 0, y: 0 },
-    visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
-};
-
-const defaultScrollbarProps: HighlightCanvasRendererScrollbar = {
-    horizontalScrollbarPos: null,
-    verticalScrollbarPos: null,
-};
-
 const defaultHoverProps: HighlightCanvasRendererHover = {
-    hoveredScrollbar: null,
     autofillHandleIsHovered: false,
 };
 
 const colours = {
-    grey: {
-        veryLight: 'hsla(0, 0%, 93%, 1)',
-        light: 'hsla(0, 0%, 83%, 1)', // == lightgrey
-    },
-    black: {
-        veryTransparent: 'hsla(0, 0%, 0%, 0.4)',
-        transparent: 'hsla(0, 0%, 0%, 0.55)',
-    },
     blue: {
         mediumTransparent: 'hsla(214, 78%, 51%, 0.25)',
         medium: 'hsla(214, 78%, 51%, 1)',
@@ -70,14 +43,6 @@ const colours = {
 };
 
 const styles = {
-    scrollbar: {
-        defaultFill: colours.black.veryTransparent,
-        hoverFill: colours.black.transparent,
-    },
-    scrollGutters: {
-        fill: colours.grey.veryLight,
-        stroke: colours.grey.light,
-    },
     selectedCells: {
         fill: colours.blue.mediumTransparent,
         stroke: colours.blue.medium,
@@ -91,17 +56,15 @@ const styles = {
     },
 };
 
-export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
+export class HighlightCanvasRenderer extends BaseGridOffsetRenderer<any> {
     private basicProps: HighlightCanvasRendererBasics;
-    private posProps: HighlightCanvasRendererPosition = defaultPosProps;
-    private scrollProps: HighlightCanvasRendererScrollbar = defaultScrollbarProps;
     private hoverProps: HighlightCanvasRendererHover = defaultHoverProps;
     private selectionProps: HighlightCanvasRendererSelection = {
         selectionState: new NoSelection(false),
     };
 
-    constructor(canvas: HTMLCanvasElement, basicProps: HighlightCanvasRendererBasics, dpr: number) {
-        super(canvas, dpr, true);
+    constructor(name: string, canvas: HTMLCanvasElement, basicProps: HighlightCanvasRendererBasics, dpr: number) {
+        super(name, canvas, dpr, true);
         this.basicProps = basicProps;
     }
 
@@ -109,7 +72,6 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         canvas: HTMLCanvasElement,
         basicProps: HighlightCanvasRendererBasics,
         posProps: HighlightCanvasRendererPosition,
-        scrollProps: HighlightCanvasRendererScrollbar,
         hoverProps: HighlightCanvasRendererHover,
         selectProps: HighlightCanvasRendererSelection,
     ) {
@@ -118,21 +80,18 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
         }
         this.basicProps = basicProps;
         this.posProps = posProps;
-        this.scrollProps = scrollProps,
         this.hoverProps = hoverProps;
         this.selectionProps = selectProps;
-        this.drawScaled(this.draw);
+        this.drawScaled(this.draw, this.drawUntranslated);
+    }
+
+    public drawUntranslated = () => {
+        // Clear the higlight layer
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     public draw = () => {
         const context = this.context;
-
-        // Clear the higlight layer
-        context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Translate the canvas context so that it's covering the visibleRect
-        // (so when we translate it back, what we've drawn is within the bounds of the canvas element)
-        context.translate(-this.posProps.gridOffset.x, -this.posProps.gridOffset.y);
 
         context.lineCap = 'butt';
         context.fillStyle = styles.selectedCells.fill;
@@ -184,74 +143,6 @@ export class HighlightCanvasRenderer extends CommonCanvasRenderer<any> {
                 context.setLineDash([]);
             }
         }
-
-        // Translate back, to bring our drawn area into the bounds of the canvas element
-        context.translate(this.posProps.gridOffset.x, this.posProps.gridOffset.y);
-
-        // Draw scrollbar gutters
-        const vBounds = this.basicProps.verticalGutterBounds;
-        const hBounds = this.basicProps.horizontalGutterBounds;
-        if (vBounds || hBounds) {
-            this.context.fillStyle = styles.scrollGutters.fill;
-            if (vBounds) {
-                this.context.fillRect(vBounds.left, vBounds.top, vBounds.width, vBounds.height);
-            }
-            if (hBounds) {
-                this.context.fillRect(hBounds.left, hBounds.top, hBounds.width, hBounds.height);
-            }
-
-            this.context.strokeStyle = styles.scrollGutters.stroke;
-            this.context.lineWidth = 1;
-            this.context.beginPath();
-            if (vBounds) {
-                this.context.moveTo(vBounds.left, 0);
-                this.context.lineTo(vBounds.left, vBounds.height - (hBounds ? hBounds.height : 0));
-                this.context.moveTo(vBounds.right, 0);
-                this.context.lineTo(vBounds.right, vBounds.height);
-            }
-            if (hBounds) {
-                this.context.moveTo(0, hBounds.top);
-                this.context.lineTo(hBounds.width - (vBounds ? vBounds.width : 0), hBounds.top);
-                this.context.moveTo(0, hBounds.bottom);
-                this.context.lineTo(hBounds.width, hBounds.bottom);
-            }
-            this.context.stroke();
-        }
-
-        // Set up for drawing scrollbars
-        context.lineCap = 'round';
-
-        // Draw horizontal scrollbar (if needed)
-        if (this.scrollProps.horizontalScrollbarPos) {
-            if (this.hoverProps.hoveredScrollbar === 'x') {
-                context.strokeStyle = styles.scrollbar.hoverFill;
-                context.lineWidth = ScrollGeometry.barWidth + 3;
-            } else {
-                context.strokeStyle = styles.scrollbar.defaultFill;
-                context.lineWidth = ScrollGeometry.barWidth;
-            }
-            const scrollPos = this.scrollProps.horizontalScrollbarPos;
-            context.beginPath();
-            context.moveTo(scrollPos.extent.start, scrollPos.transverse);
-            context.lineTo(scrollPos.extent.end, scrollPos.transverse);
-            context.stroke();
-        }
-
-        // Draw vertical scrollbar (if needed)
-        if (this.scrollProps.verticalScrollbarPos) {
-            if (this.hoverProps.hoveredScrollbar === 'y') {
-                context.strokeStyle = styles.scrollbar.hoverFill;
-                context.lineWidth = ScrollGeometry.barWidth + 3;
-            } else {
-                context.strokeStyle = styles.scrollbar.defaultFill;
-                context.lineWidth = ScrollGeometry.barWidth;
-            }
-            const scrollPos = this.scrollProps.verticalScrollbarPos;
-            context.beginPath();
-            context.moveTo(scrollPos.transverse, scrollPos.extent.start);
-            context.lineTo(scrollPos.transverse, scrollPos.extent.end);
-            context.stroke();
-        }
     }
 
     private gridCellCoordToGridPixelCoord = ({x, y}: {x: number; y: number}): ClientRect => {
@@ -275,5 +166,5 @@ export function shouldSelectionClear(
     prev: { columns: ColumnDef[], data: Array<DataRow<any>>},
     next: { columns: ColumnDef[], data: Array<DataRow<any>>},
 ): boolean {
-    return (!shallow_equals(prev.columns, next.columns) || prev.data.length !== next.data.length);
+    return (!shallowEqual(prev.columns, next.columns) || prev.data.length !== next.data.length);
 }

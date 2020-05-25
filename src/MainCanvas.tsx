@@ -1,8 +1,8 @@
 import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
-import { GridCanvas } from './GridCanvas';
-import { GridCanvasRendererPosition } from './gridCanvasRenderer';
+import { CanvasRendererPosition } from './commonCanvasRenderer';
 import { GridState } from './gridState';
+import { HighlightedGridCanvas } from './HighlightedGridCanvas';
 
 export interface MainCanvasProps<T> {
     width: number;
@@ -14,7 +14,7 @@ export interface MainCanvasProps<T> {
 }
 
 export class MainCanvas<T> extends React.PureComponent<MainCanvasProps<T>> {
-    private readonly posProps: ReactiveFn<GridCanvasRendererPosition>;
+    private readonly posProps: ReactiveFn<CanvasRendererPosition>;
 
     public constructor(props: MainCanvasProps<T>) {
         super(props);
@@ -30,7 +30,7 @@ export class MainCanvas<T> extends React.PureComponent<MainCanvasProps<T>> {
                     width: visibleRect.width - frozenColsWidth,
                 };
             });
-        this.posProps = transformer([mainVisibleRect], (visibleRect): GridCanvasRendererPosition => ({
+        this.posProps = transformer([mainVisibleRect], (visibleRect): CanvasRendererPosition => ({
             gridOffset: { x: visibleRect.left, y: visibleRect.top },
             visibleRect,
         }));
@@ -41,12 +41,12 @@ export class MainCanvas<T> extends React.PureComponent<MainCanvasProps<T>> {
             ...this.props,
             top: this.props.frozenRowsHeight,
             left: this.props.frozenColsWidth,
-            height: this.props.height - this.props.frozenRowsHeight,
-            width: this.props.width - this.props.frozenColsWidth,
+            height: Math.max(this.props.height - this.props.frozenRowsHeight, 0),
+            width: Math.max(this.props.width - this.props.frozenColsWidth, 0),
             posProps: this.posProps,
         };
         return (
-            <GridCanvas {...props} name="main" />
+            <HighlightedGridCanvas {...props} name="main" />
         );
     }
 }
