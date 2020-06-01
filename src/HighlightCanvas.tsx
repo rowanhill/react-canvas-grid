@@ -1,6 +1,6 @@
 import { consumer, mergeTransformer, ReactiveConsumer, ReactiveFn } from 'instigator';
 import * as React from 'react';
-import { CanvasRendererPosition } from './commonCanvasRenderer';
+import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { GridState, shallowEqualsExceptFunctions } from './gridState';
 import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
 

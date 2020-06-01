@@ -1,11 +1,11 @@
 import shallowEqual from 'shallow-equals';
-import { BaseGridOffsetRenderer } from './baseGridOffsetRenderer';
+import { BaseGridOffsetRenderer, CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { ColumnBoundary, GridGeometry } from './gridGeometry';
 import { CellsSelection } from './selectionState/cellsSelection';
 import { NoSelection } from './selectionState/noSelection';
 import { AllSelectionStates } from './selectionState/selectionStateFactory';
 import { CellCoordBounds, SelectRange } from './selectionState/selectionTypes';
-import { ColumnDef, Coord, DataRow } from './types';
+import { ColumnDef, DataRow } from './types';
 
 export interface HighlightCanvasRendererBasics {
     rowHeight: number;
@@ -15,11 +15,6 @@ export interface HighlightCanvasRendererBasics {
     verticalGutterBounds: ClientRect|null;
     cellBounds: CellCoordBounds;
     shouldAllowAutofill: (selectRange: SelectRange) => boolean;
-}
-
-export interface HighlightCanvasRendererPosition {
-    gridOffset: Coord;
-    visibleRect: ClientRect;
 }
 
 export interface HighlightCanvasRendererHover {
@@ -71,7 +66,7 @@ export class HighlightCanvasRenderer extends BaseGridOffsetRenderer<any> {
     public updateProps(
         canvas: HTMLCanvasElement,
         basicProps: HighlightCanvasRendererBasics,
-        posProps: HighlightCanvasRendererPosition,
+        posProps: CanvasRendererPosition,
         hoverProps: HighlightCanvasRendererHover,
         selectProps: HighlightCanvasRendererSelection,
     ) {

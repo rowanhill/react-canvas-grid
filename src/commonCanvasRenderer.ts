@@ -1,21 +1,8 @@
-import { Coord } from './types';
-
-export interface CanvasRendererPosition {
-    gridOffset: Coord;
-    visibleRect: ClientRect;
-}
-
-const defaultPosProps = {
-    gridOffset: { x: 0, y: 0 },
-    visibleRect: { left: 0, top: 0, right: 0, bottom: 0, height: 0, width: 0 },
-};
-
 export const borderColour = 'lightgrey';
 
 export abstract class CommonCanvasRenderer<T> {
     protected canvas: HTMLCanvasElement;
     protected context: CanvasRenderingContext2D;
-    protected posProps: CanvasRendererPosition = defaultPosProps;
     protected readonly name: string;
     protected readonly alpha: boolean;
     protected readonly dpr: number;

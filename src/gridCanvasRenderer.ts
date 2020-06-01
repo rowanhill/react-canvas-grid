@@ -1,7 +1,7 @@
 import shallowEqual from 'shallow-equals';
-import { BaseGridOffsetRenderer } from './baseGridOffsetRenderer';
+import { BaseGridOffsetRenderer, CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { drawCell } from './cellRenderer';
-import { borderColour, CanvasRendererPosition } from './commonCanvasRenderer';
+import { borderColour } from './commonCanvasRenderer';
 import { Bounds, ColumnDef, Coord, DataRow, Size } from './types';
 
 export interface GridCanvasRendererBasics<T> {
