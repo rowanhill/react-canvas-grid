@@ -2,7 +2,7 @@ import { consumer, mergeTransformer, ReactiveConsumer, ReactiveFn } from 'instig
 import * as React from 'react';
 import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { GridState, shallowEqualsExceptFunctions } from './gridState';
-import { HighlightCanvasRenderer } from './highlightCanvasRenderer';
+import { HighlightCanvasRenderer, HighlightCanvasRendererBasics } from './highlightCanvasRenderer';
 
 export interface HighlightCanvasProps<T> {
     name: string;
@@ -48,7 +48,7 @@ export class HighlightCanvas<T> extends React.PureComponent<HighlightCanvasProps
         }
 
         const gridState = this.props.gridState;
-        const basicProps = mergeTransformer({
+        const basicProps = mergeTransformer<HighlightCanvasRendererBasics>({
             rowHeight: gridState.rowHeight,
             columnBoundaries: gridState.columnBoundaries,
             borderWidth: gridState.borderWidth,

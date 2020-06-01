@@ -11,8 +11,6 @@ export interface HighlightCanvasRendererBasics {
     rowHeight: number;
     columnBoundaries: ColumnBoundary[];
     borderWidth: number;
-    horizontalGutterBounds: ClientRect|null;
-    verticalGutterBounds: ClientRect|null;
     cellBounds: CellCoordBounds;
     shouldAllowAutofill: (selectRange: SelectRange) => boolean;
 }
