@@ -18,6 +18,8 @@ import { FrozenCellsGrid } from './FrozenCells.grid';
 import { FrozenCellsText } from './FrozenCells.text';
 import { KeyboardEventsGrid } from './KeyboardEvents.grid';
 import { KeyboardEventsText } from './KeyboardEvents.text';
+import { ResizeGrid } from './Resize.grid';
+import { ResizeText } from './Resize.text';
 import { SelectionEventsGrid } from './SelectionEvents.grid';
 import { SelectionEventsText } from './SelectionEvents.text';
 import { SimpleGrid } from './Simple.grid';
@@ -139,6 +141,14 @@ const exampleMeta: ExampleMeta[] = [
         text: AutofillText,
         fileName: 'Autofill',
       },
+      {
+          pathFragment: '/resize',
+          name: 'Resize',
+          description: 'Respond to change in explicit size',
+          grid: ResizeGrid,
+          text: ResizeText,
+          fileName: 'Resize',
+        },
 ];
 
 export default exampleMeta;

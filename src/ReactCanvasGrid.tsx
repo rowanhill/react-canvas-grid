@@ -138,6 +138,18 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             throw new Error('root element ref not set in componentDidMount, so cannot determine canvas size');
         }
         const rootRect = this.rootRef.current.getBoundingClientRect();
+
+        // If the rootSize has changed, set it in state. This will cause a re-render, and the canvas
+        // elements will resize correctly. Once state is set, we can also update the rootSize in
+        // gridState to cause a grid redraw, to update the contents of the canvases.
+        if (this.state.rootSize === null ||
+            this.state.rootSize.width !== rootRect.width ||
+            this.state.rootSize.height !== rootRect.height
+        ) {
+            this.setState({ rootSize: { width: rootRect.width, height: rootRect.height } }, () => {
+                this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
+            });
+        }
         batch(() => {
             this.gridState.columns(this.props.columns);
             this.gridState.data(this.props.data);
@@ -145,7 +157,6 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             this.gridState.borderWidth(this.props.borderWidth);
             this.gridState.frozenRows(this.props.frozenRows);
             this.gridState.frozenCols(this.props.frozenCols);
-            this.gridState.rootSize({ width: rootRect.width, height: rootRect.height });
             this.gridState.shouldAllowAutofill(this.props.shouldAllowAutofill);
 
             if (shouldSelectionClear(prevProps, this.props)) {
@@ -157,7 +168,8 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
 
             const gridSize = this.gridState.gridSize();
             const canvasSize = this.gridState.canvasSize();
-            const truncatedOffset = GridGeometry.truncateGridOffset(this.gridState.gridOffset(), gridSize, canvasSize);
+            const truncatedOffset =
+                GridGeometry.truncateGridOffset(this.gridState.gridOffset(), gridSize, canvasSize);
             if (truncatedOffset) {
                 this.gridState.gridOffsetRaw(truncatedOffset);
             }
