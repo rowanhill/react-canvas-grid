@@ -10,7 +10,7 @@ function createSingleCell(cell: Coord): CellsSelection {
     return new CellsSelection(cell, { left: cell.x, right: cell.x, top: cell.y, bottom: cell.y }, cell, false);
 }
 
-export class CellsSelection extends BaseSelectionState<CellsSelection> {
+export class CellsSelection extends BaseSelectionState {
     private readonly editCursorCell: Coord;
     private readonly selection: Bounds;
     private readonly focusCell: Coord;

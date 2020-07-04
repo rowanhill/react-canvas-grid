@@ -5,7 +5,7 @@ import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
-export class RowsSelection extends BaseSelectionState<RowsSelection> {
+export class RowsSelection extends BaseSelectionState {
     private readonly editCursorCell: Coord;
     private readonly selectionStartRowIndex: number;
     private readonly selectionCursorRowIndex: number;
