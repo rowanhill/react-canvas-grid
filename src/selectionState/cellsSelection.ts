@@ -1,12 +1,15 @@
 import { GridState } from '../gridState';
 import { Bounds, Coord } from '../types';
 import { equalBounds, equalCoord } from '../utils';
+import { ColsSelection, createSingleColSelection } from './colsSelection';
 import { calculateGridOffsetForTargetCell } from './focusOffset';
+import { createSingleRowSelection, RowsSelection } from './rowsSelection';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
-function createSingleCell(cell: Coord): CellsSelection {
+export function createSingleCell(targetCell: Coord, cellBounds: CellCoordBounds): CellsSelection {
+    const cell = truncateCoord({ x: targetCell.x, y: targetCell.y }, cellBounds);
     return new CellsSelection(cell, { left: cell.x, right: cell.x, top: cell.y, bottom: cell.y }, cell, false);
 }
 
@@ -30,24 +33,30 @@ export class CellsSelection extends BaseSelectionState {
         this.autofillDragCell = autofillDragCell;
     }
 
-    public arrowUp = (cellBounds: CellCoordBounds): CellsSelection => {
-        const newCell = truncateCoord({ x: this.editCursorCell.x, y: this.editCursorCell.y - 1 }, cellBounds);
-        return createSingleCell(newCell);
+    public arrowUp = (cellBounds: CellCoordBounds): CellsSelection | ColsSelection => {
+        const targetCell = { x: this.editCursorCell.x, y: this.editCursorCell.y - 1 };
+        if (this.editCursorCell.y === cellBounds.frozenRows && this.editCursorCell.y > 0) {
+            return createSingleColSelection(targetCell, cellBounds);
+        } else {
+            return createSingleCell(targetCell, cellBounds);
+        }
     }
 
     public arrowDown = (cellBounds: CellCoordBounds): CellsSelection => {
-        const newCell = truncateCoord({ x: this.editCursorCell.x, y: this.editCursorCell.y + 1 }, cellBounds);
-        return createSingleCell(newCell);
+        return createSingleCell({ x: this.editCursorCell.x, y: this.editCursorCell.y + 1 }, cellBounds);
     }
 
-    public arrowLeft = (cellBounds: CellCoordBounds): CellsSelection => {
-        const newCell = truncateCoord({ x: this.editCursorCell.x - 1, y: this.editCursorCell.y }, cellBounds);
-        return createSingleCell(newCell);
+    public arrowLeft = (cellBounds: CellCoordBounds): CellsSelection | RowsSelection => {
+        const targetCell = { x: this.editCursorCell.x - 1, y: this.editCursorCell.y };
+        if (this.editCursorCell.x === cellBounds.frozenCols && this.editCursorCell.x > 0) {
+            return createSingleRowSelection(targetCell, cellBounds);
+        } else {
+            return createSingleCell(targetCell, cellBounds);
+        }
     }
 
     public arrowRight = (cellBounds: CellCoordBounds): CellsSelection => {
-        const newCell = truncateCoord({ x: this.editCursorCell.x + 1, y: this.editCursorCell.y }, cellBounds);
-        return createSingleCell(newCell);
+        return createSingleCell({ x: this.editCursorCell.x + 1, y: this.editCursorCell.y }, cellBounds);
     }
 
     public shiftArrowUp = (cellBounds: CellCoordBounds): CellsSelection => {

@@ -114,59 +114,69 @@ describe('keyDownOnGrid', () => {
         expectNothingToHaveHappened(gridState, props, event);
     });
 
-    it('does nothing if the key press results in the a selection state with a null focus grid offset', () => {
-        const event = createEvent('ArrowUp');
-        jest.spyOn(initialSelection, 'arrowUp').mockReturnValue(newSelection);
-        jest.spyOn(newSelection, 'getFocusGridOffset').mockReturnValue(null);
+    describe.each`
+        focusOffsetDesc | setFocusOffset
+        ${'set'}        | ${true}
+        ${'not set'}    | ${false}
+    `('where the new selection has a focus grid offset that is $focusOffsetDesc', ({ setFocusOffset }) => {
+        beforeEach(() => {
+            jest.spyOn(newSelection, 'getFocusGridOffset')
+                .mockReturnValue(setFocusOffset ? 'dummy new grid offset' as any : null);
+        });
 
-        keyDownOnGrid(event, props, gridState);
+        it.each`
+            key             | arrowMethod
+            ${'ArrowUp'}    | ${'arrowUp'}
+            ${'ArrowDown'}  | ${'arrowDown'}
+            ${'ArrowRight'} | ${'arrowRight'}
+            ${'ArrowLeft'}  | ${'arrowLeft'}
+        `('calls on start / on end, scrolls the grid if needed, ' +
+        'and updates the selection on $key press without shift', ({
+            key,
+            arrowMethod,
+        }) => {
+            const event = createEvent(key);
+            jest.spyOn(initialSelection, arrowMethod).mockReturnValue(newSelection);
 
-        expectNothingToHaveHappened(gridState, props, event);
-    });
+            keyDownOnGrid(event, props, gridState);
 
-    it.each`
-        key             | arrowMethod
-        ${'ArrowUp'}    | ${'arrowUp'}
-        ${'ArrowDown'}  | ${'arrowDown'}
-        ${'ArrowRight'} | ${'arrowRight'}
-        ${'ArrowLeft'}  | ${'arrowLeft'}
-    `('calls on start / on end, scrolls the grid, and updates the selection on $key press without shift', ({
-        key,
-        arrowMethod,
-    }) => {
-        const event = createEvent(key);
-        jest.spyOn(initialSelection, arrowMethod).mockReturnValue(newSelection);
+            expect(props.onSelectionChangeStart).toHaveBeenCalledWith('dummy selection range');
+            expect(props.onSelectionChangeUpdate).not.toHaveBeenCalled();
+            expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
+            if (setFocusOffset) {
+                expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
+            } else {
+                expect(gridState.gridOffsetRaw).not.toHaveBeenCalled();
+            }
+            expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
+            expect(event.preventDefault).toHaveBeenCalled();
+        });
 
-        keyDownOnGrid(event, props, gridState);
+        it.each`
+            key             | arrowMethod
+            ${'ArrowUp'}    | ${'shiftArrowUp'}
+            ${'ArrowDown'}  | ${'shiftArrowDown'}
+            ${'ArrowRight'} | ${'shiftArrowRight'}
+            ${'ArrowLeft'}  | ${'shiftArrowLeft'}
+        `('calls on update / on end, scrolls the grid if needed, and updates the selection on $key press with shift', ({
+            key,
+            arrowMethod,
+        }) => {
+            const event = createEvent(key, true);
+            jest.spyOn(initialSelection, arrowMethod).mockReturnValue(newSelection);
 
-        expect(props.onSelectionChangeStart).toHaveBeenCalledWith('dummy selection range');
-        expect(props.onSelectionChangeUpdate).not.toHaveBeenCalled();
-        expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
-        expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
-        expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
-        expect(event.preventDefault).toHaveBeenCalled();
-    });
+            keyDownOnGrid(event, props, gridState);
 
-    it.each`
-        key             | arrowMethod
-        ${'ArrowUp'}    | ${'shiftArrowUp'}
-        ${'ArrowDown'}  | ${'shiftArrowDown'}
-        ${'ArrowRight'} | ${'shiftArrowRight'}
-        ${'ArrowLeft'}  | ${'shiftArrowLeft'}
-    `('calls on update / on end, scrolls the grid, and updates the selection on $key press with shift', ({
-        key,
-        arrowMethod,
-    }) => {
-        const event = createEvent(key, true);
-        jest.spyOn(initialSelection, arrowMethod).mockReturnValue(newSelection);
-
-        keyDownOnGrid(event, props, gridState);
-
-        expect(props.onSelectionChangeStart).not.toHaveBeenCalled();
-        expect(props.onSelectionChangeUpdate).toHaveBeenCalledWith('dummy selection range');
-        expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
-        expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
-        expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
-        expect(event.preventDefault).toHaveBeenCalled();
+            expect(props.onSelectionChangeStart).not.toHaveBeenCalled();
+            expect(props.onSelectionChangeUpdate).toHaveBeenCalledWith('dummy selection range');
+            expect(props.onSelectionChangeEnd).toHaveBeenCalledWith('dummy selection range');
+            if (setFocusOffset) {
+                expect(gridState.gridOffsetRaw).toHaveBeenCalledWith('dummy new grid offset');
+            } else {
+                expect(gridState.gridOffsetRaw).not.toHaveBeenCalled();
+            }
+            expect(gridState.selectionState).toHaveBeenCalledWith(newSelection);
+            expect(event.preventDefault).toHaveBeenCalled();
+        });
     });
 });

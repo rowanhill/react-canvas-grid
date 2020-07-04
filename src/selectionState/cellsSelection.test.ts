@@ -1,6 +1,8 @@
 import { Coord } from '../types';
 import { cellsSelection } from './cellsSelectionBuilder';
+import { ColsSelection } from './colsSelection';
 import { calculateGridOffsetForTargetCell } from './focusOffset';
+import { RowsSelection } from './rowsSelection';
 import { CellCoordBounds } from './selectionTypes';
 
 jest.mock('./focusOffset');
@@ -64,6 +66,48 @@ describe('CellsSelection', () => {
 
             expect(offset).toBe('dummy offset');
             expect(calculateGridOffsetForTargetCell).toHaveBeenCalledWith(null, coord(simpleResult));
+        });
+    });
+
+    describe('arrowUp', () => {
+        it('does nothing when at the top of the grid', () => {
+            const sel = cellsSelection(0, 0).build();
+
+            const newSel = sel.arrowUp(bounds);
+
+            expect(JSON.parse(JSON.stringify(newSel))).toEqual(JSON.parse(JSON.stringify(sel)));
+        });
+
+        it('selects the column when moving into the frozen rows', () => {
+            const sel = cellsSelection(0, 2).build();
+            const frozenBounds = { ...bounds, frozenRows: 2 };
+
+            const newSel = sel.arrowUp(frozenBounds);
+
+            expect(newSel).toBeInstanceOf(ColsSelection);
+            expect(newSel.getSelectionRange(frozenBounds)).toEqual(cellRange([0, 0], [0, frozenBounds.numRows - 1]));
+            expect(newSel.getCursorCell()).toEqual({ x: 0, y: 2 });
+        });
+    });
+
+    describe('arrowLeft', () => {
+        it('does nothing when at the left of the grid', () => {
+            const sel = cellsSelection(0, 0).build();
+
+            const newSel = sel.arrowLeft(bounds);
+
+            expect(JSON.parse(JSON.stringify(newSel))).toEqual(JSON.parse(JSON.stringify(sel)));
+        });
+
+        it('selects the row when moving into the frozen columns', () => {
+            const sel = cellsSelection(2, 0).build();
+            const frozenBounds = { ...bounds, frozenCols: 2 };
+
+            const newSel = sel.arrowLeft(frozenBounds);
+
+            expect(newSel).toBeInstanceOf(RowsSelection);
+            expect(newSel.getSelectionRange(frozenBounds)).toEqual(cellRange([0, 0], [frozenBounds.numCols - 1, 0]));
+            expect(newSel.getCursorCell()).toEqual({ x: 2, y: 0 });
         });
     });
 

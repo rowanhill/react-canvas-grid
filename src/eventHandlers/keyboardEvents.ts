@@ -43,7 +43,7 @@ export const keyDownOnGrid = <T>(
 
     const oldSelectionRange = selectionState.getSelectionRange(cellBounds);
 
-    if (selectionRange !== null && newOffset !== null && !equalSelectRange(oldSelectionRange, selectionRange)) {
+    if (selectionRange !== null && !equalSelectRange(oldSelectionRange, selectionRange)) {
         // Start / update prop callback
         const onStartOrUpdate = event.shiftKey ? props.onSelectionChangeUpdate : props.onSelectionChangeStart;
         if (onStartOrUpdate) {
@@ -51,7 +51,9 @@ export const keyDownOnGrid = <T>(
         }
 
         // Scroll
-        gridState.gridOffsetRaw(newOffset);
+        if (newOffset !== null) {
+            gridState.gridOffsetRaw(newOffset);
+        }
 
         // End prop callback
         if (props.onSelectionChangeEnd) {

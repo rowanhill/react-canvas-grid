@@ -1,9 +1,16 @@
 import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { Coord } from '../types';
+import { AllGridSelection } from './allGridSelection';
+import { CellsSelection, createSingleCell } from './cellsSelection';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
+
+export function createSingleColSelection(targetCell: Coord, cellBounds: CellCoordBounds) {
+    const newCell = { x: truncateCol(targetCell.x, cellBounds), y: cellBounds.frozenRows };
+    return new ColsSelection(newCell, newCell.x, newCell.x, false, newCell.x);
+}
 
 export class ColsSelection extends BaseSelectionState {
     private readonly editCursorCell: Coord;
@@ -29,18 +36,20 @@ export class ColsSelection extends BaseSelectionState {
         return this;
     }
 
-    public arrowDown = (): ColsSelection => {
-        return this;
+    public arrowDown = (cellBounds: CellCoordBounds): CellsSelection => {
+        return createSingleCell(this.editCursorCell, cellBounds);
     }
 
-    public arrowLeft = (cellBounds: CellCoordBounds): ColsSelection => {
-        const newCell = { x: truncateCol(this.editCursorCell.x - 1, cellBounds), y: this.editCursorCell.y };
-        return new ColsSelection(newCell, newCell.x, newCell.x, false, newCell.x);
+    public arrowLeft = (cellBounds: CellCoordBounds): ColsSelection | AllGridSelection => {
+        if (this.editCursorCell.x <= cellBounds.frozenCols && cellBounds.frozenCols > 0) {
+            return new AllGridSelection(false);
+        } else {
+            return createSingleColSelection({ x: this.editCursorCell.x - 1, y: this.editCursorCell. y }, cellBounds);
+        }
     }
 
     public arrowRight = (cellBounds: CellCoordBounds): ColsSelection => {
-        const newCell = { x: truncateCol(this.editCursorCell.x + 1, cellBounds), y: this.editCursorCell.y };
-        return new ColsSelection(newCell, newCell.x, newCell.x, false, newCell.x);
+        return createSingleColSelection({ x: this.editCursorCell.x + 1, y: this.editCursorCell. y }, cellBounds);
     }
 
     public shiftArrowUp = (): ColsSelection => {

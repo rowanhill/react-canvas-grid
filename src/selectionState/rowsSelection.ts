@@ -1,9 +1,16 @@
 import { GridGeometry } from '../gridGeometry';
 import { GridState } from '../gridState';
 import { Coord } from '../types';
+import { AllGridSelection } from './allGridSelection';
+import { CellsSelection, createSingleCell } from './cellsSelection';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
+
+export function createSingleRowSelection(targetCell: Coord, cellBounds: CellCoordBounds) {
+    const newCell = { x: cellBounds.frozenCols, y: truncateRow(targetCell.y, cellBounds) };
+    return new RowsSelection(newCell, newCell.y, newCell.y, false, newCell.y);
+}
 
 export class RowsSelection extends BaseSelectionState {
     private readonly editCursorCell: Coord;
@@ -25,22 +32,24 @@ export class RowsSelection extends BaseSelectionState {
         this.focusRowIndex = focusRowIndex;
     }
 
-    public arrowUp = (cellBounds: CellCoordBounds): RowsSelection => {
-        const newCell = { x: this.editCursorCell.x, y: truncateRow(this.editCursorCell.y - 1, cellBounds) };
-        return new RowsSelection(newCell, newCell.y, newCell.y, false, newCell.y);
+    public arrowUp = (cellBounds: CellCoordBounds): RowsSelection | AllGridSelection => {
+        if (this.editCursorCell.y === cellBounds.frozenRows && this.editCursorCell.y > 0) {
+            return new AllGridSelection(false);
+        } else {
+            return createSingleRowSelection({ x: this.editCursorCell.x, y: this.editCursorCell.y - 1 }, cellBounds);
+        }
     }
 
     public arrowDown = (cellBounds: CellCoordBounds): RowsSelection => {
-        const newCell = { x: this.editCursorCell.x, y: truncateRow(this.editCursorCell.y + 1, cellBounds) };
-        return new RowsSelection(newCell, newCell.y, newCell.y, false, newCell.y);
+        return createSingleRowSelection({ x: this.editCursorCell.x, y: this.editCursorCell.y + 1 }, cellBounds);
     }
 
     public arrowLeft = (): RowsSelection => {
         return this;
     }
 
-    public arrowRight = (): RowsSelection => {
-        return this;
+    public arrowRight = (cellBounds: CellCoordBounds): CellsSelection => {
+        return createSingleCell(this.editCursorCell, cellBounds);
     }
 
     public shiftArrowUp = (cellBounds: CellCoordBounds): RowsSelection => {

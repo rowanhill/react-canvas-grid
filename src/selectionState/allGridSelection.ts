@@ -1,14 +1,21 @@
 import { GridState } from '../gridState';
 import { Coord } from '../types';
+import { createSingleColSelection } from './colsSelection';
+import { createSingleRowSelection } from './rowsSelection';
 import { BaseSelectionState } from './selectionState';
 import { createSelectionStateForMouseDown } from './selectionStateFactory';
 import { CellCoordBounds, ClickMeta, SelectRange } from './selectionTypes';
 
 export class AllGridSelection extends BaseSelectionState {
+    public arrowDown = (cellBounds: CellCoordBounds) => {
+        return createSingleRowSelection({ x: cellBounds.frozenCols, y: cellBounds.frozenRows }, cellBounds);
+    }
+    public arrowRight = (cellBounds: CellCoordBounds) => {
+        return createSingleColSelection({ x: cellBounds.frozenCols, y: cellBounds.frozenRows }, cellBounds);
+    }
+
     public arrowUp = () => this;
-    public arrowDown = () => this;
     public arrowLeft = () => this;
-    public arrowRight = () => this;
     public shiftArrowUp = () => this;
     public shiftArrowDown = () => this;
     public shiftArrowLeft = () => this;
