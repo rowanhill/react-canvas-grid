@@ -1,7 +1,7 @@
 import { mount } from 'enzyme';
 import { transformer } from 'instigator';
 import * as React from 'react';
-import { CanvasRendererPosition } from './commonCanvasRenderer';
+import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { GridCanvas, GridCanvasProps } from './GridCanvas';
 import { GridCanvasRenderer } from './gridCanvasRenderer';
 import { GridState } from './gridState';

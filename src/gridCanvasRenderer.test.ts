@@ -1,5 +1,5 @@
+import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import * as cellRenderer from './cellRenderer';
-import { CanvasRendererPosition } from './commonCanvasRenderer';
 import { GridCanvasRenderer, GridCanvasRendererBasics } from './gridCanvasRenderer';
 import { execRaf, mockRaf, resetRaf } from './rafTestHelper';
 import { CellDef, ColumnDef, DataRow, Size } from './types';
