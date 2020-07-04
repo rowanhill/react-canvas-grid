@@ -32,8 +32,8 @@ export class AllGridSelection extends BaseSelectionState<AllGridSelection> {
     public getSelectionRange = (cellBounds: CellCoordBounds): SelectRange  => {
         return {
             topLeft: {
-                x: cellBounds.frozenCols,
-                y: cellBounds.frozenRows,
+                x: 0,
+                y: 0,
             },
             bottomRight: {
                 x: cellBounds.numCols - 1,

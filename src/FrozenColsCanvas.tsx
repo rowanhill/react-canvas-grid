@@ -3,6 +3,7 @@ import * as React from 'react';
 import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { FrozenCanvasCoreProps, FrozenCanvasProps } from './FrozenCanvas';
 import { GridCanvas } from './GridCanvas';
+import { HighlightedGridCanvas } from './HighlightedGridCanvas';
 
 type FrozenColsCanvasProps<T> =  FrozenCanvasCoreProps<T> & Pick<FrozenCanvasProps<T>, 'horizontalGutterBounds'>;
 
@@ -43,7 +44,7 @@ export class FrozenColsCanvas<T> extends React.PureComponent<FrozenColsCanvasPro
             posProps: this.colsPosProps,
         };
         return (
-            <GridCanvas {...props} name="cols" />
+            <HighlightedGridCanvas {...props} name="cols" />
         );
     }
 }

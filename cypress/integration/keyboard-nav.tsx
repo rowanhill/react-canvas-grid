@@ -120,8 +120,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (1,3) -> (19,3)
-   end: (1,3) -> (19,3)
+` start: (0,3) -> (19,3)
+   end: (0,3) -> (19,3)
 `);
         });
 
@@ -132,8 +132,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (1,5) -> (19,5)
-   end: (1,5) -> (19,5)
+` start: (0,5) -> (19,5)
+   end: (0,5) -> (19,5)
 `);
         });
 
@@ -144,8 +144,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (1,4) -> (19,4)
-   end: (1,4) -> (19,4)
+` start: (0,4) -> (19,4)
+   end: (0,4) -> (19,4)
 `);
         });
 
@@ -156,8 +156,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (1,4) -> (19,4)
-   end: (1,4) -> (19,4)
+` start: (0,4) -> (19,4)
+   end: (0,4) -> (19,4)
 `);
         });
 
@@ -168,8 +168,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`update: (1,3) -> (19,4)
-   end: (1,3) -> (19,4)
+`update: (0,3) -> (19,4)
+   end: (0,3) -> (19,4)
 `);
         });
 
@@ -180,8 +180,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`update: (1,4) -> (19,5)
-   end: (1,4) -> (19,5)
+`update: (0,4) -> (19,5)
+   end: (0,4) -> (19,5)
 `);
         });
 
@@ -192,7 +192,7 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`   end: (1,4) -> (19,4)
+`   end: (0,4) -> (19,4)
 `);
         });
 
@@ -203,7 +203,7 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`   end: (1,4) -> (19,4)
+`   end: (0,4) -> (19,4)
 `);
         });
     });
@@ -220,8 +220,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (3,1) -> (3,99)
-   end: (3,1) -> (3,99)
+` start: (3,0) -> (3,99)
+   end: (3,0) -> (3,99)
 `);
         });
 
@@ -232,8 +232,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (3,1) -> (3,99)
-   end: (3,1) -> (3,99)
+` start: (3,0) -> (3,99)
+   end: (3,0) -> (3,99)
 `);
         });
 
@@ -244,8 +244,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (2,1) -> (2,99)
-   end: (2,1) -> (2,99)
+` start: (2,0) -> (2,99)
+   end: (2,0) -> (2,99)
 `);
         });
 
@@ -256,8 +256,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-` start: (4,1) -> (4,99)
-   end: (4,1) -> (4,99)
+` start: (4,0) -> (4,99)
+   end: (4,0) -> (4,99)
 `);
         });
 
@@ -268,7 +268,7 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`   end: (3,1) -> (3,99)
+`   end: (3,0) -> (3,99)
 `);
         });
 
@@ -279,7 +279,7 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`   end: (3,1) -> (3,99)
+`   end: (3,0) -> (3,99)
 `);
         });
 
@@ -290,8 +290,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`update: (2,1) -> (3,99)
-   end: (2,1) -> (3,99)
+`update: (2,0) -> (3,99)
+   end: (2,0) -> (3,99)
 `);
         });
 
@@ -302,8 +302,8 @@ describe('ReactCanvasGrid with frozen rows & cells', () => {
                 .invoke('text')
                 .should(
                     'contain',
-`update: (3,1) -> (4,99)
-   end: (3,1) -> (4,99)
+`update: (3,0) -> (4,99)
+   end: (3,0) -> (4,99)
 `);
         });
     });

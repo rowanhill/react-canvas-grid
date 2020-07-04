@@ -119,7 +119,7 @@ export class RowsSelection extends BaseSelectionState<RowsSelection> {
     public getSelectionRange = (cellBounds: CellCoordBounds): SelectRange => {
         return {
             topLeft: {
-                x: cellBounds.frozenCols,
+                x: 0,
                 y: Math.min(this.selectionStartRowIndex, this.selectionCursorRowIndex),
             },
             bottomRight: {

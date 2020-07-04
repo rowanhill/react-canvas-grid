@@ -2,7 +2,7 @@ import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
 import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { FrozenCanvasCoreProps, FrozenCanvasProps } from './FrozenCanvas';
-import { GridCanvas } from './GridCanvas';
+import { HighlightedGridCanvas } from './HighlightedGridCanvas';
 
 type FrozenRowsCanvasProps<T> =  FrozenCanvasCoreProps<T> & Pick<FrozenCanvasProps<T>, 'verticalGutterBounds'>;
 
@@ -43,7 +43,7 @@ export class FrozenRowsCanvas<T> extends React.PureComponent<FrozenRowsCanvasPro
             posProps: this.rowsPosProps,
         };
         return (
-            <GridCanvas {...props} name="rows" />
+            <HighlightedGridCanvas {...props} name="rows" />
         );
     }
 }

@@ -120,7 +120,7 @@ export class ColsSelection extends BaseSelectionState<ColsSelection> {
         return {
             topLeft: {
                 x: Math.min(this.selectionStartColIndex, this.selectionCursorColIndex),
-                y: cellBounds.frozenRows,
+                y: 0,
             },
             bottomRight: {
                 x: Math.max(this.selectionStartColIndex, this.selectionCursorColIndex),

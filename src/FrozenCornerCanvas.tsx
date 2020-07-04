@@ -2,7 +2,7 @@ import { ReactiveFn, transformer } from 'instigator';
 import * as React from 'react';
 import { CanvasRendererPosition } from './baseGridOffsetRenderer';
 import { FrozenCanvasCoreProps } from './FrozenCanvas';
-import { GridCanvas } from './GridCanvas';
+import { HighlightedGridCanvas } from './HighlightedGridCanvas';
 
 export class FrozenCornerCanvas<T> extends React.PureComponent<FrozenCanvasCoreProps<T>> {
     private readonly cornerPosProps: ReactiveFn<CanvasRendererPosition>;
@@ -37,7 +37,7 @@ export class FrozenCornerCanvas<T> extends React.PureComponent<FrozenCanvasCoreP
             posProps: this.cornerPosProps,
         };
         return (
-            <GridCanvas {...props} name="corner" />
+            <HighlightedGridCanvas {...props} name="corner" />
         );
     }
 }
