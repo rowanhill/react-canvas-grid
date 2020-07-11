@@ -1,7 +1,7 @@
-# react-canvas-grid
+# [react-canvas-grid](https://rowanhill.github.io/react-canvas-grid)
 A canvas-powered, React-friendly datagrid component
 
-## :heavy_exclamation_mark: _**WARNING: This should be considered pre-release software, unsuitable for production use**_ :heavy_exclamation_mark:
+Note: This library is still considered beta, because it currently has few consumers. Feel free to give it a try and report any issues!
 
 There are already lots of excellent grid / table components that can be used with React, so why another one? Well, react-canvas-grid's
 particular goals are:
