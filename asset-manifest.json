@@ -1,22 +1,26 @@
 {
   "files": {
-    "main.css": "/react-canvas-grid/static/css/main.dec6b6b8.chunk.css",
-    "main.js": "/react-canvas-grid/static/js/main.0992c7b1.chunk.js",
-    "main.js.map": "/react-canvas-grid/static/js/main.0992c7b1.chunk.js.map",
+    "main.css": "/react-canvas-grid/static/css/main.d834f298.chunk.css",
+    "main.js": "/react-canvas-grid/static/js/main.601b03aa.chunk.js",
+    "main.js.map": "/react-canvas-grid/static/js/main.601b03aa.chunk.js.map",
     "runtime-main.js": "/react-canvas-grid/static/js/runtime-main.960464a6.js",
     "runtime-main.js.map": "/react-canvas-grid/static/js/runtime-main.960464a6.js.map",
-    "static/js/2.1104ba1a.chunk.js": "/react-canvas-grid/static/js/2.1104ba1a.chunk.js",
-    "static/js/2.1104ba1a.chunk.js.map": "/react-canvas-grid/static/js/2.1104ba1a.chunk.js.map",
+    "static/js/2.ec2d6c32.chunk.js": "/react-canvas-grid/static/js/2.ec2d6c32.chunk.js",
+    "static/js/2.ec2d6c32.chunk.js.map": "/react-canvas-grid/static/js/2.ec2d6c32.chunk.js.map",
     "index.html": "/react-canvas-grid/index.html",
-    "precache-manifest.35345ba2fbd97d7e14410de23e6f8ad0.js": "/react-canvas-grid/precache-manifest.35345ba2fbd97d7e14410de23e6f8ad0.js",
+    "precache-manifest.be4a4fe6d789cac34a13e06f4775096a.js": "/react-canvas-grid/precache-manifest.be4a4fe6d789cac34a13e06f4775096a.js",
     "service-worker.js": "/react-canvas-grid/service-worker.js",
-    "static/css/main.dec6b6b8.chunk.css.map": "/react-canvas-grid/static/css/main.dec6b6b8.chunk.css.map",
-    "static/js/2.1104ba1a.chunk.js.LICENSE.txt": "/react-canvas-grid/static/js/2.1104ba1a.chunk.js.LICENSE.txt"
+    "static/css/main.d834f298.chunk.css.map": "/react-canvas-grid/static/css/main.d834f298.chunk.css.map",
+    "static/js/2.ec2d6c32.chunk.js.LICENSE.txt": "/react-canvas-grid/static/js/2.ec2d6c32.chunk.js.LICENSE.txt",
+    "static/media/logo.870c9de4.svg": "/react-canvas-grid/static/media/logo.870c9de4.svg",
+    "static/media/react-js.28144579.svg": "/react-canvas-grid/static/media/react-js.28144579.svg",
+    "static/media/rocket-launch-lines.262e49c2.svg": "/react-canvas-grid/static/media/rocket-launch-lines.262e49c2.svg",
+    "static/media/structure.c98a3d06.svg": "/react-canvas-grid/static/media/structure.c98a3d06.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.960464a6.js",
-    "static/js/2.1104ba1a.chunk.js",
-    "static/css/main.dec6b6b8.chunk.css",
-    "static/js/main.0992c7b1.chunk.js"
+    "static/js/2.ec2d6c32.chunk.js",
+    "static/css/main.d834f298.chunk.css",
+    "static/js/main.601b03aa.chunk.js"
   ]
 }

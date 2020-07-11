@@ -1,0 +1,16 @@
+<svg viewBox="0 0 540 175" xmlns="http://www.w3.org/2000/svg">
+  <defs></defs>
+  <path style="fill-opacity: 0;stroke-linecap: round;stroke-linejoin: round;stroke-width: 20px;" d="M 100.825 35.246 L 10.825 86.246 L 100.825 136.246"></path>
+  <g>
+    <rect x="128.791" y="8.83" width="192.003" height="157.242" style="stroke-linecap: round;stroke-linejoin: round;stroke-width: 15px;fill: none;"></rect>
+    <line style="stroke-width: 10px;" x1="128.505" y1="62.863" x2="320.492" y2="62.863"></line>
+    <line style="stroke-width: 7px;" x1="128.505" y1="113.059" x2="320.492" y2="113.059"></line>
+    <line style="stroke-width: 10px;" x1="196.241" y1="10.657" x2="196.241" y2="165.931"></line>
+    <line style="stroke-width: 7px;" x1="255.61" y1="10.657" x2="255.61" y2="165.881"></line>
+  </g>
+  <g transform="matrix(0.851458, -0.150135, 0.150135, 0.851458, 87.666634, -35.230808)" style="">
+    <path d="M 376.32 109.701 C 369.156 102.286 295.074 203.04 282.28 221.6 C 273.974 233.65 282.805 247.268 290.376 247.497 C 307.968 247.548 310.541 237.798 324.849 215.193 C 332.033 204.661 383.592 117.749 376.32 109.701 Z"></path>
+    <path d="M 281.751 250.121 C 289.458 253.645 290.923 261.109 288.724 267.638 C 285.472 277.294 278.995 286.18 270.216 289.381 C 260.413 291.975 253.766 291.186 238.437 285.254 C 249.133 283.577 262.204 267.148 264.094 259.321 C 266.032 251.292 273.695 246.437 281.751 250.121 Z"></path>
+  </g>
+  <path style="fill-opacity: 0;stroke-linecap: round;stroke-linejoin: round;stroke-width: 20px;" d="M 529.167 136.246 L 439.167 85.246 L 529.167 35.246" transform="matrix(-1, 0, 0, -1, 968.333984, 171.492001)"></path>
+</svg>
