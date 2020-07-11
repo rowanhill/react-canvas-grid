@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid', () => {
     it('uses custom background renderers from cell data', () => {
-        cy.visit('/#/custom-bg');
+        cy.visit('/#/examples/custom-bg');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
         cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
 
@@ -10,7 +10,7 @@ describe('ReactCanvasGrid', () => {
     });
 
     it('uses custom text renderers from cell data', () => {
-        cy.visit('/#/custom-text');
+        cy.visit('/#/examples/custom-text');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
         cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');
 

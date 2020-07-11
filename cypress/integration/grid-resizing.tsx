@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid with resizable cssWidth / cssHeight', () => {
     beforeEach(() => {
-        cy.visit('/#/resize');
+        cy.visit('/#/examples/resize');
         cy.get('.react-canvas-grid').as('Root');
         cy.get('.react-canvas-grid canvas').eq(1).as('Canvas');
 

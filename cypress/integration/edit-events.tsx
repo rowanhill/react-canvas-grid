@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid', () => {
     beforeEach(() => {
-        cy.visit('/#/edit-events');
+        cy.visit('/#/examples/edit-events');
 
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');

@@ -1,73 +1,29 @@
 .app-container {
-  display: flex;
-  flex: 1;
-  flex-direction: row;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
 }
 
-main {
-  flex: 1;
-  margin: 0 1.5em;
+nav.top-nav {
+    height: 3em;
+    line-height: 3em;
+    display: inline-flex;
+    flex-direction: row;
+    background-color: var(--primary-colour);
 }
 
-main ul {
-  padding: 0;
-  list-style-type: none;
+.top-nav .top-nav-item {
+    margin-left: 1em;
 }
 
-main ul li {
-  margin-bottom: 1.5em;
+.top-nav .top-nav-item a {
+    color: white;
+}
+.top-nav .top-nav-item a:hover {
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
 }
 
-main ul li h3 {
-  margin: 0 0 0.5em 0;
-}
-
-main ul li p {
-  margin: 0 0 0.5em 0;
-}
-
-nav {
-  flex: 0 0 12em;
-  order: -1;
-  min-height: 100vh;
-  margin: 0.5em;
-}
-
-nav ul {
-  border: 1px solid #eeeeee;
-  border-radius: 3px;
-  padding: 0;
-  list-style-type: none;
-}
-
-nav ul li {
-  font-size: 0.8em;
-  font-weight: 600;
-  border-bottom: 1px solid #eeeeee;
-}
-nav ul li:hover {
-  background-color: hsl(0, 0%, 97%);
-}
-
-nav ul li:first-of-type a {
-  border-top-right-radius: 2px;
-}
-nav ul li:last-of-type a {
-  border-bottom-right-radius: 2px;
-}
-nav ul li:last-of-type {
-  border-bottom: none;
-}
-
-nav ul li a {
-  display: block;
-  color: hsl(0, 0%, 40%);
-  padding: 0.4em;
-}
-nav ul li:hover a {
-  color: hsl(0, 0%, 50%);
-}
-nav ul li a.selected {
-  border-right: 2px solid #333944;
-  background-color: #eeeeee;
+.top-nav .logo-svg {
+    height: 100%;
+    padding: 5px;
 }

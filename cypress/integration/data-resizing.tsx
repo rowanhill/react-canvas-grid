@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid with some initial data', () => {
     beforeEach(() => {
-        cy.visit('/#/dynamic-data');
+        cy.visit('/#/examples/dynamic-data');
 
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');

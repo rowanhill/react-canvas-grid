@@ -2,7 +2,7 @@ import { Coord } from '../../src/index';
 
 describe('ReactCanvasGrid in a fixed size parent', () => {
     beforeEach(() => {
-        cy.visit('/#/simple');
+        cy.visit('/#/examples/simple');
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
         cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');

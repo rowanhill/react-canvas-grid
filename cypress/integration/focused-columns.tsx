@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid', () => {
     beforeEach(() => {
-        cy.visit('/#/focused-column');
+        cy.visit('/#/examples/focused-column');
 
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');

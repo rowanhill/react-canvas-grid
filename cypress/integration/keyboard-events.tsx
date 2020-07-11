@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid', () => {
     beforeEach(() => {
-        cy.visit('/#/keyboard-events');
+        cy.visit('/#/examples/keyboard-events');
 
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');

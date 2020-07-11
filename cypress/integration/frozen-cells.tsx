@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid with frozen rows & cells', () => {
     beforeEach(() => {
-        cy.visit('/#/frozen');
+        cy.visit('/#/examples/frozen');
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
         cy.get('.fixed-size-holder canvas').eq(1).as('Canvas');

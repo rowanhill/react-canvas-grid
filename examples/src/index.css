@@ -1,3 +1,9 @@
+:root {
+  --primary-colour: hsl(123, 59%, 36%);
+  --primary-colour-light: hsl(123, 59%, 47%);
+  --primary-colour-dark: hsl(123, 59%, 25%);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -11,11 +17,6 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-  font-size: 0.9em;
-  background-color: #eee;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  color: rgb(196, 78, 78);
 }
 
 button.link {
@@ -25,12 +26,12 @@ button.link {
   cursor: pointer;
 }
 a, .link {
-  color: hsl(123, 59%, 36%);
+  color: var(--primary-colour);
   font-weight: bold;
   text-decoration: none;
 }
 a:hover, .link:hover {
-  color: hsl(123, 59%, 47%);
+  color: var(--primary-colour-light);
 }
 
 p {

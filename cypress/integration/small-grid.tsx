@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid with very little data', () => {
     beforeEach(() => {
-        cy.visit('/#/small');
+        cy.visit('/#/examples/small');
     });
 
     it('renders a grid of data', () => {

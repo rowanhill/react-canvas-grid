@@ -1,39 +1,27 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { HashRouter, NavLink, Route } from 'react-router-dom';
 import './App.css';
-import exampleMeta from './examples/exampleMeta';
-import { examplePage } from './examples/ExamplePage';
-import { Index } from './examples/Index';
+import Examples from './Examples';
+import Home from './Home';
 
-class App extends Component<{}, {}> {
-  public render() {
+const App = () => {
     return (
-      <HashRouter>
-        <div className="app-container">
-          <main>
-            <Route exact path="/" component={Index} />
-            {exampleMeta.map((meta) => (
-              <Route
-                key={meta.pathFragment}
-                path={meta.pathFragment}
-                component={examplePage(meta.text, meta.grid, meta.fileName)}
-              />
-            ))}
-          </main>
-          <nav>
-            <h1><NavLink to="/">react-canvas-grid</NavLink></h1>
-            <ul>
-              {exampleMeta.map((meta) => (
-                <li key={meta.pathFragment}>
-                  <NavLink to={meta.pathFragment} activeClassName="selected">{meta.name}</NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </HashRouter>
+        <HashRouter>
+            <div className="app-container">
+                <nav className="top-nav">
+                    <span className="top-nav-item"><NavLink to="/">Home</NavLink></span>
+                    <span className="top-nav-item"><NavLink to="/examples">Examples</NavLink></span>
+                    <span className="top-nav-item">
+                        <a href="https://github.com/rowanhill/react-canvas-grid/">GitHub</a>
+                    </span>
+                </nav>
+                <main>
+                    <Route exact path="/" component={Home} />
+                    <Route path="/examples" component={Examples} />
+                </main>
+            </div>
+        </HashRouter>
     );
-  }
-}
+};
 
 export default App;

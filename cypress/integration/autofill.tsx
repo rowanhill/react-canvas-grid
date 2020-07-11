@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid autofill', () => {
     beforeEach(() => {
-        cy.visit('/#/autofill');
+        cy.visit('/#/examples/autofill');
 
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');

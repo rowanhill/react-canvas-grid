@@ -9,7 +9,7 @@ export const Index = () => {
             <ul>
                 {exampleMeta.map((meta) => (
                     <li key={meta.pathFragment}>
-                        <h3><Link to={meta.pathFragment}>{meta.name}</Link></h3>
+                        <h3><Link to={'/examples' + meta.pathFragment}>{meta.name}</Link></h3>
                         <p>{meta.description}</p>
                     </li>
                 ))}

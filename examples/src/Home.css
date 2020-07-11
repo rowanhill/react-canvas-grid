@@ -1,0 +1,62 @@
+.hero-wrapper {
+    background: linear-gradient(to bottom, var(--primary-colour) 0, var(--primary-colour-dark) 100%);
+    min-height: calc(100vh - 3em);
+    color: white;
+    box-sizing: border-box;
+    padding-bottom: 15vh;
+}
+
+.hero-wrapper svg {
+    fill: white;
+    stroke: white;
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
+}
+
+.hero-wrapper .logo-svg {
+    margin: 15vh 30% 3em 30%;
+}
+
+.hero-wrapper h1 {
+    font-family: monospace;
+    font-size: 5em;
+    text-align: center;
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
+}
+.hero-wrapper h1 .warning {
+    color: rgb(230, 0, 0);
+}
+
+.hero-wrapper .features {
+    display: flex;
+    flex-direction: row;
+    margin: 0 10%;
+    padding-top: 5em;
+}
+.hero-wrapper .feature {
+    padding: 0 2em;
+    width: 33%;
+    text-align: center;
+}
+.hero-wrapper .feature .feature-icon-sizer {
+    width: 60%;
+    height: 0;
+    padding-bottom: 60%;
+    margin: 0 auto;
+}
+.hero-wrapper .feature h3 {
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
+}
+
+.install-instructions-wrapper {
+    text-align: center;
+}
+.install-instructions {
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 3em;
+    display: inline-block;
+    margin: 5em 0;
+}
+.install-instructions code {
+    font-size: 2em;
+}

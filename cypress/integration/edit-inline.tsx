@@ -1,6 +1,6 @@
 describe('ReactCanvasGrid with inline editor & data management callbacks', () => {
     beforeEach(() => {
-        cy.visit('/#/editable');
+        cy.visit('/#/examples/editable');
 
         cy.get('.fixed-size-holder').as('Holder');
         cy.get('.fixed-size-holder .react-canvas-grid').as('Root');
