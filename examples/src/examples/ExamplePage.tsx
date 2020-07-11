@@ -14,7 +14,7 @@ export const examplePage = (Text: React.ComponentType, Grid: React.ComponentType
         }
 
         public componentDidMount() {
-            fetch(`examples/${fileName}.grid.tsx`)
+            fetch(process.env.PUBLIC_URL + `/examples/${fileName}.grid.tsx`)
                 .then((res) => res.text())
                 .then((source) => this.setState({source}));
         }
