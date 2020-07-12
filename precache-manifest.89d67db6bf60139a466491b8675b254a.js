@@ -1,11 +1,11 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "7504ede67743d86ce490e42a1969f36c",
+    "revision": "6c266a30a80c51b9e95daeaa24153a26",
     "url": "/react-canvas-grid/index.html"
   },
   {
-    "revision": "5f2fd9d1ddb2265527ce",
-    "url": "/react-canvas-grid/static/css/main.d834f298.chunk.css"
+    "revision": "aec2aa97d39b99b84934",
+    "url": "/react-canvas-grid/static/css/main.9c56fea8.chunk.css"
   },
   {
     "revision": "a95cef49818f9436cd52",
@@ -16,12 +16,16 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/react-canvas-grid/static/js/2.ec2d6c32.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "5f2fd9d1ddb2265527ce",
-    "url": "/react-canvas-grid/static/js/main.601b03aa.chunk.js"
+    "revision": "aec2aa97d39b99b84934",
+    "url": "/react-canvas-grid/static/js/main.ea621214.chunk.js"
   },
   {
     "revision": "e0b9da960ba246d3fafb",
     "url": "/react-canvas-grid/static/js/runtime-main.960464a6.js"
+  },
+  {
+    "revision": "c5e60777d65ac31e917672f42fd716b8",
+    "url": "/react-canvas-grid/static/media/feature-icon-gradient.c5e60777.svg"
   },
   {
     "revision": "870c9de422bff2b2da80edd61383e48e",
