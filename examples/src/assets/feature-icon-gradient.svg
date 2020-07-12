@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+    <style type="text/css">
+        .feature-icon path {
+            fill: url(#VerticalPrimaryGradient)
+        }
+    </style>
+    <defs>
+        <linearGradient id="VerticalPrimaryGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="var(--primary-colour)" />
+            <stop offset="100%" stop-color="var(--primary-colour-dark)" />
+        </linearGradient>
+    </defs>
+</svg>

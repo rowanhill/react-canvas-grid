@@ -1,6 +1,5 @@
 .hero-wrapper {
     background: linear-gradient(to bottom, var(--primary-colour) 0, var(--primary-colour-dark) 100%);
-    min-height: calc(100vh - 3em);
     color: white;
     box-sizing: border-box;
     padding-bottom: 15vh;
@@ -13,7 +12,7 @@
 }
 
 .hero-wrapper .logo-svg {
-    margin: 15vh 30% 3em 30%;
+    margin: 15vh 20% 3em 20%;
 }
 
 .hero-wrapper h1 {
@@ -26,37 +25,56 @@
     color: rgb(230, 0, 0);
 }
 
-.hero-wrapper .features {
+.features {
     display: flex;
     flex-direction: row;
     margin: 0 10%;
     padding-top: 5em;
 }
-.hero-wrapper .feature {
-    padding: 0 2em;
-    width: 33%;
+.features .feature {
+    margin: 0 2em;
+    flex: 1 1 0;
     text-align: center;
 }
-.hero-wrapper .feature .feature-icon-sizer {
+.features .feature .feature-icon-sizer {
     width: 60%;
     height: 0;
     padding-bottom: 60%;
     margin: 0 auto;
 }
-.hero-wrapper .feature h3 {
-    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
+.features .feature h3 {
+    color: var(--primary-colour-dark);
+    font-size: 1.5em;
+}
+@media (max-width: 768px) {
+    .features {
+        display: block;
+        padding-top: 2em;
+    }
+    .features .feature {
+        margin-bottom: 2em;
+    }
 }
 
 .install-instructions-wrapper {
     text-align: center;
+    margin: 0 2em;
 }
 .install-instructions {
-    border: 2px solid black;
+    border: 2px solid white;
     border-radius: 5px;
-    padding: 3em;
+    padding: 2em;
     display: inline-block;
-    margin: 5em 0;
+    margin-top: 3em;
 }
 .install-instructions code {
-    font-size: 2em;
+    font-size: 1.2em;
+}
+.install-instructions .prompt {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
