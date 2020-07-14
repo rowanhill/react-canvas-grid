@@ -36,11 +36,13 @@
     flex: 1 1 0;
     text-align: center;
 }
-.features .feature:first-of-type {
-    margin-left: 0;
-}
-.features .feature:last-of-type {
-    margin-right: 0;
+@media (min-width: 789px) {
+    .features .feature:first-of-type {
+        margin-left: 0;
+    }
+    .features .feature:last-of-type {
+        margin-right: 0;
+    }
 }
 .features .feature .feature-icon-sizer {
     width: 60%;
@@ -104,8 +106,12 @@
     display: flex;
     flex-direction: row;
 }
+@media (max-width: 768px) {
+    .capability .capability-details {
+        display: initial;
+    }
+}
 .capability:nth-child(even) .capability-details {
-    display: flex;
     flex-direction: row-reverse;
 }
 .capability img {
