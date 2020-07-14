@@ -9,7 +9,7 @@ const App = () => {
         <HashRouter>
             <div className="app-container">
                 <nav className="top-nav">
-                    <span className="top-nav-item"><NavLink to="/">Home</NavLink></span>
+                    <span className="top-nav-item"><NavLink exact to="/">Home</NavLink></span>
                     <span className="top-nav-item"><NavLink to="/examples">Examples</NavLink></span>
                     <span className="top-nav-item">
                         <a href="https://github.com/rowanhill/react-canvas-grid/">GitHub</a>

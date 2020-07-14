@@ -2,6 +2,7 @@
   --primary-colour: hsl(123, 59%, 36%);
   --primary-colour-light: hsl(123, 59%, 47%);
   --primary-colour-dark: hsl(123, 59%, 25%);
+  --secondary-colour: hsl(73, 87%, 82%);
 }
 
 body {

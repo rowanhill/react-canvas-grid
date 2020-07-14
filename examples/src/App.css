@@ -19,6 +19,9 @@ nav.top-nav {
 .top-nav .top-nav-item a {
     color: white;
 }
+.top-nav .top-nav-item a.active {
+    color: var(--secondary-colour);
+}
 .top-nav .top-nav-item a:hover {
     filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.3));
 }
