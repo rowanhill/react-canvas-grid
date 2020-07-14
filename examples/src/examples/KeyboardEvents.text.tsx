@@ -12,12 +12,12 @@ export const KeyboardEventsText = () => {
             <p>
                 Note that keyboard events will also bubble up when the user interacts with the
                 inline editor, which you may wish to ignore. To do so, you may wish to observe
-                the grid's <Link to="/edit-events">edit events</Link>.
+                the grid's <Link to="/examples/edit-events">edit events</Link>.
             </p>
             <p>
                 Also note that the editing functionality provided in this example is incomplete;
                 changes are not persisted. To see a more complete example, see
-                the <Link to="/editable">Editable Data</Link> example.
+                the <Link to="/examples/editable">Editable Data</Link> example.
             </p>
         </>
     );

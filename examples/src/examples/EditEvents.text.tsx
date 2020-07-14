@@ -9,7 +9,7 @@ export const EditEventsText = () => {
                 The callback <code>onCellDataChanged</code> allow consumers of react-canvas-grid to
                 respond to the user making changes to the data. Typically, this is used to update the
                 data passed to the grid in the <code>data</code> prop. Without doing so, the grid's
-                data will not be changed. See the <Link to="/editable">Editable Data</Link> example
+                data will not be changed. See the <Link to="/examples/editable">Editable Data</Link> example
                 for further detail. This example does not update the data, but merely logs event.
             </p>
             <p>

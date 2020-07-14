@@ -5,7 +5,7 @@ export const SmallGridText = () => {
         <>
             <h1>Small Grid</h1>
             <p>
-                This is a minimal usage of react-canvas-grid: a small, read-only grid of
+                This is a minimal usage of ReactCanvasGrid: a small, read-only grid of
                 static values.
             </p>
         </>
