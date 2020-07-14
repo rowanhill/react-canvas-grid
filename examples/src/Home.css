@@ -36,6 +36,12 @@
     flex: 1 1 0;
     text-align: center;
 }
+.features .feature:first-of-type {
+    margin-left: 0;
+}
+.features .feature:last-of-type {
+    margin-right: 0;
+}
 .features .feature .feature-icon-sizer {
     width: 60%;
     height: 0;
@@ -77,4 +83,36 @@
     -moz-user-select: none; /* Old versions of Firefox */
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+.capabilities {
+    margin: 5em 10% 0 10%;
+}
+
+.capability {
+    margin-bottom: 2em;
+}
+.capability h3 {
+    margin: 2em 0 0.75em 0;
+    color: var(--primary-colour-dark);
+}
+.capability p {
+    margin: 0 0 1em 0;
+}
+.capability .capability-details {
+    margin: 0 1.5em;
+    display: flex;
+    flex-direction: row;
+}
+.capability:nth-child(even) .capability-details {
+    display: flex;
+    flex-direction: row-reverse;
+}
+.capability img {
+    width: 204px;
+    object-fit: contain;
+    margin: 0 1em 0.5em 0;
+}
+.capability:nth-child(even) img {
+    margin: 0 0 0.5em 1em;
 }
