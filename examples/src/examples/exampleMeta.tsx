@@ -5,6 +5,8 @@ import { CustomBackgroundGrid } from './CustomBackground.grid';
 import { CustomBackgroundText } from './CustomBackground.text';
 import { CustomTextGrid } from './CustomText.grid';
 import { CustomTextText } from './CustomText.text';
+import { CustomTitleGrid } from './CustomTitle.grid';
+import { CustomTitleText } from './CustomTitle.text';
 import { DynamicDataGrid } from './DynamicData.grid';
 import { DyanmicDataText } from './DynamicData.text';
 import { EditableDataGrid } from './Editable.grid';
@@ -108,6 +110,14 @@ const exampleMeta: ExampleMeta[] = [
         grid: CustomTextGrid,
         text: CustomTextText,
         fileName: 'CustomText',
+    },
+    {
+        pathFragment: '/custom-title',
+        name: 'Custom Title Text',
+        description: 'Native browser title text that updates with the cell being hovered',
+        grid: CustomTitleGrid,
+        text: CustomTitleText,
+        fileName: 'CustomTitle',
     },
     {
         pathFragment: '/selection-events',

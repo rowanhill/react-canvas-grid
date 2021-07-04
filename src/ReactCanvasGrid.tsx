@@ -11,7 +11,7 @@ import { MainCanvas } from './MainCanvas';
 import { ScrollbarCanvas } from './scrollbars/ScrollbarCanvas';
 import { NoSelection } from './selectionState/noSelection';
 import { SelectRange } from './selectionState/selectionTypes';
-import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, Size } from './types';
+import { cellIsEditable, ColumnDef, Coord, DataRow, EditableCellDef, getTitleText, Size } from './types';
 export interface CellDataChangeEvent<T> {
     newData: T;
     cell: EditableCellDef<T>;
@@ -62,6 +62,7 @@ export interface EditingCell<T> {
 interface ReactCanvasGridState<T> {
     rootSize: Size|null;
     gridOffset: Coord;
+    title: string | null;
     editingCell: EditingCell<T> | null;
     cursorType: 'crosshair' | 'default';
     dpr: number;
@@ -98,6 +99,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
         this.state = {
             rootSize: null,
             gridOffset: this.gridState.gridOffset(),
+            title: null,
             editingCell: null,
             cursorType: 'default',
             dpr: window.devicePixelRatio,
@@ -218,6 +220,7 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             <div
                 ref={this.rootRef}
                 className="react-canvas-grid"
+                title={this.state.title || undefined}
                 onMouseDown={this.onMouseDown}
                 onDoubleClick={this.onDoubleClick}
                 onKeyDown={this.onKeyDown}
@@ -296,7 +299,16 @@ export class ReactCanvasGrid<T> extends React.PureComponent<ReactCanvasGridProps
             return;
         }
 
-        handleMouseMove(event, coord, this.rootRef, this.gridState, this.props, this.state.editingCell);
+        const area = handleMouseMove(event, coord, this.rootRef, this.gridState, this.props, this.state.editingCell);
+
+        // If the mouse moved within the grid, update the title
+        if (coord.x >= 0 && coord.y >= 0 && area === 'grid') {
+            const cellCoords = GridGeometry.calculateGridCellCoordsFromGridState(event, this.rootRef.current, this.gridState);
+            const col = this.props.columns[cellCoords.x];
+            const cell = this.props.data[cellCoords.y][col.fieldName];
+            const title = getTitleText(cell);
+            this.setState({ title });
+        }
     }
 
     private onMouseUp = (event: MouseEvent) => {

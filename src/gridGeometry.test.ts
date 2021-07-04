@@ -80,6 +80,8 @@ describe('GridGeomtry', () => {
             const colBoundaries = [{left: 0, right: 10}];
             const borderWidth =  1;
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -89,6 +91,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -100,6 +104,8 @@ describe('GridGeomtry', () => {
             const colBoundaries = [{left: 0, right: 10}];
             const borderWidth =  1;
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 100, left: 100 })} as unknown as HTMLDivElement;
@@ -109,6 +115,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -121,6 +129,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 15, y: 25 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -130,6 +140,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -142,6 +154,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -151,6 +165,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -163,6 +179,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -172,6 +190,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -184,6 +204,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -193,6 +215,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -205,6 +229,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -214,6 +240,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -226,6 +254,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -235,6 +265,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -247,6 +279,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -256,6 +290,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -268,6 +304,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -277,6 +315,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -289,6 +329,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -298,6 +340,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -310,6 +354,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -319,6 +365,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);
@@ -331,6 +379,8 @@ describe('GridGeomtry', () => {
             const colBoundaries =
                 GridGeometry.calculateColumnBoundaries([{width: 10}, {width: 10}] as any, borderWidth);
             const rowHeight = 20;
+            const frozenColsWidth = 0;
+            const frozenRowsHeight = 0;
             const gridOffset: Coord = { x: 0, y: 0 };
             const maxRow = 100;
             const root = { getBoundingClientRect: () => ({ top: 0, left: 0 })} as unknown as HTMLDivElement;
@@ -340,6 +390,8 @@ describe('GridGeomtry', () => {
                 colBoundaries,
                 borderWidth,
                 rowHeight,
+                frozenColsWidth,
+                frozenRowsHeight,
                 gridOffset,
                 maxRow,
                 root);

@@ -106,6 +106,8 @@ export class GridGeometry {
             gridState.columnBoundaries(),
             gridState.borderWidth(),
             gridState.rowHeight(),
+            gridState.frozenColsWidth(),
+            gridState.frozenRowsHeight(),
             gridState.gridOffset(),
             gridState.data().length - 1,
             rootRef,
@@ -113,14 +115,16 @@ export class GridGeometry {
     }
 
     /**
-     * Calculate the column & row index (i.e. "grid cell coordinates") that contains a click. The click coordinates
-     * are given in the window/viewport's frame of reference.
+     * Calculate the column & row index (i.e. "grid cell coordinates") that contains a mouse event. The event coordinates
+     * are given in the window/viewport's frame of reference. The grid cell coordinates account for frozen cells.
      */
     public static calculateGridCellCoords = (
         event: {clientX: number, clientY: number},
         columnBoundaries: ColumnBoundary[],
         borderWidth: number,
         rowHeight: number,
+        frozenColsWidth: number,
+        frozenRowsHeight: number,
         gridOffset: Coord,
         maxRow: number,
         root: HTMLDivElement|null,
@@ -132,6 +136,8 @@ export class GridGeometry {
             GridGeometry.windowPixelToGridPixel(
                 {x: event.clientX, y: event.clientY},
                 gridOffset,
+                frozenColsWidth,
+                frozenRowsHeight,
                 root,
             ),
             columnBoundaries,
@@ -144,6 +150,8 @@ export class GridGeometry {
     public static calculateGridPixelCoords = (
         event: {clientX: number, clientY: number},
         gridOffset: Coord,
+        frozenColsWidth: number,
+        frozenRowsHeight: number,
         root: HTMLDivElement|null,
     ): Coord => {
         if (!root) {
@@ -152,6 +160,8 @@ export class GridGeometry {
         return GridGeometry.windowPixelToGridPixel(
             {x: event.clientX, y: event.clientY},
             gridOffset,
+            frozenColsWidth,
+            frozenRowsHeight,
             root,
         );
     }
@@ -400,11 +410,26 @@ export class GridGeometry {
         };
     }
 
-    private static windowPixelToGridPixel = ({x, y}: Coord, gridOffset: Coord, root: HTMLDivElement): Coord => {
+    /**
+     * Converts a coordinate in the window / viewport frame of reference into grid pixel coordinates. The grid
+     * coordinates take account of frozen cells - i.e. if the window pixel is over a frozen cell, the grid coordinate
+     * is for a pxiel in that frozen cell, not an non-frozen cell that has been scrolled underneath it.
+     */
+    private static windowPixelToGridPixel = (
+        {x, y}: Coord,
+        gridOffset: Coord,
+        frozenColsWidth: number,
+        frozenRowsHeight: number,
+        root: HTMLDivElement,
+    ): Coord => {
         const rootClientRect = root.getBoundingClientRect();
+        const componentX = x - rootClientRect.left;
+        const componentY = y - rootClientRect.top;
+        const gridX = componentX < frozenColsWidth ? componentX : componentX + gridOffset.x;
+        const gridY = componentY < frozenRowsHeight ? componentY : componentY + gridOffset.y;
         return {
-            x: x + gridOffset.x - rootClientRect.left,
-            y: y + gridOffset.y - rootClientRect.top,
+            x: gridX,
+            y: gridY,
         };
     }
 

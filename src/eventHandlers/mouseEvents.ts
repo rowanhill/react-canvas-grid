@@ -57,15 +57,17 @@ export function handleMouseMove<T>(
     gridState: GridState<T>,
     props: ReactCanvasGridProps<T>,
     editingCell: EditingCell<T> | null,
-) {
+): 'grid'|'scrollbar'|'autofill-handle' {
     if (mouseDragOnScrollbar(coord, gridState)) {
-        return;
+        return 'scrollbar';
     } else if (mouseDragOnGrid(event, rootRef, props, gridState, editingCell)) {
-        return;
+        return 'grid';
     } else if (mouseHoverOnAutofillHandle(event, gridState, rootRef)) {
-        return;
+        return 'autofill-handle';
+    } else if (mouseHoverOnScrollbar(coord, gridState)) {
+        return 'scrollbar';
     } else {
-        mouseHoverOnScrollbar(coord, gridState);
+        return 'grid';
     }
 }
 

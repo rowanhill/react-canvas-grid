@@ -77,6 +77,8 @@ export const mouseHoverOnScrollbar = <T>(coord: Coord, gridState: GridState<T>) 
     );
 
     gridState.hoveredScrollbar(hoveredScrollbar);
+
+    return hoveredScrollbar !== null;
 };
 
 export const mouseUpOnScrollbar = (): boolean => {

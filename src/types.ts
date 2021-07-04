@@ -29,6 +29,14 @@ interface WithTextString {
 }
 type TextAccessible<T> = WithTextFunction<T> | WithTextString;
 
+interface WithTitleFunction<T> {
+    getTitle: (data: T) => string;
+}
+interface WithTitleString {
+    title: string;
+}
+type TitleAccessible<T> = WithTitleFunction<T> | WithTitleString | {};
+
 interface WithSerialisers<T> {
     editor: {
         serialise: (data: T) => string;
@@ -37,16 +45,33 @@ interface WithSerialisers<T> {
 }
 type Serialisable<T> = WithSerialisers<T> | {};
 
-export type CellDef<T> = CellDefCommon<T> & TextAccessible<T> & Serialisable<T>;
+export type CellDef<T> = CellDefCommon<T> & TextAccessible<T> & TitleAccessible<T> & Serialisable<T>;
 export type EditableCellDef<T> = CellDef<T> & WithSerialisers<T>;
 
-export const cellHasTextFunction = <T> (cell: CellDef<T>): cell is CellDefCommon<T> & WithTextFunction<T> => {
+export const cellHasTextFunction = <T> (cell: CellDef<T>): cell is CellDef<T> & WithTextFunction<T> => {
     return !!(cell as any).getText;
 };
 
 export const getCellText = <T> (cell: CellDef<T>): string => {
     return cellHasTextFunction(cell) ? cell.getText(cell.data) : cell.text;
 };
+
+const cellHasTitleFunction = <T> (cell: CellDef<T>): cell is CellDef<T> & WithTitleFunction<T> => {
+    return !!(cell as any).getTitle;
+};
+const cellHasTitleString = <T> (cell: CellDef<T>): cell is CellDef<T> & WithTitleString => {
+    return !!(cell as any).title;
+}
+
+export const getTitleText = <T> (cell: CellDef<T>): string | null => {
+    if (cellHasTitleFunction(cell)) {
+        return cell.getTitle(cell.data);
+    } else if (cellHasTitleString(cell)) {
+        return cell.title;
+    } else {
+        return null;
+    }
+}
 
 export const cellIsEditable = <T> (cell: CellDef<T>): cell is EditableCellDef<T> => {
     return !!(cell as EditableCellDef<T>).editor;

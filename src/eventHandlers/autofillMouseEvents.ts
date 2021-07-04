@@ -68,7 +68,13 @@ const isOverAutofillHandle = <T>(
         gridState.borderWidth(),
         gridState.columnBoundaries(),
     );
-    const gridPixelCoord = GridGeometry.calculateGridPixelCoords(event, gridState.gridOffset(), rootRef.current);
+    const gridPixelCoord = GridGeometry.calculateGridPixelCoords(
+        event,
+        gridState.gridOffset(),
+        gridState.frozenColsWidth(),
+        gridState.frozenRowsHeight(),
+        rootRef.current,
+    );
     const dx = gridPixelCoord.x - bottomRightCellBounds.right;
     const dy = gridPixelCoord.y - bottomRightCellBounds.bottom;
 
