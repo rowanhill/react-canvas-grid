@@ -125,6 +125,7 @@ function createData(numCols: number) {
     const row: DataRow<AllCellDataTypes> = {
       date: {
         text: (i + 1).toString(),
+        title: (i + 1).toString(),
         data: null,
         renderBackground: renderHeaderBackground,
       },
@@ -135,6 +136,7 @@ function createData(numCols: number) {
       if (i === 0) {
         const cell: CustomBgCellDef = {
           getText: getCustomCellText,
+          title: label.text,
           data: { bgColour: label.colour, highlight, text: label.text, shouldReverseText: Math.random() < 0.5 },
           renderBackground: renderHeaderBackground,
         };
@@ -142,6 +144,7 @@ function createData(numCols: number) {
       } else {
         const cell: CustomBgCellDef = {
           getText: getCustomCellText,
+          title: label.text,
           data: { bgColour: label.colour, highlight, text: label.text, shouldReverseText: Math.random() < 0.5 },
           renderBackground: renderCellBackground,
           editor: {
