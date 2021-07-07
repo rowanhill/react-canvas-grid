@@ -3,56 +3,62 @@ import nightOwlLight from 'prism-react-renderer/themes/nightOwlLight';
 import * as React from 'react';
 import './ExamplePage.css';
 
-export const examplePage = (Text: React.ComponentType, Grid: React.ComponentType, fileName: string) => {
-    return class extends React.Component<{}, { source: string|null; showSource: boolean; }> {
-        constructor(props: {}) {
-            super(props);
-            this.state = {
-                source: null,
-                showSource: false,
-            };
-        }
+interface ExamplePageProps {
+    textComponent: React.ComponentType;
+    gridComponent: React.ComponentType;
+    filename: String;
+}
 
-        public componentDidMount() {
-            fetch(process.env.PUBLIC_URL + `/examples/${fileName}.grid.tsx`)
-                .then((res) => res.text())
-                .then((source) => this.setState({source}));
-        }
+export class ExamplePage extends React.Component<ExamplePageProps, { source: string|null; showSource: boolean; }> {
+    constructor(props: ExamplePageProps) {
+        super(props);
+        this.state = {
+            source: null,
+            showSource: false,
+        };
+    }
 
-        public render() {
-            return (
-                <>
-                    <Text />
-                    <Grid />
-                    {this.state.source &&
-                        <button className="link code-toggle" onClick={this.toggleCode}>
-                            {this.state.showSource ? 'Hide' : 'Show'} code
-                        </button>
-                    }
-                    {this.state.source && this.state.showSource &&
-                        <Highlight {...defaultProps} theme={nightOwlLight} code={this.state.source} language="tsx">
-                            {({ className, style, tokens, getLineProps, getTokenProps }) => (
-                            <pre className={`code-example ${className}`} style={style}>
-                                {tokens.map((line, i) => (
-                                <div {...getLineProps({ line, key: i })}>
-                                    {line.map((token, key) => (
-                                    <span {...getTokenProps({ token, key })} />
-                                    ))}
-                                </div>
+    public componentDidMount() {
+        fetch(process.env.PUBLIC_URL + `/examples/${this.props.filename}.grid.tsx`)
+            .then((res) => res.text())
+            .then((source) => this.setState({source}));
+    }
+
+    public render() {
+        const Text = this.props.textComponent;
+        const Grid = this.props.gridComponent;
+        return (
+            <>
+                <Text />
+                <Grid />
+                {this.state.source &&
+                    <button className="link code-toggle" onClick={this.toggleCode}>
+                        {this.state.showSource ? 'Hide' : 'Show'} code
+                    </button>
+                }
+                {this.state.source && this.state.showSource &&
+                    <Highlight {...defaultProps} theme={nightOwlLight} code={this.state.source} language="tsx">
+                        {({ className, style, tokens, getLineProps, getTokenProps }) => (
+                        <pre className={`code-example ${className}`} style={style}>
+                            {tokens.map((line, i) => (
+                            <div {...getLineProps({ line, key: i })}>
+                                {line.map((token, key) => (
+                                <span {...getTokenProps({ token, key })} />
                                 ))}
-                            </pre>
-                            )}
-                        </Highlight>
-                    }
-                </>
-            );
-        }
+                            </div>
+                            ))}
+                        </pre>
+                        )}
+                    </Highlight>
+                }
+            </>
+        );
+    }
 
-        private toggleCode = (e: React.MouseEvent) => {
-            this.setState({
-                showSource: !this.state.showSource,
-            });
-            e.preventDefault();
-        }
-    };
+    private toggleCode = (e: React.MouseEvent) => {
+        this.setState({
+            showSource: !this.state.showSource,
+        });
+        e.preventDefault();
+    }
 };
