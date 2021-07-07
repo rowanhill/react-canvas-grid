@@ -1,6 +1,6 @@
 {
   "name": "react-canvas-grid",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "A simple, canvas-based, React-friendly datagrid component",
   "homepage": "https://rowanhill.github.io/react-canvas-grid",
   "main": "dist/index.js",
