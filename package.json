@@ -27,7 +27,8 @@
   "author": "Rowan Hill",
   "license": "ISC",
   "peerDependencies": {
-    "react": "16.x"
+    "react": ">=16",
+    "react-dom": ">=16"
   },
   "dependencies": {
     "instigator": "^0.6.1",
